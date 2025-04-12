@@ -4,10 +4,13 @@ import { Order, OrderStatus } from '@/types/order';
 import { useAuth } from './AuthContext';
 import { OrderService, OrderInput } from '@/services/OrderService';
 import { toast } from 'sonner';
+import { UserRole } from './AuthContext';
 
 interface AppContextType {
   orders: Order[];
   loading: boolean;
+  userRole?: UserRole; // Added for RoleSwitcher
+  switchRole: (role: UserRole) => void; // Added for RoleSwitcher
   addOrder: (order: OrderInput) => Promise<void>;
   assignOrder: (orderId: string, assignedTo: string) => Promise<void>;
   completeOrder: (orderId: string) => Promise<void>;
@@ -20,13 +23,18 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const [userRole, setUserRole] = useState<UserRole>('admin'); // Default role
+  const { user, profile } = useAuth();
 
   useEffect(() => {
     if (user) {
       fetchOrders();
     }
-  }, [user]);
+    // Set user role from profile when available
+    if (profile?.role) {
+      setUserRole(profile.role);
+    }
+  }, [user, profile]);
 
   const fetchOrders = async () => {
     try {
@@ -43,6 +51,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshOrders = async () => {
     await fetchOrders();
+  };
+
+  const switchRole = (role: UserRole) => {
+    setUserRole(role);
   };
 
   const addOrder = async (orderData: OrderInput) => {
@@ -91,6 +103,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         orders,
         loading,
+        userRole,
+        switchRole,
         addOrder,
         assignOrder,
         completeOrder,

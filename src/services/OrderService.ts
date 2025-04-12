@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Order } from '@/types/order';
+import { Order, OrderStatus } from '@/types/order';
 
 export type OrderInput = Omit<Order, 'id' | 'status' | 'createdAt' | 'completedAt' | 'assignedTo'>;
 
@@ -24,7 +24,7 @@ export const OrderService = {
       tableSize: order.table_size,
       colour: order.colour,
       quantity: order.quantity,
-      status: order.status,
+      status: order.status as OrderStatus, // Cast to OrderStatus
       assignedTo: order.delivery_person_id ? 'Assigned' : undefined,
       createdAt: new Date(order.created_at),
       completedAt: order.completed_at ? new Date(order.completed_at) : undefined
@@ -60,7 +60,7 @@ export const OrderService = {
       tableSize: data.table_size,
       colour: data.colour,
       quantity: data.quantity,
-      status: data.status,
+      status: data.status as OrderStatus, // Cast to OrderStatus
       createdAt: new Date(data.created_at)
     };
   },
