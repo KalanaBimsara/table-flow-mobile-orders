@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -12,7 +13,7 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: '1rem',
 			screens: {
 				'2xl': '1400px'
 			}
@@ -51,6 +52,13 @@ export default {
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
+				},
+				furniture: {
+					navy: '#1a365d',
+					blue: '#2a4365',
+					wood: '#c19a6b',
+					lightwood: '#e8d1b7',
+					gray: '#f7fafc'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
