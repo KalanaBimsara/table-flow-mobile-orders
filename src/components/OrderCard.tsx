@@ -8,7 +8,6 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { tableSizeOptions, colourOptions } from '@/types/order';
 import { useApp } from '@/contexts/AppContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 type OrderCardProps = {
@@ -16,28 +15,17 @@ type OrderCardProps = {
 };
 
 const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
-  const { assignOrder, completeOrder } = useApp();
-  const { user, profile } = useAuth();
+  const { userRole, assignOrder, completeOrder } = useApp();
   
-  const handleAssignOrder = async () => {
-    if (!user) {
-      toast.error('You must be logged in to assign orders');
-      return;
-    }
-    
-    try {
-      await assignOrder(order.id, user.id);
-    } catch (error) {
-      console.error('Error assigning order:', error);
-    }
+  const handleAssignOrder = () => {
+    // In a real app, this would show a selection UI for drivers
+    assignOrder(order.id, 'Driver 1');
+    toast.success(`Order assigned to Driver 1`);
   };
   
-  const handleCompleteOrder = async () => {
-    try {
-      await completeOrder(order.id);
-    } catch (error) {
-      console.error('Error completing order:', error);
-    }
+  const handleCompleteOrder = () => {
+    completeOrder(order.id);
+    toast.success('Order marked as completed');
   };
 
   const getTableSizeLabel = (value: string) => {
@@ -111,7 +99,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           {order.status === 'assigned' && (
             <div className="flex items-center gap-2">
               <Truck size={16} className="flex-shrink-0 text-muted-foreground" />
-              <span>Assigned to: {order.assignedTo || 'Driver'}</span>
+              <span>Assigned to: {order.assignedTo}</span>
             </div>
           )}
           
@@ -125,7 +113,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
       </CardContent>
       
       <CardFooter className="flex justify-end gap-2">
-        {profile?.role === 'admin' && order.status === 'pending' && (
+        {userRole === 'admin' && order.status === 'pending' && (
           <Button 
             size="sm" 
             variant="outline"
@@ -135,18 +123,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           </Button>
         )}
         
-        {profile?.role === 'delivery' && order.status === 'pending' && (
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={handleAssignOrder}
-          >
-            Assign to Me
-          </Button>
-        )}
-        
-        {((profile?.role === 'admin' && order.status === 'assigned') || 
-         (profile?.role === 'delivery' && order.status === 'assigned')) && (
+        {((userRole === 'admin' && order.status === 'assigned') || 
+         (userRole === 'delivery' && order.status === 'assigned')) && (
           <Button 
             size="sm" 
             variant="default"

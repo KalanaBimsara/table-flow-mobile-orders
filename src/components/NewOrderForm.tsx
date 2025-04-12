@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { tableSizeOptions, colourOptions } from '@/types/order';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
   customerName: z.string().min(2, { message: "Customer name must be at least 2 characters" }),
@@ -27,41 +26,33 @@ type OrderFormValues = z.infer<typeof formSchema>;
 
 export function NewOrderForm() {
   const { addOrder } = useApp();
-  const { profile } = useAuth();
   
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      customerName: profile?.role === 'customer' ? profile?.full_name || "" : "",
-      address: profile?.role === 'customer' ? profile?.address || "" : "",
-      contactNumber: profile?.role === 'customer' ? profile?.contact_number || "" : "",
+      customerName: "",
+      address: "",
+      contactNumber: "",
       tableSize: "medium",
       colour: "oak",
       quantity: 1,
     },
   });
 
-  async function onSubmit(values: OrderFormValues) {
-    try {
-      await addOrder({
-        customerName: values.customerName,
-        address: values.address,
-        contactNumber: values.contactNumber,
-        tableSize: values.tableSize,
-        colour: values.colour,
-        quantity: values.quantity,
-      });
-      form.reset({
-        customerName: profile?.role === 'customer' ? profile?.full_name || "" : "",
-        address: profile?.role === 'customer' ? profile?.address || "" : "",
-        contactNumber: profile?.role === 'customer' ? profile?.contact_number || "" : "",
-        tableSize: "medium",
-        colour: "oak",
-        quantity: 1,
-      });
-    } catch (error) {
-      console.error("Error adding order:", error);
-    }
+  function onSubmit(values: OrderFormValues) {
+    // Ensure all values are present before passing to addOrder
+    const orderData = {
+      customerName: values.customerName,
+      address: values.address,
+      contactNumber: values.contactNumber,
+      tableSize: values.tableSize,
+      colour: values.colour,
+      quantity: values.quantity,
+    };
+    
+    addOrder(orderData);
+    form.reset();
+    toast.success("New order added successfully");
   }
 
   return (

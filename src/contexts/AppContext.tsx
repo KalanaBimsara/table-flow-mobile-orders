@@ -1,96 +1,85 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus } from '@/types/order';
-import { useAuth } from './AuthContext';
-import { OrderService, OrderInput } from '@/services/OrderService';
-import { toast } from 'sonner';
-import { UserRole } from './AuthContext';
+import { v4 as uuidv4 } from 'uuid';
+
+type UserRole = 'admin' | 'delivery';
 
 interface AppContextType {
   orders: Order[];
-  loading: boolean;
-  userRole?: UserRole; // Added for RoleSwitcher
-  switchRole: (role: UserRole) => void; // Added for RoleSwitcher
-  addOrder: (order: OrderInput) => Promise<void>;
-  assignOrder: (orderId: string, assignedTo: string) => Promise<void>;
-  completeOrder: (orderId: string) => Promise<void>;
+  userRole: UserRole;
+  switchRole: (role: UserRole) => void;
+  addOrder: (order: Omit<Order, 'id' | 'status' | 'createdAt'>) => void;
+  assignOrder: (orderId: string, assignedTo: string) => void;
+  completeOrder: (orderId: string) => void;
   getFilteredOrders: (status?: OrderStatus) => Order[];
-  refreshOrders: () => Promise<void>;
+  getAssignedOrders: () => Order[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'tableflow-orders';
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<UserRole>('admin'); // Default role
-  const { user, profile } = useAuth();
+  const [userRole, setUserRole] = useState<UserRole>('admin');
 
+  // Load orders from localStorage on initial render
   useEffect(() => {
-    if (user) {
-      fetchOrders();
+    const savedOrders = localStorage.getItem(STORAGE_KEY);
+    if (savedOrders) {
+      try {
+        const parsedOrders = JSON.parse(savedOrders);
+        // Convert string dates back to Date objects
+        const ordersWithDates = parsedOrders.map((order: any) => ({
+          ...order,
+          createdAt: new Date(order.createdAt),
+          completedAt: order.completedAt ? new Date(order.completedAt) : undefined
+        }));
+        setOrders(ordersWithDates);
+      } catch (error) {
+        console.error('Failed to parse saved orders:', error);
+      }
     }
-    // Set user role from profile when available
-    if (profile?.role) {
-      setUserRole(profile.role);
-    }
-  }, [user, profile]);
+  }, []);
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const data = await OrderService.getOrders();
-      setOrders(data);
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
-      toast.error('Failed to load orders');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const refreshOrders = async () => {
-    await fetchOrders();
-  };
+  // Save orders to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+  }, [orders]);
 
   const switchRole = (role: UserRole) => {
     setUserRole(role);
   };
 
-  const addOrder = async (orderData: OrderInput) => {
-    try {
-      await OrderService.addOrder(orderData, user?.id);
-      toast.success('Order added successfully');
-      await fetchOrders();
-    } catch (error) {
-      console.error('Failed to add order:', error);
-      toast.error('Failed to add order');
-      throw error;
-    }
+  const addOrder = (orderData: Omit<Order, 'id' | 'status' | 'createdAt'>) => {
+    const newOrder: Order = {
+      ...orderData,
+      id: uuidv4(),
+      status: 'pending',
+      createdAt: new Date()
+    };
+    setOrders(prev => [...prev, newOrder]);
   };
 
-  const assignOrder = async (orderId: string, assignedTo: string) => {
-    try {
-      await OrderService.assignOrder(orderId, assignedTo);
-      toast.success('Order assigned successfully');
-      await fetchOrders();
-    } catch (error) {
-      console.error('Failed to assign order:', error);
-      toast.error('Failed to assign order');
-      throw error;
-    }
+  const assignOrder = (orderId: string, assignedTo: string) => {
+    setOrders(prev => 
+      prev.map(order => 
+        order.id === orderId 
+          ? { ...order, status: 'assigned' as OrderStatus, assignedTo } 
+          : order
+      )
+    );
   };
 
-  const completeOrder = async (orderId: string) => {
-    try {
-      await OrderService.completeOrder(orderId);
-      toast.success('Order marked as completed');
-      await fetchOrders();
-    } catch (error) {
-      console.error('Failed to complete order:', error);
-      toast.error('Failed to complete order');
-      throw error;
-    }
+  const completeOrder = (orderId: string) => {
+    setOrders(prev => 
+      prev.map(order => 
+        order.id === orderId 
+          ? { ...order, status: 'completed' as OrderStatus, completedAt: new Date() } 
+          : order
+      )
+    );
   };
 
   const getFilteredOrders = (status?: OrderStatus) => {
@@ -98,18 +87,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return orders.filter(order => order.status === status);
   };
 
+  const getAssignedOrders = () => {
+    return orders.filter(order => order.status === 'assigned');
+  };
+
   return (
-    <AppContext.Provider
-      value={{
+    <AppContext.Provider 
+      value={{ 
         orders,
-        loading,
         userRole,
         switchRole,
         addOrder,
         assignOrder,
         completeOrder,
         getFilteredOrders,
-        refreshOrders
+        getAssignedOrders
       }}
     >
       {children}
