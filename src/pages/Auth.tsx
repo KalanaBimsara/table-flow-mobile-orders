@@ -12,16 +12,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
 import { Table } from 'lucide-react';
-import { toast } from 'sonner';
-import { UserRole } from '@/contexts/AuthContext';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().email(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 const signupSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().email(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   full_name: z.string().min(2, 'Full name must be at least 2 characters'),
   role: z.enum(['customer', 'delivery']).default('customer'),
@@ -33,8 +31,6 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function Auth() {
   const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('login');
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -56,15 +52,10 @@ export default function Auth() {
 
   async function onLoginSubmit(data: LoginFormValues) {
     setIsLoading(true);
-    setAuthError(null);
     try {
       await signIn(data.email, data.password);
-      toast.success('Signed in successfully');
     } catch (error) {
-      console.error('Login error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
-      setAuthError(errorMessage);
-      toast.error(errorMessage);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -72,24 +63,13 @@ export default function Auth() {
 
   async function onSignupSubmit(data: SignupFormValues) {
     setIsLoading(true);
-    setAuthError(null);
     try {
-      // Validate role is a valid UserRole
-      const role = data.role as UserRole;
-      
       await signUp(data.email, data.password, {
         full_name: data.full_name,
-        role: role,
+        role: data.role,
       });
-      
-      toast.success('Account created successfully! Please check your email for confirmation.');
-      setActiveTab('login');
-      loginForm.setValue('email', data.email);
     } catch (error) {
-      console.error('Signup error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
-      setAuthError(errorMessage);
-      toast.error(errorMessage);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -105,13 +85,7 @@ export default function Auth() {
           </div>
         </div>
         
-        {authError && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
-            {authError}
-          </div>
-        )}
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
