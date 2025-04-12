@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Got existing session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -69,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -80,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      console.log('Profile data:', data);
       setProfile(data as Profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -94,17 +98,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Signing in with email:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        toast.error(error.message);
+        console.error('Sign in error:', error);
         throw error;
       }
 
-      toast.success('Signed in successfully');
+      console.log('Sign in successful:', data.user?.id);
       navigate('/');
     } catch (error) {
       console.error('Error signing in:', error);
@@ -114,7 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('Signing up with email:', email, 'and user data:', userData);
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -126,11 +132,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        toast.error(error.message);
+        console.error('Sign up error:', error);
         throw error;
       }
 
-      toast.success('Signed up successfully. Please sign in.');
+      console.log('Sign up successful:', data);
       navigate('/auth');
     } catch (error) {
       console.error('Error signing up:', error);
@@ -142,10 +148,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        toast.error(error.message);
+        console.error('Sign out error:', error);
         throw error;
       }
-      toast.success('Signed out successfully');
+      console.log('Signed out successfully');
       navigate('/auth');
     } catch (error) {
       console.error('Error signing out:', error);

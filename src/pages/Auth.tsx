@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
 import { Table } from 'lucide-react';
+import { toast } from 'sonner';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -31,6 +32,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function Auth() {
   const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -52,10 +54,15 @@ export default function Auth() {
 
   async function onLoginSubmit(data: LoginFormValues) {
     setIsLoading(true);
+    setAuthError(null);
     try {
       await signIn(data.email, data.password);
+      toast.success('Signed in successfully');
     } catch (error) {
-      console.error(error);
+      console.error('Login error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -63,13 +70,20 @@ export default function Auth() {
 
   async function onSignupSubmit(data: SignupFormValues) {
     setIsLoading(true);
+    setAuthError(null);
     try {
       await signUp(data.email, data.password, {
         full_name: data.full_name,
         role: data.role,
       });
+      toast.success('Account created successfully. Please sign in.');
+      loginForm.setValue('email', data.email);
+      loginForm.setValue('password', data.password);
     } catch (error) {
-      console.error(error);
+      console.error('Signup error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -84,6 +98,12 @@ export default function Auth() {
             <span>TableFlow</span>
           </div>
         </div>
+        
+        {authError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+            {authError}
+          </div>
+        )}
         
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
