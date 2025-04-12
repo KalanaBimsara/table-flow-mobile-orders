@@ -1,22 +1,50 @@
 
 import React from 'react';
-import { Menu, Home, Package, History, Table, X } from 'lucide-react';
+import { Menu, Home, Package, History, Table, X, LogOut, User, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useApp } from '@/contexts/AppContext';
-import RoleSwitcher from './RoleSwitcher';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const AppHeader: React.FC = () => {
-  const { userRole } = useApp();
   const location = useLocation();
   const [open, setOpen] = React.useState(false);
+  const { user, profile, signOut } = useAuth();
 
-  const navItems = [
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  // Base navigation items for all users
+  const baseNavItems = [
     { href: '/', label: 'Dashboard', icon: Home },
     { href: '/orders', label: 'Orders', icon: Package },
     { href: '/history', label: 'Order History', icon: History },
   ];
+  
+  // Admin-specific navigation items
+  const adminNavItems = [
+    { href: '/users', label: 'User Management', icon: Users },
+  ];
+  
+  // Combine navigation items based on user role
+  const navItems = profile?.role === 'admin' 
+    ? [...baseNavItems, ...adminNavItems] 
+    : baseNavItems;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -78,12 +106,68 @@ const AppHeader: React.FC = () => {
                   {item.label}
                 </Link>
               ))}
+              {profile && (
+                <>
+                  <div className="h-px bg-border my-2"></div>
+                  <div className="px-2 py-1 text-sm font-medium text-muted-foreground">
+                    Signed in as: {profile.full_name || user?.email}
+                  </div>
+                  <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                    Role: {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center gap-2 justify-start py-1"
+                    onClick={() => {
+                      signOut();
+                      setOpen(false);
+                    }}
+                  >
+                    <LogOut size={16} />
+                    <span>Sign Out</span>
+                  </Button>
+                </>
+              )}
             </nav>
           </SheetContent>
         </Sheet>
 
-        <div className="ml-auto flex items-center">
-          <RoleSwitcher />
+        <div className="ml-auto flex items-center gap-2">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar>
+                    <AvatarFallback>
+                      {profile?.full_name ? getInitials(profile.full_name) : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{profile?.full_name || 'User'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Role: {profile?.role.charAt(0).toUpperCase() + profile?.role.slice(1)}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => signOut()}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button asChild>
+              <Link to="/auth">Sign In</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>
