@@ -12,7 +12,7 @@ export const createAdminUser = async (email: string, password: string, fullName:
     options: {
       data: {
         full_name: fullName,
-        role: 'admin',
+        role: 'admin', // Ensure this string matches exactly what's in the database enum
       },
     },
   });

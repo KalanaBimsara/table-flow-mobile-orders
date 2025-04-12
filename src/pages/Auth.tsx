@@ -13,14 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Link } from 'react-router-dom';
 import { Table } from 'lucide-react';
 import { toast } from 'sonner';
+import { UserRole } from '@/contexts/AuthContext';
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 const signupSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   full_name: z.string().min(2, 'Full name must be at least 2 characters'),
   role: z.enum(['customer', 'delivery']).default('customer'),
@@ -33,6 +34,7 @@ export default function Auth() {
   const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('login');
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -72,13 +74,17 @@ export default function Auth() {
     setIsLoading(true);
     setAuthError(null);
     try {
+      // Validate role is a valid UserRole
+      const role = data.role as UserRole;
+      
       await signUp(data.email, data.password, {
         full_name: data.full_name,
-        role: data.role,
+        role: role,
       });
-      toast.success('Account created successfully. Please sign in.');
+      
+      toast.success('Account created successfully! Please check your email for confirmation.');
+      setActiveTab('login');
       loginForm.setValue('email', data.email);
-      loginForm.setValue('password', data.password);
     } catch (error) {
       console.error('Signup error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
@@ -105,7 +111,7 @@ export default function Auth() {
           </div>
         )}
         
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>

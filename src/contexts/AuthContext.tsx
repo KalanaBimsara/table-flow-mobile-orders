@@ -120,13 +120,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
     try {
       console.log('Signing up with email:', email, 'and user data:', userData);
+      
+      // Ensure role is a valid value from the enum
+      const validRole: UserRole = userData.role && ['admin', 'customer', 'delivery'].includes(userData.role) 
+        ? userData.role as UserRole 
+        : 'customer';
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: userData.full_name,
-            role: userData.role || 'customer',
+            full_name: userData.full_name || '',
+            role: validRole,
           },
         },
       });
@@ -137,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('Sign up successful:', data);
+      toast.success('Account created successfully! Please check your email for confirmation.');
       navigate('/auth');
     } catch (error) {
       console.error('Error signing up:', error);
