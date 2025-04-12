@@ -40,7 +40,17 @@ export function NewOrderForm() {
   });
 
   function onSubmit(values: OrderFormValues) {
-    addOrder(values);
+    // Ensure all values are present before passing to addOrder
+    const orderData = {
+      customerName: values.customerName,
+      address: values.address,
+      contactNumber: values.contactNumber,
+      tableSize: values.tableSize,
+      colour: values.colour,
+      quantity: values.quantity,
+    };
+    
+    addOrder(orderData);
     form.reset();
     toast.success("New order added successfully");
   }
