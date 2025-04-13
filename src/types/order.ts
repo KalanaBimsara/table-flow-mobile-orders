@@ -9,6 +9,7 @@ export interface Order {
   tableSize: string;
   colour: string;
   quantity: number;
+  note?: string;
   status: OrderStatus;
   assignedTo?: string;
   createdAt: Date;

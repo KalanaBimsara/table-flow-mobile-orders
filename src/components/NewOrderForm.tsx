@@ -20,6 +20,7 @@ const formSchema = z.object({
   tableSize: z.string(),
   colour: z.string(),
   quantity: z.coerce.number().int().positive().min(1, { message: "Quantity must be at least 1" }),
+  note: z.string().optional(),
 });
 
 type OrderFormValues = z.infer<typeof formSchema>;
@@ -36,23 +37,18 @@ export function NewOrderForm() {
       tableSize: "medium",
       colour: "oak",
       quantity: 1,
+      note: "",
     },
   });
 
-  function onSubmit(values: OrderFormValues) {
-    // Ensure all values are present before passing to addOrder
-    const orderData = {
-      customerName: values.customerName,
-      address: values.address,
-      contactNumber: values.contactNumber,
-      tableSize: values.tableSize,
-      colour: values.colour,
-      quantity: values.quantity,
-    };
-    
-    addOrder(orderData);
-    form.reset();
-    toast.success("New order added successfully");
+  async function onSubmit(values: OrderFormValues) {
+    try {
+      await addOrder(values);
+      form.reset();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('An error occurred when creating your order');
+    }
   }
 
   return (
@@ -175,6 +171,24 @@ export function NewOrderForm() {
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="note"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Special Instructions</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Any special requirements or notes about the order" 
+                      className="min-h-[80px]" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <Button type="submit" className="w-full">
               Add New Order

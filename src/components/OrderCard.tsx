@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { MapPin, User, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck } from 'lucide-react';
+import { MapPin, User, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote } from 'lucide-react';
 import { Order } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -20,12 +20,10 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   const handleAssignOrder = () => {
     // In a real app, this would show a selection UI for drivers
     assignOrder(order.id, 'Driver 1');
-    toast.success(`Order assigned to Driver 1`);
   };
   
   const handleCompleteOrder = () => {
     completeOrder(order.id);
-    toast.success('Order marked as completed');
   };
 
   const getTableSizeLabel = (value: string) => {
@@ -90,6 +88,13 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
               <span>{order.quantity} {order.quantity > 1 ? 'tables' : 'table'}</span>
             </div>
           </div>
+          
+          {order.note && (
+            <div className="flex items-start gap-2 mt-2">
+              <StickyNote size={16} className="mt-1 flex-shrink-0 text-muted-foreground" />
+              <span className="whitespace-pre-line">{order.note}</span>
+            </div>
+          )}
           
           <div className="flex items-center gap-2 mt-2">
             <Calendar size={16} className="flex-shrink-0 text-muted-foreground" />

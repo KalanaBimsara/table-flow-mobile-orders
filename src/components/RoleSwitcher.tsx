@@ -2,7 +2,7 @@
 import React from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
-import { UserRound, Truck, UserCog, Store } from 'lucide-react';
+import { UserRound, Truck, UserCog } from 'lucide-react';
 
 const RoleSwitcher: React.FC = () => {
   const { userRole, switchRole } = useApp();
@@ -17,15 +17,6 @@ const RoleSwitcher: React.FC = () => {
       >
         <UserCog size={16} />
         <span className="hidden sm:inline">Admin</span>
-      </Button>
-      <Button
-        variant={userRole === 'seller' ? 'default' : 'outline'}
-        size="sm"
-        className="flex items-center gap-2"
-        onClick={() => switchRole('seller')}
-      >
-        <Store size={16} />
-        <span className="hidden sm:inline">Seller</span>
       </Button>
       <Button
         variant={userRole === 'customer' ? 'default' : 'outline'}

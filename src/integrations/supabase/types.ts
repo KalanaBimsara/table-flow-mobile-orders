@@ -70,23 +70,20 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          name: string
-          role: string
-          updated_at: string | null
+          name: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
         }
         Insert: {
           created_at?: string | null
           id: string
-          name: string
-          role: string
-          updated_at?: string | null
+          name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
         }
         Update: {
           created_at?: string | null
           id?: string
-          name?: string
-          role?: string
-          updated_at?: string | null
+          name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
         }
         Relationships: []
       }
