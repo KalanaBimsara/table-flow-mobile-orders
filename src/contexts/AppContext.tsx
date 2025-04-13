@@ -35,12 +35,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load orders when component mounts or user changes
   useEffect(() => {
     fetchOrders();
-  }, [user]);
+  }, [user, userRole]);
 
   const fetchOrders = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user is authenticated, skipping order fetch");
+      return;
+    }
 
     try {
+      console.log("Fetching orders with user role:", userRole);
+      
       let query = supabase.from('orders').select('*');
       
       // Apply filters based on user role
@@ -54,20 +59,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       if (error) {
         console.error('Error fetching orders:', error);
+        toast.error(`Failed to fetch orders: ${error.message}`);
         return;
       }
+      
+      if (!data) {
+        console.log("No data returned from orders query");
+        setOrders([]);
+        return;
+      }
+      
+      console.log("Fetched orders:", data);
       
       // Convert string dates to Date objects
       const ordersWithDates = data.map((order: any) => ({
         ...order,
         id: order.id,
+        customerName: order.customer_name,
+        address: order.address,
+        contactNumber: order.contact_number,
+        tableSize: order.table_size,
+        colour: order.colour,
+        quantity: order.quantity,
+        note: order.note || undefined, // Convert null to undefined
+        status: order.status as OrderStatus,
         createdAt: new Date(order.created_at),
-        completedAt: order.completed_at ? new Date(order.completed_at) : undefined
+        completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
+        assignedTo: order.delivery_person_id
       }));
       
       setOrders(ordersWithDates);
     } catch (error) {
       console.error('Error fetching orders:', error);
+      toast.error('An unexpected error occurred while fetching orders');
     }
   };
 
@@ -79,8 +103,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const switchRole = (role: UserRole) => {
     setUserRole(role);
     toast.success(`Switched to ${role} role`);
-    // Refresh orders when role changes
-    fetchOrders();
+    // Refresh orders when role changes - handled by useEffect
   };
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'status' | 'createdAt'>) => {
@@ -88,6 +111,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toast.error("You must be logged in to place an order");
       return;
     }
+
+    console.log("Adding order with data:", orderData);
 
     try {
       // Prepare the order data for the database
@@ -104,6 +129,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status: 'pending'
       };
 
+      console.log("Inserting order into database:", newOrderData);
+
       // Insert into database
       const { data, error } = await supabase
         .from('orders')
@@ -116,6 +143,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toast.error('Failed to create order: ' + error.message);
         return;
       }
+
+      console.log("Order created successfully:", data);
 
       // Convert the returned database record to our app's Order format
       const newOrder: Order = {
@@ -156,6 +185,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const assignOrder = async (orderId: string, assignedTo: string) => {
     try {
+      console.log(`Assigning order ${orderId} to ${assignedTo}`);
+      
       // Update in database
       const { error } = await supabase
         .from('orders')
@@ -172,6 +203,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
 
+      console.log(`Order ${orderId} assigned successfully`);
+
       // Update local state
       setOrders(prev => 
         prev.map(order => 
@@ -180,6 +213,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             : order
         )
       );
+      
+      toast.success('Order assigned successfully');
     } catch (error) {
       console.error('Error assigning order:', error);
       toast.error('An unexpected error occurred');
@@ -188,6 +223,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const completeOrder = async (orderId: string) => {
     try {
+      console.log(`Completing order ${orderId}`);
+      
       const now = new Date();
       
       // Update in database
@@ -206,6 +243,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
 
+      console.log(`Order ${orderId} completed successfully`);
+
       // Update local state
       setOrders(prev => 
         prev.map(order => 
@@ -214,6 +253,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             : order
         )
       );
+      
+      toast.success('Order completed successfully');
     } catch (error) {
       console.error('Error completing order:', error);
       toast.error('An unexpected error occurred');
