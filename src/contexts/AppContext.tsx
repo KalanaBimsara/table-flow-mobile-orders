@@ -98,7 +98,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         table_size: orderData.tableSize,
         colour: orderData.colour,
         quantity: orderData.quantity,
-        note: orderData.note,
+        note: orderData.note || null, // Handle undefined by converting to null
         created_by: user.id,
         price: calculatePrice(orderData.tableSize, orderData.quantity),
         status: 'pending'
@@ -126,7 +126,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         tableSize: data.table_size,
         colour: data.colour,
         quantity: data.quantity,
-        note: data.note,
+        note: data.note || undefined, // Convert null to undefined
         status: data.status as OrderStatus,
         createdAt: new Date(data.created_at)
       };

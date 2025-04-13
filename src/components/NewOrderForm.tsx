@@ -43,7 +43,18 @@ export function NewOrderForm() {
 
   async function onSubmit(values: OrderFormValues) {
     try {
-      await addOrder(values);
+      // Make sure all required properties are present before calling addOrder
+      const orderData = {
+        customerName: values.customerName,
+        address: values.address,
+        contactNumber: values.contactNumber,
+        tableSize: values.tableSize,
+        colour: values.colour,
+        quantity: values.quantity,
+        note: values.note || "",  // Ensure note is never undefined
+      };
+      
+      await addOrder(orderData);
       form.reset();
     } catch (error) {
       console.error('Error submitting form:', error);
