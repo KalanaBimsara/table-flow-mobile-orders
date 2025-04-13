@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,7 +76,6 @@ const Auth: React.FC = () => {
     }
   };
 
-  // Redirect if user is already logged in
   if (user && !loading) {
     return <Navigate to="/" />;
   }
@@ -220,6 +218,7 @@ const Auth: React.FC = () => {
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="customer">Customer</SelectItem>
                             <SelectItem value="delivery">Delivery</SelectItem>
+                            <SelectItem value="seller">Seller</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

@@ -49,6 +49,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, role: string) => {
     try {
+      // Ensure the role matches the enum values exactly
+      if (!['customer', 'seller', 'delivery', 'admin'].includes(role)) {
+        throw new Error("Invalid role. Must be one of: customer, seller, delivery, admin");
+      }
+
       const { error } = await supabase.auth.signUp({ 
         email, 
         password,
