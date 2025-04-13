@@ -1,10 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus } from '@/types/order';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
-export type UserRole = 'admin' | 'delivery' | 'customer';
+export type UserRole = 'admin' | 'seller' | 'delivery' | 'customer';
 
 interface AppContextType {
   orders: Order[];
@@ -29,13 +28,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (savedRole as UserRole) || 'admin';
   });
 
-  // Load orders from localStorage on initial render
   useEffect(() => {
     const savedOrders = localStorage.getItem(STORAGE_KEY);
     if (savedOrders) {
       try {
         const parsedOrders = JSON.parse(savedOrders);
-        // Convert string dates back to Date objects
         const ordersWithDates = parsedOrders.map((order: any) => ({
           ...order,
           createdAt: new Date(order.createdAt),
@@ -48,12 +45,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Save orders to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
   }, [orders]);
 
-  // Save userRole to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem(USER_ROLE_KEY, userRole);
   }, [userRole]);
