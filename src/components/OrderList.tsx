@@ -5,7 +5,7 @@ import OrderCard from './OrderCard';
 import { OrderStatus } from '@/types/order';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Truck, CheckCircle2 } from 'lucide-react';
+import { Package, Truck, CheckCircle2, ShoppingBag } from 'lucide-react';
 
 export function OrderList() {
   const { getFilteredOrders, userRole } = useApp();
@@ -39,6 +39,83 @@ export function OrderList() {
               </p>
             )}
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // For customer users, show their orders
+  if (userRole === 'customer') {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShoppingBag size={20} />
+            Your Orders
+          </CardTitle>
+          <CardDescription>
+            Track your furniture table orders
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="all">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all" className="flex items-center gap-2">
+                <Package size={16} />
+                <span className="hidden sm:inline">All Orders</span>
+              </TabsTrigger>
+              <TabsTrigger value="active" className="flex items-center gap-2">
+                <Truck size={16} />
+                <span className="hidden sm:inline">Active</span>
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="flex items-center gap-2">
+                <CheckCircle2 size={16} />
+                <span className="hidden sm:inline">Completed</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="mt-4">
+              <div className="space-y-4">
+                {pendingOrders.length > 0 || assignedOrders.length > 0 || completedOrders.length > 0 ? (
+                  [...pendingOrders, ...assignedOrders, ...completedOrders].map(order => (
+                    <OrderCard key={order.id} order={order} />
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-muted-foreground">
+                    You haven't placed any orders yet.
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="active" className="mt-4">
+              <div className="space-y-4">
+                {pendingOrders.length > 0 || assignedOrders.length > 0 ? (
+                  [...pendingOrders, ...assignedOrders].map(order => (
+                    <OrderCard key={order.id} order={order} />
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-muted-foreground">
+                    No active orders found.
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="completed" className="mt-4">
+              <div className="space-y-4">
+                {completedOrders.length > 0 ? (
+                  completedOrders.map(order => (
+                    <OrderCard key={order.id} order={order} />
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-muted-foreground">
+                    No completed orders found.
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     );

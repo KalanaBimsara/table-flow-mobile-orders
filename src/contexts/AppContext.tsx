@@ -2,8 +2,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus } from '@/types/order';
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
 
-type UserRole = 'admin' | 'delivery';
+export type UserRole = 'admin' | 'delivery' | 'customer';
 
 interface AppContextType {
   orders: Order[];
@@ -19,10 +20,14 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'tableflow-orders';
+const USER_ROLE_KEY = 'tableflow-user-role';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [userRole, setUserRole] = useState<UserRole>('admin');
+  const [userRole, setUserRole] = useState<UserRole>(() => {
+    const savedRole = localStorage.getItem(USER_ROLE_KEY);
+    return (savedRole as UserRole) || 'admin';
+  });
 
   // Load orders from localStorage on initial render
   useEffect(() => {
@@ -48,8 +53,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
   }, [orders]);
 
+  // Save userRole to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(USER_ROLE_KEY, userRole);
+  }, [userRole]);
+
   const switchRole = (role: UserRole) => {
     setUserRole(role);
+    toast.success(`Switched to ${role} role`);
   };
 
   const addOrder = (orderData: Omit<Order, 'id' | 'status' | 'createdAt'>) => {
