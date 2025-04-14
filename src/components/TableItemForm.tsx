@@ -35,7 +35,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({ index, onRemove, showRemo
   const getFormattedPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'INR',
+      currency: 'LKR',
       maximumFractionDigits: 0
     }).format(price);
   };

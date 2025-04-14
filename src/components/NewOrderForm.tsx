@@ -52,7 +52,13 @@ export function NewOrderForm() {
         customerName: values.customerName,
         address: values.address,
         contactNumber: values.contactNumber,
-        tables: values.tables,
+        tables: values.tables.map((table) => ({
+          id: table.id!,
+          size: table.size!,
+          colour: table.colour!,
+          quantity: table.quantity!,
+          price: table.price!,
+        })),
         note: values.note || "",
         totalPrice
       };
@@ -99,7 +105,7 @@ export function NewOrderForm() {
   const getFormattedPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'INR',
+      currency: 'LKR',
       maximumFractionDigits: 0
     }).format(price);
   };
