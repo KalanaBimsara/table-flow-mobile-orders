@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Order, OrderStatus } from '@/types/order';
+import { Order, OrderStatus, TableItem } from '@/types/order';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +21,6 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'tableflow-orders';
 const USER_ROLE_KEY = 'tableflow-user-role';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -46,6 +45,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       console.log("Fetching orders with user role:", userRole);
       
+      // First, fetch the orders
       let query = supabase.from('orders').select('*');
       
       // Apply filters based on user role
@@ -55,40 +55,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         query = query.eq('delivery_person_id', user.id);
       }
       
-      const { data, error } = await query;
+      const { data: ordersData, error: ordersError } = await query;
       
-      if (error) {
-        console.error('Error fetching orders:', error);
-        toast.error(`Failed to fetch orders: ${error.message}`);
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError);
+        toast.error(`Failed to fetch orders: ${ordersError.message}`);
         return;
       }
       
-      if (!data) {
-        console.log("No data returned from orders query");
+      if (!ordersData || ordersData.length === 0) {
+        console.log("No orders returned from query");
         setOrders([]);
         return;
       }
       
-      console.log("Fetched orders:", data);
+      console.log("Fetched orders:", ordersData);
       
-      // Convert string dates to Date objects
-      const ordersWithDates = data.map((order: any) => ({
+      // Now fetch all tables for these orders
+      const orderIds = ordersData.map(order => order.id);
+      const { data: tablesData, error: tablesError } = await supabase
+        .from('order_tables')
+        .select('*')
+        .in('order_id', orderIds);
+      
+      if (tablesError) {
+        console.error('Error fetching order tables:', tablesError);
+        toast.error(`Failed to fetch order tables: ${tablesError.message}`);
+      }
+      
+      // Group tables by order_id
+      const tablesByOrder = (tablesData || []).reduce((acc, table) => {
+        if (!acc[table.order_id]) {
+          acc[table.order_id] = [];
+        }
+        acc[table.order_id].push({
+          id: table.id,
+          size: table.size,
+          colour: table.colour,
+          quantity: table.quantity,
+          price: table.price
+        });
+        return acc;
+      }, {} as Record<string, TableItem[]>);
+      
+      // Convert string dates to Date objects and add tables to orders
+      const ordersWithTablesAndDates = ordersData.map((order: any) => ({
         ...order,
         id: order.id,
         customerName: order.customer_name,
         address: order.address,
         contactNumber: order.contact_number,
-        tableSize: order.table_size,
-        colour: order.colour,
-        quantity: order.quantity,
+        tables: tablesByOrder[order.id] || [],
         note: order.note || undefined, // Convert null to undefined
         status: order.status as OrderStatus,
         createdAt: new Date(order.created_at),
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
-        assignedTo: order.delivery_person_id
+        assignedTo: order.delivery_person_id,
+        totalPrice: order.price
       }));
       
-      setOrders(ordersWithDates);
+      setOrders(ordersWithTablesAndDates);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('An unexpected error occurred while fetching orders');
@@ -115,72 +141,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     console.log("Adding order with data:", orderData);
 
     try {
-      // Prepare the order data for the database
-      const newOrderData = {
-        customer_name: orderData.customerName,
-        address: orderData.address,
-        contact_number: orderData.contactNumber,
-        table_size: orderData.tableSize,
-        colour: orderData.colour,
-        quantity: orderData.quantity,
-        note: orderData.note || null, // Handle undefined by converting to null
-        created_by: user.id,
-        price: calculatePrice(orderData.tableSize, orderData.quantity),
-        status: 'pending'
-      };
-
-      console.log("Inserting order into database:", newOrderData);
-
-      // Insert into database
-      const { data, error } = await supabase
+      // Start a transaction
+      const { data: order, error: orderError } = await supabase
         .from('orders')
-        .insert(newOrderData)
-        .select('*')
+        .insert({
+          customer_name: orderData.customerName,
+          address: orderData.address,
+          contact_number: orderData.contactNumber,
+          note: orderData.note || null, // Handle undefined by converting to null
+          created_by: user.id,
+          price: orderData.totalPrice || orderData.tables.reduce((sum, table) => sum + table.price, 0),
+          status: 'pending'
+        })
+        .select('id')
         .single();
 
-      if (error) {
-        console.error('Error creating order:', error);
-        toast.error('Failed to create order: ' + error.message);
+      if (orderError) {
+        console.error('Error creating order:', orderError);
+        toast.error('Failed to create order: ' + orderError.message);
         return;
       }
+      
+      console.log("Order created with ID:", order.id);
+      
+      // Insert each table
+      if (orderData.tables && orderData.tables.length > 0) {
+        const tablesData = orderData.tables.map(table => ({
+          order_id: order.id,
+          size: table.size,
+          colour: table.colour,
+          quantity: table.quantity,
+          price: table.price
+        }));
+        
+        const { error: tablesError } = await supabase
+          .from('order_tables')
+          .insert(tablesData);
+        
+        if (tablesError) {
+          console.error('Error creating order tables:', tablesError);
+          toast.error('Failed to create order tables: ' + tablesError.message);
+          return;
+        }
+      }
 
-      console.log("Order created successfully:", data);
-
-      // Convert the returned database record to our app's Order format
-      const newOrder: Order = {
-        id: data.id,
-        customerName: data.customer_name,
-        address: data.address,
-        contactNumber: data.contact_number,
-        tableSize: data.table_size,
-        colour: data.colour,
-        quantity: data.quantity,
-        note: data.note || undefined, // Convert null to undefined
-        status: data.status as OrderStatus,
-        createdAt: new Date(data.created_at)
-      };
-
-      // Update local state
-      setOrders(prev => [...prev, newOrder]);
+      // Refresh orders to include the new one
+      fetchOrders();
       toast.success('Order created successfully!');
 
     } catch (error) {
       console.error('Error adding order:', error);
       toast.error('An unexpected error occurred');
     }
-  };
-
-  // Calculate price based on table size and quantity
-  const calculatePrice = (tableSize: string, quantity: number): number => {
-    const basePrices: Record<string, number> = {
-      'small': 200,
-      'medium': 350,
-      'large': 500,
-      'xl': 750,
-      'custom': 1000
-    };
-    
-    return (basePrices[tableSize] || 350) * quantity;
   };
 
   const assignOrder = async (orderId: string, assignedTo: string) => {

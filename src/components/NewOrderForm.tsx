@@ -1,25 +1,35 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import * as z from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '@/contexts/AppContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { tableSizeOptions, colourOptions } from '@/types/order';
 import { toast } from 'sonner';
+import { Plus } from 'lucide-react';
+import TableItemForm from './TableItemForm';
+import { TableItem } from '@/types/order';
 
+// Define schema for a single table item
+const tableItemSchema = z.object({
+  id: z.string(),
+  size: z.string(),
+  colour: z.string(),
+  quantity: z.number().int().positive().min(1, { message: "Quantity must be at least 1" }),
+  price: z.number()
+});
+
+// Define the overall form schema
 const formSchema = z.object({
   customerName: z.string().min(2, { message: "Customer name must be at least 2 characters" }),
   address: z.string().min(5, { message: "Please enter a valid address" }),
   contactNumber: z.string().min(10, { message: "Please enter a valid phone number" }),
-  tableSize: z.string(),
-  colour: z.string(),
-  quantity: z.coerce.number().int().positive().min(1, { message: "Quantity must be at least 1" }),
+  tables: z.array(tableItemSchema).min(1, { message: "At least one table is required" }),
   note: z.string().optional(),
 });
 
@@ -28,39 +38,72 @@ type OrderFormValues = z.infer<typeof formSchema>;
 export function NewOrderForm() {
   const { addOrder } = useApp();
   
-  const form = useForm<OrderFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      customerName: "",
-      address: "",
-      contactNumber: "",
-      tableSize: "medium",
-      colour: "oak",
-      quantity: 1,
-      note: "",
-    },
-  });
+  const form = useFormProvider();
 
+  const watchTables = form.watch("tables");
+  const totalPrice = React.useMemo(() => {
+    return watchTables?.reduce((sum, table) => sum + (table.price || 0), 0) || 0;
+  }, [watchTables]);
+
+  // Handle form submission
   async function onSubmit(values: OrderFormValues) {
     try {
-      // Make sure all required properties are present before calling addOrder
+      // Prepare order data with the tables
       const orderData = {
         customerName: values.customerName,
         address: values.address,
         contactNumber: values.contactNumber,
-        tableSize: values.tableSize,
-        colour: values.colour,
-        quantity: values.quantity,
-        note: values.note || "",  // Ensure note is never undefined
+        tables: values.tables,
+        note: values.note || "",
+        totalPrice
       };
       
       await addOrder(orderData);
-      form.reset();
+      form.reset({
+        customerName: "",
+        address: "",
+        contactNumber: "",
+        tables: [createEmptyTable()],
+        note: "",
+      });
+      toast.success("Order created successfully!");
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error('An error occurred when creating your order');
     }
   }
+
+  // Create a new empty table with default values
+  const createEmptyTable = (): TableItem => ({
+    id: uuidv4(),
+    size: '24x32',
+    colour: 'white',
+    quantity: 1,
+    price: 10500 // Default price for 24x32 table
+  });
+
+  // Add a new table to the form
+  const addTable = () => {
+    const currentTables = form.getValues("tables") || [];
+    form.setValue("tables", [...currentTables, createEmptyTable()]);
+  };
+
+  // Remove a table from the form
+  const removeTable = (index: number) => {
+    const currentTables = form.getValues("tables");
+    if (currentTables.length > 1) {
+      form.setValue("tables", currentTables.filter((_, i) => i !== index));
+    }
+  };
+
+  // Format price in Indian Rupees
+  const getFormattedPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
 
   return (
     <Card className="w-full">
@@ -69,7 +112,7 @@ export function NewOrderForm() {
         <CardDescription>Create a new delivery order for a customer</CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
+        <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
@@ -117,70 +160,35 @@ export function NewOrderForm() {
               )}
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="tableSize"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Table Size</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select size" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tableSizeOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="mt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Tables</h3>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={addTable}
+                  className="flex items-center"
+                >
+                  <Plus size={16} className="mr-1" />
+                  Add Table
+                </Button>
+              </div>
               
-              <FormField
-                control={form.control}
-                name="colour"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Wood/Colour</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select colour" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {colourOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {watchTables?.map((table, index) => (
+                <TableItemForm
+                  key={table.id}
+                  index={index}
+                  onRemove={() => removeTable(index)}
+                  showRemoveButton={watchTables.length > 1}
+                />
+              ))}
               
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="mt-6 text-right">
+                <p className="text-lg font-semibold">
+                  Total Order Price: {getFormattedPrice(totalPrice)}
+                </p>
+              </div>
             </div>
             
             <FormField
@@ -205,10 +213,34 @@ export function NewOrderForm() {
               Add New Order
             </Button>
           </form>
-        </Form>
+        </FormProvider>
       </CardContent>
     </Card>
   );
+}
+
+// Custom hook for form setup to separate logic
+function useFormProvider() {
+  const form = useForm<OrderFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      customerName: "",
+      address: "",
+      contactNumber: "",
+      tables: [
+        {
+          id: uuidv4(),
+          size: '24x32',
+          colour: 'white',
+          quantity: 1,
+          price: 10500
+        }
+      ],
+      note: "",
+    },
+  });
+
+  return form;
 }
 
 export default NewOrderForm;

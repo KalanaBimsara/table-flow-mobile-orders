@@ -1,15 +1,15 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
-import { MapPin, User, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote } from 'lucide-react';
-import { Order } from '@/types/order';
+import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table } from 'lucide-react';
+import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { tableSizeOptions, colourOptions } from '@/types/order';
 import { useApp } from '@/contexts/AppContext';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 type OrderCardProps = {
   order: Order;
@@ -56,6 +56,15 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
     }
   };
 
+  // Format price in Indian Rupees
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
   return (
     <Card className={`order-card ${
       order.status === 'pending' ? 'order-pending' : 
@@ -79,21 +88,53 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
             <span>{order.contactNumber}</span>
           </div>
           
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            <div className="flex items-center gap-2">
-              <Package size={16} className="flex-shrink-0 text-muted-foreground" />
-              <span>{getTableSizeLabel(order.tableSize)}</span>
+          <div className="mt-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Table size={16} className="flex-shrink-0 text-muted-foreground" />
+              <span className="font-medium">Tables ({order.tables?.length || 0})</span>
             </div>
             
-            <div className="flex items-center gap-2">
-              <Palette size={16} className="flex-shrink-0 text-muted-foreground" />
-              <span>{getColourLabel(order.colour)}</span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Hash size={16} className="flex-shrink-0 text-muted-foreground" />
-              <span>{order.quantity} {order.quantity > 1 ? 'tables' : 'table'}</span>
-            </div>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="tables">
+                <AccordionTrigger className="py-2 text-sm">View Tables</AccordionTrigger>
+                <AccordionContent>
+                  {order.tables && order.tables.length > 0 ? (
+                    <div className="space-y-3">
+                      {order.tables.map((table, index) => (
+                        <div key={table.id || index} className="border p-3 rounded-md">
+                          <div className="grid grid-cols-2 gap-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Package size={14} className="flex-shrink-0 text-muted-foreground" />
+                              <span>{getTableSizeLabel(table.size)}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <Palette size={14} className="flex-shrink-0 text-muted-foreground" />
+                              <span>{getColourLabel(table.colour)}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <Hash size={14} className="flex-shrink-0 text-muted-foreground" />
+                              <span>{table.quantity} {table.quantity > 1 ? 'tables' : 'table'}</span>
+                            </div>
+                            
+                            <div className="text-right font-medium">
+                              {formatPrice(table.price)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <div className="text-right font-semibold pt-2 border-t">
+                        Total: {formatPrice(order.totalPrice || 0)}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No table details available.</p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
           
           {order.note && (
