@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { MapPin, User, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote } from 'lucide-react';
 import { Order } from '@/types/order';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { tableSizeOptions, colourOptions } from '@/types/order';
 import { useApp } from '@/contexts/AppContext';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 type OrderCardProps = {
   order: Order;
@@ -16,10 +17,16 @@ type OrderCardProps = {
 
 const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   const { userRole, assignOrder, completeOrder } = useApp();
+  const { user } = useAuth();
   
   const handleAssignOrder = () => {
-    // In a real app, this would show a selection UI for drivers
-    assignOrder(order.id, 'Driver 1');
+    if (!user) {
+      toast.error("You must be logged in to assign orders");
+      return;
+    }
+    
+    // Here we use the current user's ID instead of a string like "Driver 1"
+    assignOrder(order.id, user.id);
   };
   
   const handleCompleteOrder = () => {
@@ -104,7 +111,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           {order.status === 'assigned' && (
             <div className="flex items-center gap-2">
               <Truck size={16} className="flex-shrink-0 text-muted-foreground" />
-              <span>Assigned to: {order.assignedTo}</span>
+              <span>Assigned to delivery person</span>
             </div>
           )}
           
