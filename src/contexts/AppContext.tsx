@@ -30,7 +30,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const { user } = useAuth();
 
-  // Load orders when component mounts or user changes
   useEffect(() => {
     fetchOrders();
   }, [user, userRole]);
@@ -44,10 +43,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       console.log("Fetching orders with user role:", userRole);
       
-      // First, fetch the orders
       let query = supabase.from('orders').select('*');
       
-      // Apply filters based on user role
       if (userRole === 'customer') {
         query = query.eq('created_by', user.id);
       } else if (userRole === 'delivery') {
@@ -70,7 +67,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       console.log("Fetched orders:", ordersData);
       
-      // Fetch all tables for these orders
       const orderIds = ordersData.map(order => order.id);
       const { data: tablesData, error: tablesError } = await supabase
         .from('order_tables')
@@ -82,7 +78,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toast.error(`Failed to fetch order tables: ${tablesError.message}`);
       }
       
-      // Group tables by order_id
       const tablesByOrder = (tablesData || []).reduce((acc, table) => {
         if (!acc[table.order_id]) {
           acc[table.order_id] = [];
@@ -97,7 +92,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return acc;
       }, {} as Record<string, TableItem[]>);
       
-      // Convert string dates to Date objects and add tables to orders
       const ordersWithTablesAndDates = ordersData.map((order: any) => ({
         ...order,
         id: order.id,
@@ -105,7 +99,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         address: order.address,
         contactNumber: order.contact_number,
         tables: tablesByOrder[order.id] || [],
-        note: order.note || undefined, // Convert null to undefined
+        note: order.note || undefined,
         status: order.status as OrderStatus,
         createdAt: new Date(order.created_at),
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
@@ -120,7 +114,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Save userRole to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem(USER_ROLE_KEY, userRole);
   }, [userRole]);
@@ -128,7 +121,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const switchRole = (role: UserRole) => {
     setUserRole(role);
     toast.success(`Switched to ${role} role`);
-    // Refresh orders when role changes - handled by useEffect
+    fetchOrders();
   };
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'status' | 'createdAt'>) => {
@@ -137,20 +130,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    console.log("Adding order with data:", orderData);
-
     try {
-      // Start a transaction
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           customer_name: orderData.customerName,
           address: orderData.address,
           contact_number: orderData.contactNumber,
-          note: orderData.note || null, // Handle undefined by converting to null
+          note: orderData.note || null,
           created_by: user.id,
           price: orderData.totalPrice || orderData.tables.reduce((sum, table) => sum + table.price, 0),
-          status: 'pending'
+          status: 'pending',
+          colour: orderData.tables[0].colour,
+          table_size: orderData.tables[0].size,
+          quantity: orderData.tables.reduce((sum, table) => sum + table.quantity, 0)
         })
         .select('id')
         .single();
@@ -161,9 +154,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       
-      console.log("Order created with ID:", order.id);
-      
-      // Insert each table
       if (orderData.tables && orderData.tables.length > 0) {
         const tablesData = orderData.tables.map(table => ({
           order_id: order.id,
@@ -184,10 +174,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
 
-      // Refresh orders to include the new one
       fetchOrders();
       toast.success('Order created successfully!');
-
     } catch (error) {
       console.error('Error adding order:', error);
       toast.error('An unexpected error occurred');
@@ -198,7 +186,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       console.log(`Assigning order ${orderId} to ${assignedTo}`);
       
-      // Update in database
       const { error } = await supabase
         .from('orders')
         .update({
@@ -216,7 +203,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       console.log(`Order ${orderId} assigned successfully`);
 
-      // Update local state
       setOrders(prev => 
         prev.map(order => 
           order.id === orderId 
@@ -238,7 +224,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       const now = new Date();
       
-      // Update in database
       const { error } = await supabase
         .from('orders')
         .update({
@@ -256,7 +241,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       console.log(`Order ${orderId} completed successfully`);
 
-      // Update local state
       setOrders(prev => 
         prev.map(order => 
           order.id === orderId 
