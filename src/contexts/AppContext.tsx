@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { v4 as uuidv4 } from 'uuid';
@@ -71,7 +70,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       console.log("Fetched orders:", ordersData);
       
-      // Now fetch all tables for these orders
+      // Fetch all tables for these orders
       const orderIds = ordersData.map(order => order.id);
       const { data: tablesData, error: tablesError } = await supabase
         .from('order_tables')

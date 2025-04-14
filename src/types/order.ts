@@ -1,8 +1,10 @@
 
+import { v4 as uuidv4 } from 'uuid';
+
 export type OrderStatus = 'pending' | 'assigned' | 'completed';
 
 export interface TableItem {
-  id: string;
+  id: string;  // Make id required
   size: string;
   colour: string;
   quantity: number;
