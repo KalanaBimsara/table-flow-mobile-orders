@@ -9,7 +9,7 @@ import { Package, Truck, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function OrderList() {
-  const { getFilteredOrders } = useApp();
+  const { getFilteredOrders, orders } = useApp();
   const { userRole } = useAuth();
 
   const pendingOrders = getFilteredOrders('pending');
@@ -31,8 +31,8 @@ export function OrderList() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {assignedOrders.length > 0 ? (
-              assignedOrders.map(order => (
+            {orders.length > 0 ? (
+              orders.map(order => (
                 <OrderCard key={order.id} order={order} />
               ))
             ) : (

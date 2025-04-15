@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -37,6 +38,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (userRole === 'customer') {
         query = query.eq('created_by', user.id);
       } else if (userRole === 'delivery') {
+        // Fix: Use delivery_person_id instead of assignedTo
         query = query.eq('delivery_person_id', user.id);
       }
       
