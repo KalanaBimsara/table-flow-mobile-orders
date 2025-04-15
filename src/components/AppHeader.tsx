@@ -1,13 +1,12 @@
-
 import React from 'react';
 import { Menu, Home, Package, History, Table, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useApp } from '@/contexts/AppContext';
-import RoleSwitcher from './RoleSwitcher';
 import { Link, useLocation } from 'react-router-dom';
+import UserMenu from './UserMenu';
 
-const AppHeader: React.FC = () => {
+const AppHeader = () => {
   const { userRole } = useApp();
   const location = useLocation();
   const [open, setOpen] = React.useState(false);
@@ -26,7 +25,6 @@ const AppHeader: React.FC = () => {
           <span className="hidden md:inline">TableFlow</span>
         </div>
 
-        {/* Desktop Nav */}
         <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mx-6">
           {navItems.map((item) => (
             <Link
@@ -44,7 +42,6 @@ const AppHeader: React.FC = () => {
           ))}
         </nav>
 
-        {/* Mobile nav */}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="icon">
@@ -83,7 +80,7 @@ const AppHeader: React.FC = () => {
         </Sheet>
 
         <div className="ml-auto flex items-center">
-          <RoleSwitcher />
+          <UserMenu />
         </div>
       </div>
     </header>
