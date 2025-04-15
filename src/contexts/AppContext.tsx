@@ -38,8 +38,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (userRole === 'customer') {
         query = query.eq('created_by', user.id);
       } else if (userRole === 'delivery') {
-        // Fix: Use delivery_person_id instead of assignedTo
-        query = query.eq('delivery_person_id', user.id);
+        // Use delivery_person_id to filter orders assigned to this delivery person
+        query = query.eq('delivery_person_id', user.id)
+                     .eq('status', 'assigned');
       }
       
       const { data: ordersData, error: ordersError } = await query;
@@ -49,6 +50,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toast.error(`Failed to fetch orders: ${ordersError.message}`);
         return;
       }
+      
+      console.log("Fetched orders:", ordersData);
       
       if (!ordersData || ordersData.length === 0) {
         console.log("No orders returned from query");

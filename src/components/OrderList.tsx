@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
@@ -32,7 +31,7 @@ export function OrderList() {
         <CardContent>
           <div className="space-y-4">
             {orders.length > 0 ? (
-              orders.map(order => (
+              orders.filter(order => order.status === 'assigned').map(order => (
                 <OrderCard key={order.id} order={order} />
               ))
             ) : (
