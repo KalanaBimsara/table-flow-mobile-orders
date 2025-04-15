@@ -1,4 +1,3 @@
-
 export type TableItem = {
   id: string,
   size: string,
@@ -67,11 +66,9 @@ export const tableSizeOptions = [
   { value: 'l-H', label: 'L-Shaped Table (Size H)', price: 26000 }
 ];
 
-
 export const colourOptions = [
   { value: 'white', label: 'White' },
   { value: 'black', label: 'Black' },
   { value: 'ash_white', label: 'American Ash White' },
   { value: 'teak', label: 'Jungle Teak' }
 ];
-

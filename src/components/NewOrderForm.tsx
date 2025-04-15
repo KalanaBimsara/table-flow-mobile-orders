@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -47,17 +48,17 @@ export function NewOrderForm() {
   // Handle form submission
   async function onSubmit(values: OrderFormValues) {
     try {
-      // Prepare order data with the tables
+      // Prepare order data with the tables - ensure all fields are non-optional
       const orderData = {
         customerName: values.customerName,
         address: values.address,
         contactNumber: values.contactNumber,
-        tables: values.tables.map((table) => ({
-          id: table.id!,
-          size: table.size!,
-          colour: table.colour!,
-          quantity: table.quantity!,
-          price: table.price!,
+        tables: values.tables.map((table): TableItem => ({
+          id: table.id,
+          size: table.size,
+          colour: table.colour,
+          quantity: table.quantity,
+          price: table.price,
         })),
         note: values.note || "",
         totalPrice
