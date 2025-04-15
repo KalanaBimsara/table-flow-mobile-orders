@@ -29,49 +29,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.log("No user is authenticated, skipping order fetch");
       return;
     }
-
+  
     try {
       console.log("Fetching orders with user role:", userRole);
-      
+  
       let query = supabase.from('orders').select('*');
-      
+  
       if (userRole === 'customer') {
         query = query.eq('created_by', user.id);
       } else if (userRole === 'delivery') {
-        // IMPORTANT: Just filter by status 'assigned' and delivery_person_id
-        // Don't filter by user ID for delivery persons as they need to see orders assigned to them
-        console.log("Fetching delivery orders for user ID:", user.id);
-        query = query.eq('delivery_person_id', user.id)
-                    .eq('status', 'assigned');
+        // 👇 Only show all orders with 'assigned' status (not filtering by delivery_person_id)
+        query = query.eq('status', 'assigned');
       }
-      
+  
       const { data: ordersData, error: ordersError } = await query;
-      
+  
       if (ordersError) {
         console.error('Error fetching orders:', ordersError);
         toast.error(`Failed to fetch orders: ${ordersError.message}`);
         return;
       }
-      
-      console.log("Fetched orders for delivery person:", ordersData);
-      
+  
       if (!ordersData || ordersData.length === 0) {
         console.log("No orders returned from query");
         setOrders([]);
         return;
       }
-      
+  
       const orderIds = ordersData.map(order => order.id);
+  
       const { data: tablesData, error: tablesError } = await supabase
         .from('order_tables')
         .select('*')
         .in('order_id', orderIds);
-      
+  
       if (tablesError) {
         console.error('Error fetching order tables:', tablesError);
         toast.error(`Failed to fetch order tables: ${tablesError.message}`);
       }
-      
+  
       const tablesByOrder = (tablesData || []).reduce((acc, table) => {
         if (!acc[table.order_id]) {
           acc[table.order_id] = [];
@@ -85,7 +81,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         return acc;
       }, {} as Record<string, TableItem[]>);
-      
+  
       const ordersWithTablesAndDates = ordersData.map((order: any) => ({
         ...order,
         id: order.id,
@@ -100,13 +96,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         assignedTo: order.delivery_person_id,
         totalPrice: order.price
       }));
-      
+  
       setOrders(ordersWithTablesAndDates);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('An unexpected error occurred while fetching orders');
     }
   };
+  
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'status' | 'createdAt'>) => {
     if (!user) {
