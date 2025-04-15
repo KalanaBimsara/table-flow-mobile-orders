@@ -1,17 +1,21 @@
 
 import React from 'react';
-import AppHeader from '@/components/AppHeader';
 import { useAuth } from '@/contexts/AuthContext';
-import UserMenu from '@/components/UserMenu';
+import AppHeader from './AppHeader';
+import { Separator } from '@/components/ui/separator';
 
-const AppHeaderWrapper: React.FC = () => {
+const AppHeaderWrapper = () => {
   const { user } = useAuth();
-
+  
   return (
-    <div className="flex items-center justify-between w-full">
-      <AppHeader />
-      {user && <UserMenu />}
-    </div>
+    <header>
+      {user && (
+        <>
+          <AppHeader />
+          <Separator />
+        </>
+      )}
+    </header>
   );
 };
 

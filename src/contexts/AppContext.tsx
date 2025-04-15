@@ -1,7 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Order, OrderStatus, TableItem, UserRole } from '@/types/order';
-import { v4 as uuidv4 } from 'uuid';
+import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -112,11 +110,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     try {
-      // Calculate the total price correctly by multiplying quantity by price for each table
       const calculatedTotalPrice = orderData.tables.reduce((sum, table) => 
         sum + (table.price * table.quantity), 0);
       
-      // Make sure we use the calculated price, not just what was passed in
       const finalTotalPrice = calculatedTotalPrice;
 
       const { data: order, error: orderError } = await supabase
