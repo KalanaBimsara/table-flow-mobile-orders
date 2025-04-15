@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -37,8 +38,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (userRole === 'customer') {
         query = query.eq('created_by', user.id);
       } else if (userRole === 'delivery') {
-        // Use delivery_person_id to filter orders assigned to this delivery person
-        // and ensure we only get orders with status 'assigned'
+        // IMPORTANT: Just filter by status 'assigned' and delivery_person_id
+        // Don't filter by user ID for delivery persons as they need to see orders assigned to them
+        console.log("Fetching delivery orders for user ID:", user.id);
         query = query.eq('delivery_person_id', user.id)
                     .eq('status', 'assigned');
       }
@@ -51,7 +53,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       
-      console.log("Fetched orders:", ordersData);
+      console.log("Fetched orders for delivery person:", ordersData);
       
       if (!ordersData || ordersData.length === 0) {
         console.log("No orders returned from query");

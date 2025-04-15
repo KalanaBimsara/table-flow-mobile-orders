@@ -16,9 +16,9 @@ export function OrderList() {
   const assignedOrders = getFilteredOrders('assigned');
   const completedOrders = getFilteredOrders('completed');
 
-  // For delivery users, only show assigned orders
+  // For delivery users, show all orders in state (which should already be filtered by the query)
   if (userRole === 'delivery') {
-    const deliveryOrders = orders.filter(order => order.status === 'assigned');
+    console.log("Delivery user orders:", orders);
     
     return (
       <Card className="w-full">
@@ -33,8 +33,8 @@ export function OrderList() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {deliveryOrders.length > 0 ? (
-              deliveryOrders.map(order => (
+            {orders.length > 0 ? (
+              orders.map(order => (
                 <OrderCard key={order.id} order={order} />
               ))
             ) : (
