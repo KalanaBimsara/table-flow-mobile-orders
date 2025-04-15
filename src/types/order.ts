@@ -1,3 +1,4 @@
+
 export type TableItem = {
   id: string,
   size: string,
@@ -7,6 +8,8 @@ export type TableItem = {
 };
 
 export type OrderStatus = 'pending' | 'assigned' | 'completed';
+
+export type UserRole = 'admin' | 'delivery' | 'customer';
 
 export type Order = {
   id: string,

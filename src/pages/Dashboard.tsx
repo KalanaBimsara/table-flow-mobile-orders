@@ -5,9 +5,10 @@ import { NewOrderForm } from '@/components/NewOrderForm';
 import { OrderList } from '@/components/OrderList';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserCog, ShoppingBag, Truck } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
-  const { userRole } = useApp();
+  const { userRole } = useAuth();
 
   return (
     <div className="container py-6 space-y-6">

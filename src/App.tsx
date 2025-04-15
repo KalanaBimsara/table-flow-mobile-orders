@@ -31,8 +31,22 @@ const App = () => (
                   <Route path="/auth" element={<Auth />} />
                   <Route element={<ProtectedRoute />}>
                     <Route path="/" element={<Index />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/history" element={<OrderHistory />} />
+                    <Route 
+                      path="/orders" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'customer', 'delivery']}>
+                          <Orders />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/history" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'customer', 'delivery']}>
+                          <OrderHistory />
+                        </ProtectedRoute>
+                      } 
+                    />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>

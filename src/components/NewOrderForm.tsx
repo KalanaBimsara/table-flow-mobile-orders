@@ -41,8 +41,10 @@ export function NewOrderForm() {
   const form = useFormProvider();
 
   const watchTables = form.watch("tables");
+  
+  // Calculate total price - multiply price by quantity for each table
   const totalPrice = React.useMemo(() => {
-    return watchTables?.reduce((sum, table) => sum + (table.price || 0), 0) || 0;
+    return watchTables?.reduce((sum, table) => sum + (table.price * table.quantity), 0) || 0;
   }, [watchTables]);
 
   // Handle form submission
@@ -102,7 +104,7 @@ export function NewOrderForm() {
     }
   };
 
-  // Format price in Indian Rupees
+  // Format price in Sri Lankan Rupees
   const getFormattedPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',

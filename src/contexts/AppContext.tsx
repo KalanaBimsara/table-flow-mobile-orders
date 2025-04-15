@@ -1,16 +1,13 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Order, OrderStatus, TableItem } from '@/types/order';
+import { Order, OrderStatus, TableItem, UserRole } from '@/types/order';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type UserRole = 'admin' | 'delivery' | 'customer';
-
 interface AppContextType {
   orders: Order[];
-  userRole: UserRole;
-  switchRole: (role: UserRole) => void;
   addOrder: (order: Omit<Order, 'id' | 'status' | 'createdAt'>) => Promise<void>;
   assignOrder: (orderId: string, assignedTo: string) => Promise<void>;
   completeOrder: (orderId: string) => Promise<void>;
@@ -20,15 +17,9 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const USER_ROLE_KEY = 'tableflow-user-role';
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [userRole, setUserRole] = useState<UserRole>(() => {
-    const savedRole = localStorage.getItem(USER_ROLE_KEY);
-    return (savedRole as UserRole) || 'admin';
-  });
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
   useEffect(() => {
     fetchOrders();
@@ -114,16 +105,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  useEffect(() => {
-    localStorage.setItem(USER_ROLE_KEY, userRole);
-  }, [userRole]);
-
-  const switchRole = (role: UserRole) => {
-    setUserRole(role);
-    toast.success(`Switched to ${role} role`);
-    fetchOrders();
-  };
-
   const addOrder = async (orderData: Omit<Order, 'id' | 'status' | 'createdAt'>) => {
     if (!user) {
       toast.error("You must be logged in to place an order");
@@ -131,6 +112,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     try {
+      // Calculate the total price correctly by multiplying quantity by price for each table
+      const calculatedTotalPrice = orderData.tables.reduce((sum, table) => 
+        sum + (table.price * table.quantity), 0);
+      
+      // Make sure we use the calculated price, not just what was passed in
+      const finalTotalPrice = calculatedTotalPrice;
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -139,7 +127,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           contact_number: orderData.contactNumber,
           note: orderData.note || null,
           created_by: user.id,
-          price: orderData.totalPrice || orderData.tables.reduce((sum, table) => sum + table.price, 0),
+          price: finalTotalPrice,
           status: 'pending',
           colour: orderData.tables[0].colour,
           table_size: orderData.tables[0].size,
@@ -269,8 +257,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider 
       value={{ 
         orders,
-        userRole,
-        switchRole,
         addOrder,
         assignOrder,
         completeOrder,
@@ -288,5 +274,6 @@ export const useApp = () => {
   if (context === undefined) {
     throw new Error('useApp must be used within an AppProvider');
   }
-  return context;
+  
+  return { ...context, userRole: useAuth().userRole };
 };

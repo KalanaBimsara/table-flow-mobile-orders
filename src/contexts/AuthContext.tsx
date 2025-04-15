@@ -4,10 +4,12 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { UserRole } from '@/types/order';
 
 type AuthContextType = {
   session: Session | null;
   user: User | null;
+  userRole: UserRole | null;
   loading: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string, role: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -19,20 +21,30 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch user role from metadata
+          const role = session.user.user_metadata.role as UserRole;
+          setUserRole(role);
+        } else {
+          setUserRole(null);
+        }
         
         if (event === 'SIGNED_IN') {
           toast.success('Successfully signed in');
         } else if (event === 'SIGNED_OUT') {
           toast.success('Successfully signed out');
+          setUserRole(null);
         }
       }
     );
@@ -41,6 +53,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Fetch user role from metadata
+        const role = session.user.user_metadata.role as UserRole;
+        setUserRole(role);
+      }
+      
       setLoading(false);
     });
 
@@ -50,8 +69,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, firstName: string, lastName: string, role: string) => {
     try {
       // Ensure the role matches the enum values exactly
-      if (!['customer', 'seller', 'delivery', 'admin'].includes(role)) {
-        throw new Error("Invalid role. Must be one of: customer, seller, delivery, admin");
+      if (!['customer', 'delivery', 'admin'].includes(role)) {
+        throw new Error("Invalid role. Must be one of: customer, delivery, admin");
       }
 
       const { error } = await supabase.auth.signUp({ 
@@ -102,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         session,
         user,
+        userRole,
         loading,
         signUp,
         signIn,

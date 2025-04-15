@@ -6,9 +6,11 @@ import { OrderStatus } from '@/types/order';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, Truck, CheckCircle2, ShoppingBag } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function OrderList() {
-  const { getFilteredOrders, userRole } = useApp();
+  const { getFilteredOrders } = useApp();
+  const { userRole } = useAuth();
 
   const pendingOrders = getFilteredOrders('pending');
   const assignedOrders = getFilteredOrders('assigned');
