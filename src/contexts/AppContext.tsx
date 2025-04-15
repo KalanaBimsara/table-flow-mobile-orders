@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -39,8 +38,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         query = query.eq('created_by', user.id);
       } else if (userRole === 'delivery') {
         // Use delivery_person_id to filter orders assigned to this delivery person
+        // and ensure we only get orders with status 'assigned'
         query = query.eq('delivery_person_id', user.id)
-                     .eq('status', 'assigned');
+                    .eq('status', 'assigned');
       }
       
       const { data: ordersData, error: ordersError } = await query;
@@ -58,8 +58,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setOrders([]);
         return;
       }
-      
-      console.log("Fetched orders:", ordersData);
       
       const orderIds = ordersData.map(order => order.id);
       const { data: tablesData, error: tablesError } = await supabase

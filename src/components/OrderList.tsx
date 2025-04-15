@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
@@ -17,6 +18,8 @@ export function OrderList() {
 
   // For delivery users, only show assigned orders
   if (userRole === 'delivery') {
+    const deliveryOrders = orders.filter(order => order.status === 'assigned');
+    
     return (
       <Card className="w-full">
         <CardHeader>
@@ -30,8 +33,8 @@ export function OrderList() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {orders.length > 0 ? (
-              orders.filter(order => order.status === 'assigned').map(order => (
+            {deliveryOrders.length > 0 ? (
+              deliveryOrders.map(order => (
                 <OrderCard key={order.id} order={order} />
               ))
             ) : (
