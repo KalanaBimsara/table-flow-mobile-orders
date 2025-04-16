@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table } from 'lucide-react';
@@ -79,7 +78,9 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
         <div className="space-y-4 text-base md:text-lg">
           <div className="flex items-center gap-3">
             <MapPin size={isMobile ? 20 : 24} className="flex-shrink-0 text-muted-foreground" />
-            <span className="font-medium break-words">{order.address}</span>
+            <span className="font-medium break-words break-all whitespace-normal">
+              {order.address}
+            </span>
           </div>
           
           <div className="flex items-center gap-3">
