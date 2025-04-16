@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
@@ -23,22 +22,22 @@ export function OrderList() {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Truck size={20} />
-            Your Assigned Deliveries
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Truck size={28} />
+            Your Deliveries
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-lg">
             Orders assigned to you for delivery
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {orders.length > 0 ? (
               orders.map(order => (
                 <OrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-center py-8 text-muted-foreground">
+              <p className="text-center py-8 text-xl text-muted-foreground">
                 No deliveries assigned to you yet.
               </p>
             )}
