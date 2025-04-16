@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Menu, Home, Package, History, Table, X } from 'lucide-react';
+import { Menu, Home, Package, History, Table, X, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useApp } from '@/contexts/AppContext';
@@ -79,7 +80,13 @@ const AppHeader = () => {
           </SheetContent>
         </Sheet>
 
-        <div className="ml-auto flex items-center">
+        <div className="ml-auto flex items-center gap-2">
+          <Link to="/order">
+            <Button variant="secondary" className="hidden md:flex">
+              <ShoppingBag size={16} className="mr-2" />
+              Place Order
+            </Button>
+          </Link>
           <UserMenu />
         </div>
       </div>

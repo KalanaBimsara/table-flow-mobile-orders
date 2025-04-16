@@ -13,6 +13,7 @@ import OrderHistory from "./pages/OrderHistory";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import PublicOrderForm from "./pages/PublicOrderForm";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
               <main className="flex-1">
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/order" element={<PublicOrderForm />} />
                   <Route element={<ProtectedRoute />}>
                     <Route path="/" element={<Index />} />
                     <Route 
