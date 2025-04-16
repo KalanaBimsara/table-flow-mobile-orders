@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
@@ -16,29 +15,27 @@ export function OrderList() {
   const assignedOrders = getFilteredOrders('assigned');
   const completedOrders = getFilteredOrders('completed');
 
-  // For delivery users, show all orders in state (which should already be filtered by the query)
+  // For delivery users, show all assigned orders with larger, clearer view
   if (userRole === 'delivery') {
-    console.log("Delivery user orders:", orders);
-    
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Truck size={20} />
-            Your Assigned Deliveries
+          <CardTitle className="flex items-center gap-3 text-3xl">
+            <Truck size={32} />
+            Your Deliveries
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-lg">
             Orders assigned to you for delivery
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {orders.length > 0 ? (
-              orders.map(order => (
+          <div className="space-y-6">
+            {assignedOrders.length > 0 ? (
+              assignedOrders.map(order => (
                 <OrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-center py-8 text-muted-foreground">
+              <p className="text-center py-12 text-2xl text-muted-foreground">
                 No deliveries assigned to you yet.
               </p>
             )}

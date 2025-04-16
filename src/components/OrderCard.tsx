@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/contexts/AppContext';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 type OrderCardProps = {
   order: Order;
@@ -25,7 +24,6 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
       return;
     }
     
-    // Here we use the current user's ID instead of a string like "Driver 1"
     assignOrder(order.id, user.id);
   };
   
@@ -56,7 +54,6 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
     }
   };
 
-  // Format price in Indian Rupees
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -70,107 +67,101 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
       order.status === 'pending' ? 'order-pending' : 
       order.status === 'assigned' ? 'order-assigned' : 
       'order-completed'
-    }`}>
+    } text-lg`}>
       <CardContent className="pt-4">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-medium">{order.customerName}</h3>
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-2xl font-bold">{order.customerName}</h3>
           {getStatusBadge()}
         </div>
 
-        <div className="space-y-2 text-sm">
-          <div className="flex items-start gap-2">
-            <MapPin size={16} className="mt-1 flex-shrink-0 text-muted-foreground" />
-            <span className="whitespace-pre-line">{order.address}</span>
+        <div className="space-y-3 text-base">
+          <div className="flex items-center gap-3">
+            <MapPin size={24} className="flex-shrink-0 text-muted-foreground" />
+            <span className="font-medium">{order.address}</span>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Phone size={16} className="flex-shrink-0 text-muted-foreground" />
-            <span>{order.contactNumber}</span>
+          <div className="flex items-center gap-3">
+            <Phone size={24} className="flex-shrink-0 text-muted-foreground" />
+            <span className="font-medium">{order.contactNumber}</span>
           </div>
           
-          <div className="mt-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Table size={16} className="flex-shrink-0 text-muted-foreground" />
-              <span className="font-medium">Tables ({order.tables?.length || 0})</span>
+          <div className="mt-4">
+            <div className="flex items-center gap-3 mb-3">
+              <Table size={24} className="flex-shrink-0 text-muted-foreground" />
+              <span className="text-xl font-bold">Table Details</span>
             </div>
             
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="tables">
-                <AccordionTrigger className="py-2 text-sm">View Tables</AccordionTrigger>
-                <AccordionContent>
-                  {order.tables && order.tables.length > 0 ? (
-                    <div className="space-y-3">
-                      {order.tables.map((table, index) => (
-                        <div key={table.id || index} className="border p-3 rounded-md">
-                          <div className="grid grid-cols-2 gap-y-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Package size={14} className="flex-shrink-0 text-muted-foreground" />
-                              <span>{getTableSizeLabel(table.size)}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <Palette size={14} className="flex-shrink-0 text-muted-foreground" />
-                              <span>{getColourLabel(table.colour)}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <Hash size={14} className="flex-shrink-0 text-muted-foreground" />
-                              <span>{table.quantity} {table.quantity > 1 ? 'tables' : 'table'}</span>
-                            </div>
-                            
-                            <div className="text-right font-medium">
-                              {formatPrice(table.price)}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+            <div className="space-y-3">
+              {order.tables && order.tables.length > 0 ? (
+                order.tables.map((table, index) => (
+                  <div key={table.id || index} className="border p-4 rounded-lg bg-gray-50">
+                    <div className="grid grid-cols-2 gap-y-2 text-base">
+                      <div className="flex items-center gap-2">
+                        <Package size={18} className="flex-shrink-0 text-muted-foreground" />
+                        <span className="font-medium">Size: {getTableSizeLabel(table.size)}</span>
+                      </div>
                       
-                      <div className="text-right font-semibold pt-2 border-t">
-                        Total: {formatPrice(order.totalPrice || 0)}
+                      <div className="flex items-center gap-2">
+                        <Palette size={18} className="flex-shrink-0 text-muted-foreground" />
+                        <span className="font-medium">Colour: {getColourLabel(table.colour)}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Hash size={18} className="flex-shrink-0 text-muted-foreground" />
+                        <span className="font-medium">Quantity: {table.quantity} {table.quantity > 1 ? 'tables' : 'table'}</span>
+                      </div>
+                      
+                      <div className="text-right text-lg font-bold">
+                        Price: {formatPrice(table.price)}
                       </div>
                     </div>
-                  ) : (
-                    <p className="text-muted-foreground">No table details available.</p>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-base">No table details available.</p>
+              )}
+              
+              <div className="text-right text-xl font-bold pt-2 border-t">
+                Total Price: {formatPrice(order.totalPrice || 0)}
+              </div>
+            </div>
           </div>
           
           {order.note && (
-            <div className="flex items-start gap-2 mt-2">
-              <StickyNote size={16} className="mt-1 flex-shrink-0 text-muted-foreground" />
-              <span className="whitespace-pre-line">{order.note}</span>
+            <div className="flex items-center gap-3 mt-3">
+              <StickyNote size={24} className="flex-shrink-0 text-muted-foreground" />
+              <span className="font-medium">{order.note}</span>
             </div>
           )}
           
-          <div className="flex items-center gap-2 mt-2">
-            <Calendar size={16} className="flex-shrink-0 text-muted-foreground" />
-            <span>Created: {format(new Date(order.createdAt), 'MMM d, yyyy')}</span>
+          <div className="flex items-center gap-3 mt-3">
+            <Calendar size={24} className="flex-shrink-0 text-muted-foreground" />
+            <span className="font-medium">Created: {format(new Date(order.createdAt), 'MMM d, yyyy')}</span>
           </div>
           
           {order.status === 'assigned' && (
-            <div className="flex items-center gap-2">
-              <Truck size={16} className="flex-shrink-0 text-muted-foreground" />
-              <span>Assigned to delivery person</span>
+            <div className="flex items-center gap-3 mt-3">
+              <Truck size={24} className="flex-shrink-0 text-muted-foreground" />
+              <span className="font-medium">Assigned to delivery</span>
             </div>
           )}
           
           {order.status === 'completed' && order.completedAt && (
-            <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="flex-shrink-0 text-muted-foreground" />
-              <span>Completed: {format(new Date(order.completedAt), 'MMM d, yyyy')}</span>
+            <div className="flex items-center gap-3 mt-3">
+              <CheckCircle2 size={24} className="flex-shrink-0 text-muted-foreground" />
+              <span className="font-medium">Completed: {format(new Date(order.completedAt), 'MMM d, yyyy')}</span>
             </div>
           )}
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-end gap-2">
+      <CardFooter className="flex justify-end gap-3">
         {userRole === 'admin' && order.status === 'pending' && (
           <Button 
-            size="sm" 
+            size="lg" 
             variant="outline"
             onClick={handleAssignOrder}
+            className="text-base"
           >
             Assign to Delivery
           </Button>
@@ -179,9 +170,10 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
         {((userRole === 'admin' && order.status === 'assigned') || 
          (userRole === 'delivery' && order.status === 'assigned')) && (
           <Button 
-            size="sm" 
+            size="lg" 
             variant="default"
             onClick={handleCompleteOrder}
+            className="text-base"
           >
             Mark Complete
           </Button>
