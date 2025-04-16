@@ -1,15 +1,17 @@
+
 import React from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
-import { OrderStatus } from '@/types/order';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, Truck, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function OrderList() {
   const { getFilteredOrders, orders } = useApp();
   const { userRole } = useAuth();
+  const isMobile = useIsMobile();
 
   const pendingOrders = getFilteredOrders('pending');
   const assignedOrders = getFilteredOrders('assigned');
@@ -19,12 +21,12 @@ export function OrderList() {
   if (userRole === 'delivery') {
     return (
       <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-3xl">
-            <Truck size={32} />
+        <CardHeader className="text-center md:text-left">
+          <CardTitle className="flex items-center justify-center md:justify-start gap-3 text-2xl md:text-3xl">
+            <Truck size={isMobile ? 24 : 32} />
             Your Deliveries
           </CardTitle>
-          <CardDescription className="text-lg">
+          <CardDescription className="text-base md:text-lg">
             Orders assigned to you for delivery
           </CardDescription>
         </CardHeader>
@@ -35,7 +37,7 @@ export function OrderList() {
                 <OrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-center py-12 text-2xl text-muted-foreground">
+              <p className="text-center py-10 text-xl md:text-2xl text-muted-foreground">
                 No deliveries assigned to you yet.
               </p>
             )}
@@ -49,8 +51,8 @@ export function OrderList() {
   if (userRole === 'customer') {
     return (
       <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className={isMobile ? "text-center" : ""}>
+          <CardTitle className={`flex items-center ${isMobile ? "justify-center" : ""} gap-2`}>
             <ShoppingBag size={20} />
             Your Orders
           </CardTitle>
@@ -60,18 +62,18 @@ export function OrderList() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all" className="flex items-center gap-2">
+            <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-3"}`}>
+              <TabsTrigger value="all" className="flex items-center justify-center gap-2 text-base">
                 <Package size={16} />
-                <span className="hidden sm:inline">All Orders</span>
+                <span>All Orders</span>
               </TabsTrigger>
-              <TabsTrigger value="active" className="flex items-center gap-2">
+              <TabsTrigger value="active" className="flex items-center justify-center gap-2 text-base">
                 <Truck size={16} />
-                <span className="hidden sm:inline">Active</span>
+                <span>Active</span>
               </TabsTrigger>
-              <TabsTrigger value="completed" className="flex items-center gap-2">
+              <TabsTrigger value="completed" className="flex items-center justify-center gap-2 text-base">
                 <CheckCircle2 size={16} />
-                <span className="hidden sm:inline">Completed</span>
+                <span>Completed</span>
               </TabsTrigger>
             </TabsList>
             
@@ -82,7 +84,7 @@ export function OrderList() {
                     <OrderCard key={order.id} order={order} />
                   ))
                 ) : (
-                  <p className="text-center py-8 text-muted-foreground">
+                  <p className="text-center py-8 text-muted-foreground text-lg">
                     You haven't placed any orders yet.
                   </p>
                 )}
@@ -96,7 +98,7 @@ export function OrderList() {
                     <OrderCard key={order.id} order={order} />
                   ))
                 ) : (
-                  <p className="text-center py-8 text-muted-foreground">
+                  <p className="text-center py-8 text-muted-foreground text-lg">
                     No active orders found.
                   </p>
                 )}
@@ -110,7 +112,7 @@ export function OrderList() {
                     <OrderCard key={order.id} order={order} />
                   ))
                 ) : (
-                  <p className="text-center py-8 text-muted-foreground">
+                  <p className="text-center py-8 text-muted-foreground text-lg">
                     No completed orders found.
                   </p>
                 )}
@@ -125,32 +127,29 @@ export function OrderList() {
   // For admin users, show all orders with tabs
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Manage Orders</CardTitle>
+      <CardHeader className={isMobile ? "text-center" : ""}>
+        <CardTitle className={`${isMobile ? "text-center" : ""}`}>Manage Orders</CardTitle>
         <CardDescription>
           View and manage all furniture table orders
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="pending">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="pending" className="flex items-center gap-2">
+          <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-3"}`}>
+            <TabsTrigger value="pending" className="flex items-center justify-center gap-2 text-base">
               <Package size={16} />
-              <span className="hidden sm:inline">Pending</span>
-              <span className="inline sm:hidden">({pendingOrders.length})</span>
-              <span className="hidden sm:inline">({pendingOrders.length})</span>
+              <span>Pending</span>
+              <span>({pendingOrders.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="assigned" className="flex items-center gap-2">
+            <TabsTrigger value="assigned" className="flex items-center justify-center gap-2 text-base">
               <Truck size={16} />
-              <span className="hidden sm:inline">Assigned</span>
-              <span className="inline sm:hidden">({assignedOrders.length})</span>
-              <span className="hidden sm:inline">({assignedOrders.length})</span>
+              <span>Assigned</span>
+              <span>({assignedOrders.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2">
+            <TabsTrigger value="completed" className="flex items-center justify-center gap-2 text-base">
               <CheckCircle2 size={16} />
-              <span className="hidden sm:inline">Completed</span>
-              <span className="inline sm:hidden">({completedOrders.length})</span>
-              <span className="hidden sm:inline">({completedOrders.length})</span>
+              <span>Completed</span>
+              <span>({completedOrders.length})</span>
             </TabsTrigger>
           </TabsList>
           
@@ -161,7 +160,7 @@ export function OrderList() {
                   <OrderCard key={order.id} order={order} />
                 ))
               ) : (
-                <p className="text-center py-8 text-muted-foreground">
+                <p className="text-center py-8 text-muted-foreground text-lg">
                   No pending orders found.
                 </p>
               )}
@@ -175,7 +174,7 @@ export function OrderList() {
                   <OrderCard key={order.id} order={order} />
                 ))
               ) : (
-                <p className="text-center py-8 text-muted-foreground">
+                <p className="text-center py-8 text-muted-foreground text-lg">
                   No assigned orders found.
                 </p>
               )}
@@ -189,7 +188,7 @@ export function OrderList() {
                   <OrderCard key={order.id} order={order} />
                 ))
               ) : (
-                <p className="text-center py-8 text-muted-foreground">
+                <p className="text-center py-8 text-muted-foreground text-lg">
                   No completed orders found.
                 </p>
               )}

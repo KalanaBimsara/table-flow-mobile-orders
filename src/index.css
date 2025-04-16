@@ -84,6 +84,22 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Mobile-friendly styles */
+  @media (max-width: 768px) {
+    html {
+      font-size: 16px;
+    }
+    
+    h1, h2, h3 {
+      word-break: break-word;
+    }
+    
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
 }
 
 .order-card {
@@ -100,4 +116,11 @@
 
 .order-completed {
   @apply border-green-500;
+}
+
+/* Responsive adjustments for order cards */
+@media (max-width: 640px) {
+  .order-card {
+    @apply p-3 text-base;
+  }
 }
