@@ -8,9 +8,10 @@ import { UserRole } from '@/types/order';
 interface ProtectedRouteProps {
   children?: React.ReactNode;
   allowedRoles?: UserRole[];
+  public?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles, public: isPublic }) => {
   const { user, loading, userRole } = useAuth();
   const location = useLocation();
 
@@ -20,6 +21,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  // Skip authentication check for public routes
+  if (isPublic) {
+    return children ? <>{children}</> : <Outlet />;
   }
 
   if (!user) {

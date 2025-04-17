@@ -30,7 +30,14 @@ const App = () => (
               <main className="flex-1">
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
-                  <Route path="/order" element={<PublicOrderForm />} />
+                  <Route 
+                    path="/order" 
+                    element={
+                      <ProtectedRoute public={true}>
+                        <PublicOrderForm />
+                      </ProtectedRoute>
+                    } 
+                  />
                   <Route element={<ProtectedRoute />}>
                     <Route path="/" element={<Index />} />
                     <Route 
