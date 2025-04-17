@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -106,11 +105,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'status' | 'createdAt'>) => {
-    if (!user) {
-      toast.error("You must be logged in to place an order");
-      return;
-    }
-
     try {
       const calculatedTotalPrice = orderData.tables.reduce((sum, table) => 
         sum + (table.price * table.quantity), 0);
@@ -124,7 +118,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           address: orderData.address,
           contact_number: orderData.contactNumber,
           note: orderData.note || null,
-          created_by: user.id,
+          created_by: user?.id || null, // Make created_by optional
           price: finalTotalPrice,
           status: 'pending',
           colour: orderData.tables[0].colour,
