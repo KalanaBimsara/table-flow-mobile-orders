@@ -76,13 +76,21 @@ const AppHeader = () => {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                to="/order"
+                className="px-2 py-1 rounded-md text-sm font-medium transition-colors flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => setOpen(false)}
+              >
+                <ShoppingBag size={16} />
+                Place Order
+              </Link>
             </nav>
           </SheetContent>
         </Sheet>
 
         <div className="ml-auto flex items-center gap-2">
           <Link to="/order">
-            <Button variant="secondary" className="hidden md:flex">
+            <Button variant="primary" className="hidden md:flex">
               <ShoppingBag size={16} className="mr-2" />
               Place Order
             </Button>
