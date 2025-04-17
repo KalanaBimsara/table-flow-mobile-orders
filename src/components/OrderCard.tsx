@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { format } from 'date-fns';
-import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table } from 'lucide-react';
+import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2 } from 'lucide-react';
 import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -9,13 +10,24 @@ import { useApp } from '@/contexts/AppContext';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type OrderCardProps = {
   order: Order;
 };
 
 const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
-  const { userRole, assignOrder, completeOrder } = useApp();
+  const { userRole, assignOrder, completeOrder, deleteOrder } = useApp();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   
@@ -30,6 +42,10 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   
   const handleCompleteOrder = () => {
     completeOrder(order.id);
+  };
+
+  const handleDeleteOrder = () => {
+    deleteOrder(order.id);
   };
 
   const getTableSizeLabel = (value: string) => {
@@ -158,7 +174,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
         </div>
       </CardContent>
       
-      <CardFooter className={`flex ${isMobile ? 'justify-center' : 'justify-end'} gap-3`}>
+      <CardFooter className={`flex ${isMobile ? 'justify-center flex-wrap' : 'justify-end'} gap-3`}>
         {userRole === 'admin' && order.status === 'pending' && (
           <Button 
             size={isMobile ? "default" : "lg"} 
@@ -180,6 +196,33 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           >
             Mark Complete
           </Button>
+        )}
+        
+        {userRole === 'admin' && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                size={isMobile ? "default" : "lg"} 
+                variant="destructive"
+                className="text-base w-full md:w-auto"
+              >
+                <Trash2 size={isMobile ? 16 : 18} className="mr-1" />
+                Delete Order
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the order from the database.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteOrder}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </CardFooter>
     </Card>

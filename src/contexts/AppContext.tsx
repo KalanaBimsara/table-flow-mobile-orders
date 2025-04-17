@@ -9,6 +9,7 @@ interface AppContextType {
   addOrder: (order: Omit<Order, 'id' | 'status' | 'createdAt'>) => Promise<void>;
   assignOrder: (orderId: string, assignedTo: string) => Promise<void>;
   completeOrder: (orderId: string) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<void>;
   getFilteredOrders: (status?: OrderStatus) => Order[];
   getAssignedOrders: () => Order[];
 }
@@ -37,7 +38,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (userRole === 'customer') {
         query = query.eq('created_by', user.id);
       } else if (userRole === 'delivery') {
-        // 👇 Only show all orders with 'assigned' status (not filtering by delivery_person_id)
         query = query.eq('status', 'assigned');
       }
   
@@ -102,7 +102,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toast.error('An unexpected error occurred while fetching orders');
     }
   };
-  
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'status' | 'createdAt'>) => {
     try {
@@ -118,7 +117,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           address: orderData.address,
           contact_number: orderData.contactNumber,
           note: orderData.note || null,
-          created_by: user?.id || null, // Make created_by optional
+          created_by: user?.id || null,
           price: finalTotalPrice,
           status: 'pending',
           colour: orderData.tables[0].colour,
@@ -236,6 +235,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const deleteOrder = async (orderId: string) => {
+    try {
+      console.log(`Deleting order ${orderId}`);
+      
+      const { error: tablesError } = await supabase
+        .from('order_tables')
+        .delete()
+        .eq('order_id', orderId);
+      
+      if (tablesError) {
+        console.error('Error deleting order tables:', tablesError);
+        toast.error('Failed to delete order tables: ' + tablesError.message);
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('Error deleting order:', error);
+        toast.error('Failed to delete order: ' + error.message);
+        return;
+      }
+
+      console.log(`Order ${orderId} deleted successfully`);
+
+      setOrders(prev => prev.filter(order => order.id !== orderId));
+      
+      toast.success('Order deleted successfully');
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      toast.error('An unexpected error occurred');
+    }
+  };
+
   const getFilteredOrders = (status?: OrderStatus) => {
     if (!status) return orders;
     return orders.filter(order => order.status === status);
@@ -252,6 +288,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addOrder,
         assignOrder,
         completeOrder,
+        deleteOrder,
         getFilteredOrders,
         getAssignedOrders
       }}
