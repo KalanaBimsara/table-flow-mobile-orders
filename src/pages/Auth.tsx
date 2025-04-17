@@ -10,8 +10,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { Loader2, ShoppingBag } from 'lucide-react';
+import { Navigate, Link } from 'react-router-dom';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -137,6 +137,16 @@ const Auth: React.FC = () => {
                       'Sign In'
                     )}
                   </Button>
+
+                  <div className="text-center mt-4">
+                    <p className="text-sm text-muted-foreground mb-2">Want to place an order without an account?</p>
+                    <Link to="/order">
+                      <Button variant="outline" className="w-full">
+                        <ShoppingBag size={16} className="mr-2" />
+                        Order as Guest
+                      </Button>
+                    </Link>
+                  </div>
                 </form>
               </Form>
             </TabsContent>
@@ -236,6 +246,16 @@ const Auth: React.FC = () => {
                       'Create Account'
                     )}
                   </Button>
+
+                  <div className="text-center mt-4">
+                    <p className="text-sm text-muted-foreground mb-2">Want to place an order without an account?</p>
+                    <Link to="/order">
+                      <Button variant="outline" className="w-full">
+                        <ShoppingBag size={16} className="mr-2" />
+                        Order as Guest
+                      </Button>
+                    </Link>
+                  </div>
                 </form>
               </Form>
             </TabsContent>
