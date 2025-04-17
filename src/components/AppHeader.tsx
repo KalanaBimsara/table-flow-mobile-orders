@@ -90,7 +90,7 @@ const AppHeader = () => {
 
         <div className="ml-auto flex items-center gap-2">
           <Link to="/order">
-            <Button variant="primary" className="hidden md:flex">
+            <Button variant="default" className="hidden md:flex">
               <ShoppingBag size={16} className="mr-2" />
               Place Order
             </Button>
