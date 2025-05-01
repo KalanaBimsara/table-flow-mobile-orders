@@ -9,7 +9,11 @@ const Orders: React.FC = () => {
 
   return (
     <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Orders Management</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        {userRole === 'admin' ? 'Orders Management' : 
+         userRole === 'delivery' ? 'Delivery Management' : 
+         'Your Orders'}
+      </h1>
       
       {(userRole === 'customer' || userRole === 'admin') && (
         <div className="grid grid-cols-1 gap-6 mb-6">

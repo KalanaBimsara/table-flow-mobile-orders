@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -38,7 +39,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (userRole === 'customer') {
         query = query.eq('created_by', user.id);
       } else if (userRole === 'delivery') {
-        query = query.eq('status', 'assigned');
+        // For delivery personnel, show all pending orders and orders assigned to them
+        query = query.or(`status.eq.pending,delivery_person_id.eq.${user.id}`);
       }
   
       const { data: ordersData, error: ordersError } = await query;
@@ -191,6 +193,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
       
       toast.success('Order assigned successfully');
+      
+      // Refresh orders to make sure we have the latest data
+      fetchOrders();
     } catch (error) {
       console.error('Error assigning order:', error);
       toast.error('An unexpected error occurred');
@@ -304,5 +309,5 @@ export const useApp = () => {
     throw new Error('useApp must be used within an AppProvider');
   }
   
-  return { ...context, userRole: useAuth().userRole };
+  return { ...context, userRole: useAuth().userRole, user: useAuth().user };
 };
