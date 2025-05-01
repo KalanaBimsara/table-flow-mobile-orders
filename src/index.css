@@ -147,7 +147,7 @@
   
   /* Fix for tabs text wrapping */
   .tab-text {
-    @apply truncate;
+    @apply truncate max-w-full;
   }
 }
 
@@ -164,14 +164,41 @@
   }
   
   .mobile-tab-item {
-    @apply py-1 px-1 text-xs flex flex-col items-center;
+    @apply py-1 px-1 text-xs flex flex-col items-center justify-center;
+    min-width: 0;
+    width: 100%;
   }
   
   .mobile-tab-label {
     @apply text-xs block truncate w-full text-center;
+    max-width: 100%;
   }
   
   .mobile-tab-count {
     @apply text-[10px] mt-0.5 opacity-90;
+    white-space: nowrap;
+  }
+
+  /* Fix for overlapping tabs */
+  .mobile-tab-wrapper {
+    @apply w-full;
   }
 }
+
+/* Fix for tab overlapping in mobile view */
+.tab-content-mobile {
+  padding-top: 0.5rem;
+  clear: both;
+}
+
+.tab-button-mobile {
+  white-space: nowrap;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
