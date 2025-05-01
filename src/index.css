@@ -132,11 +132,46 @@
   .tabs-trigger {
     @apply text-xs py-1 px-2;
   }
+  
+  /* Fix tab layout on small screens */
+  .tabs-list-item {
+    @apply flex-grow min-w-0;
+  }
 }
 
 /* Improved mobile tab styling */
 @media (max-width: 480px) {
   .order-status-count {
     @apply block mt-1 text-xs;
+  }
+  
+  /* Fix for tabs text wrapping */
+  .tab-text {
+    @apply truncate;
+  }
+}
+
+/* Faded delete button */
+.btn-delete-faded {
+  @apply bg-red-500/70 hover:bg-red-600/90 text-white/90;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Additional mobile responsiveness for tabs */
+@media (max-width: 480px) {
+  .mobile-tabs-container {
+    @apply grid-cols-3 gap-1;
+  }
+  
+  .mobile-tab-item {
+    @apply py-1 px-1 text-xs flex flex-col items-center;
+  }
+  
+  .mobile-tab-label {
+    @apply text-xs block truncate w-full text-center;
+  }
+  
+  .mobile-tab-count {
+    @apply text-[10px] mt-0.5 opacity-90;
   }
 }

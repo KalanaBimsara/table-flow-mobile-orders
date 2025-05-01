@@ -62,18 +62,18 @@ export function OrderList() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all" className="flex items-center justify-center gap-2 text-xs md:text-base">
+            <TabsList className="grid w-full grid-cols-3 mobile-tabs-container">
+              <TabsTrigger value="all" className="mobile-tab-item">
                 <Package size={isMobile ? 14 : 16} />
-                <span>All</span>
+                <span className="mobile-tab-label">All</span>
               </TabsTrigger>
-              <TabsTrigger value="active" className="flex items-center justify-center gap-2 text-xs md:text-base">
+              <TabsTrigger value="active" className="mobile-tab-item">
                 <Truck size={isMobile ? 14 : 16} />
-                <span>Active</span>
+                <span className="mobile-tab-label">Active</span>
               </TabsTrigger>
-              <TabsTrigger value="completed" className="flex items-center justify-center gap-2 text-xs md:text-base">
+              <TabsTrigger value="completed" className="mobile-tab-item">
                 <CheckCircle2 size={isMobile ? 14 : 16} />
-                <span>Completed</span>
+                <span className="mobile-tab-label">Completed</span>
               </TabsTrigger>
             </TabsList>
             
@@ -135,21 +135,21 @@ export function OrderList() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="pending">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="pending" className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2 text-xs md:text-base">
+          <TabsList className="grid w-full grid-cols-3 gap-1">
+            <TabsTrigger value="pending" className="flex flex-col items-center justify-center py-2">
               <Package size={isMobile ? 14 : 16} />
-              <span>Pending</span>
-              <span className="text-xs">({pendingOrders.length})</span>
+              <span className="tab-text text-xs">Pending</span>
+              <span className="mobile-tab-count">({pendingOrders.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="assigned" className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2 text-xs md:text-base">
+            <TabsTrigger value="assigned" className="flex flex-col items-center justify-center py-2">
               <Truck size={isMobile ? 14 : 16} />
-              <span>Assigned</span>
-              <span className="text-xs">({assignedOrders.length})</span>
+              <span className="tab-text text-xs">Assigned</span>
+              <span className="mobile-tab-count">({assignedOrders.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2 text-xs md:text-base">
+            <TabsTrigger value="completed" className="flex flex-col items-center justify-center py-2">
               <CheckCircle2 size={isMobile ? 14 : 16} />
-              <span>Completed</span>
-              <span className="text-xs">({completedOrders.length})</span>
+              <span className="tab-text text-xs">Completed</span>
+              <span className="mobile-tab-count">({completedOrders.length})</span>
             </TabsTrigger>
           </TabsList>
           

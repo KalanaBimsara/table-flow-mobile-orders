@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2 } from 'lucide-react';
@@ -204,7 +203,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
               <Button 
                 size={isMobile ? "sm" : "default"} 
                 variant="destructive"
-                className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}
+                className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'} btn-delete-faded`}
               >
                 <Trash2 size={isMobile ? 14 : 18} className="mr-1" />
                 Delete Order
