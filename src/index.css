@@ -118,9 +118,25 @@
   @apply border-green-500;
 }
 
-/* Responsive adjustments for order cards */
+/* Responsive adjustments for order cards and tabs */
 @media (max-width: 640px) {
   .order-card {
     @apply p-3 text-base;
+  }
+  
+  /* Tabs adjustments for mobile */
+  .tabs-container .tabs-list {
+    @apply flex-wrap;
+  }
+  
+  .tabs-trigger {
+    @apply text-xs py-1 px-2;
+  }
+}
+
+/* Improved mobile tab styling */
+@media (max-width: 480px) {
+  .order-status-count {
+    @apply block mt-1 text-xs;
   }
 }
