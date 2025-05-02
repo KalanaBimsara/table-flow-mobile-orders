@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Order } from '@/types/order';
 
 export function OrderList() {
   const { getFilteredOrders, orders, assignOrder, completeOrder } = useApp();
@@ -19,7 +20,7 @@ export function OrderList() {
   const assignedOrders = getFilteredOrders('assigned');
   const completedOrders = getFilteredOrders('completed');
   
-  const [availableOrders, setAvailableOrders] = useState([]);
+  const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
 
   React.useEffect(() => {
     if (userRole === 'delivery') {
@@ -68,7 +69,7 @@ export function OrderList() {
     }
   };
 
-  const handleSelfAssign = async (orderId) => {
+  const handleSelfAssign = async (orderId: string) => {
     if (!user) {
       toast.error('You must be logged in to assign orders');
       return;
@@ -120,7 +121,7 @@ export function OrderList() {
                   assignedOrders.filter(order => order.assignedTo === user?.id).map(order => (
                     <OrderCard 
                       key={order.id} 
-                      order={order} 
+                      order={order}
                       onComplete={() => completeOrder(order.id)}
                     />
                   ))
@@ -139,7 +140,7 @@ export function OrderList() {
                     <div key={order.id} className="relative">
                       <OrderCard 
                         key={order.id} 
-                        order={order} 
+                        order={order}
                         actionButton={
                           <button 
                             onClick={() => handleSelfAssign(order.id)}

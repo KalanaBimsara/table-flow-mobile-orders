@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2 } from 'lucide-react';
@@ -23,9 +24,11 @@ import {
 
 type OrderCardProps = {
   order: Order;
+  onComplete?: () => void;
+  actionButton?: React.ReactNode;
 };
 
-const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }) => {
   const { userRole, assignOrder, completeOrder, deleteOrder } = useApp();
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -40,7 +43,11 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   };
   
   const handleCompleteOrder = () => {
-    completeOrder(order.id);
+    if (onComplete) {
+      onComplete();
+    } else {
+      completeOrder(order.id);
+    }
   };
 
   const handleDeleteOrder = () => {
@@ -195,6 +202,10 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           >
             Mark Complete
           </Button>
+        )}
+
+        {actionButton && (
+          <div className="w-full sm:w-auto">{actionButton}</div>
         )}
         
         {userRole === 'admin' && (
