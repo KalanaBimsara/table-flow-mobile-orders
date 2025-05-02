@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Order } from '@/types/order';
+import { Order, OrderStatus } from '@/types/order';
 
 export function OrderList() {
   const { getFilteredOrders, orders, assignOrder, completeOrder } = useApp();
@@ -55,7 +55,7 @@ export function OrderList() {
           price: order.price / order.quantity
         }],
         note: order.note,
-        status: order.status,
+        status: order.status as OrderStatus, // Explicitly cast to OrderStatus type
         createdAt: new Date(order.created_at),
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
         totalPrice: order.price,
