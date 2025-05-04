@@ -2,7 +2,9 @@
 export type TableItem = {
   id: string,
   size: string,
-  colour: string,
+  topColour: string,
+  frameColour: string, 
+  colour: string,  // Keeping for backward compatibility
   quantity: number,
   price: number
 };
@@ -22,6 +24,8 @@ export type Order = {
   createdAt: Date,
   completedAt?: Date,
   totalPrice: number,
+  deliveryFee?: number,
+  additionalCharges?: number,
   assignedTo?: string
 };
 

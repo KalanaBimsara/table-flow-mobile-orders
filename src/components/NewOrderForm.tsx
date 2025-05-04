@@ -19,7 +19,9 @@ import { TableItem } from '@/types/order';
 const tableItemSchema = z.object({
   id: z.string(),
   size: z.string(),
-  colour: z.string(),
+  topColour: z.string(),
+  frameColour: z.string(),
+  colour: z.string(), // Keep for backward compatibility
   quantity: z.number().int().positive().min(1, { message: "Quantity must be at least 1" }),
   price: z.number()
 });
@@ -31,6 +33,8 @@ const formSchema = z.object({
   contactNumber: z.string().min(10, { message: "Please enter a valid phone number" }),
   tables: z.array(tableItemSchema).min(1, { message: "At least one table is required" }),
   note: z.string().optional(),
+  deliveryFee: z.number().nonnegative().optional().default(0),
+  additionalCharges: z.number().nonnegative().optional().default(0),
 });
 
 type OrderFormValues = z.infer<typeof formSchema>;
@@ -41,11 +45,17 @@ export function NewOrderForm() {
   const form = useFormProvider();
 
   const watchTables = form.watch("tables");
+  const watchDeliveryFee = form.watch("deliveryFee") || 0;
+  const watchAdditionalCharges = form.watch("additionalCharges") || 0;
   
   // Calculate total price - multiply price by quantity for each table
-  const totalPrice = React.useMemo(() => {
+  const tablesCost = React.useMemo(() => {
     return watchTables?.reduce((sum, table) => sum + (table.price * table.quantity), 0) || 0;
   }, [watchTables]);
+
+  const totalPrice = React.useMemo(() => {
+    return tablesCost + watchDeliveryFee + watchAdditionalCharges;
+  }, [tablesCost, watchDeliveryFee, watchAdditionalCharges]);
 
   // Handle form submission
   async function onSubmit(values: OrderFormValues) {
@@ -58,12 +68,16 @@ export function NewOrderForm() {
         tables: values.tables.map((table): TableItem => ({
           id: table.id,
           size: table.size,
-          colour: table.colour,
+          topColour: table.topColour,
+          frameColour: table.frameColour,
+          colour: table.colour, // For compatibility
           quantity: table.quantity,
           price: table.price,
         })),
         note: values.note || "",
-        totalPrice
+        totalPrice,
+        deliveryFee: values.deliveryFee || 0,
+        additionalCharges: values.additionalCharges || 0
       };
       
       await addOrder(orderData);
@@ -73,6 +87,8 @@ export function NewOrderForm() {
         contactNumber: "",
         tables: [createEmptyTable()],
         note: "",
+        deliveryFee: 0,
+        additionalCharges: 0,
       });
       toast.success("Order created successfully!");
     } catch (error) {
@@ -85,7 +101,9 @@ export function NewOrderForm() {
   const createEmptyTable = (): TableItem => ({
     id: uuidv4(),
     size: '24x32',
-    colour: 'white',
+    topColour: 'white',
+    frameColour: 'white',
+    colour: 'white', // For compatibility
     quantity: 1,
     price: 10500  // Default price for 24x32 table
   });
@@ -192,10 +210,62 @@ export function NewOrderForm() {
                 />
               ))}
               
-              <div className="mt-6 text-right">
-                <p className="text-lg font-semibold">
-                  Total Order Price: {getFormattedPrice(totalPrice)}
-                </p>
+              <div className="mt-6 space-y-4 border-t pt-4">
+                <FormField
+                  control={form.control}
+                  name="deliveryFee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Delivery Fee</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number"
+                          placeholder="0" 
+                          {...field}
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="additionalCharges"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Charges</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number"
+                          placeholder="0" 
+                          {...field}
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4 text-right">
+                  <div className="text-sm text-muted-foreground text-right">Tables Cost:</div>
+                  <div>{getFormattedPrice(tablesCost)}</div>
+                  
+                  <div className="text-sm text-muted-foreground text-right">Delivery Fee:</div>
+                  <div>{getFormattedPrice(watchDeliveryFee)}</div>
+                  
+                  <div className="text-sm text-muted-foreground text-right">Additional Charges:</div>
+                  <div>{getFormattedPrice(watchAdditionalCharges)}</div>
+                  
+                  <div className="text-base font-medium text-right">Total:</div>
+                  <div className="text-base font-semibold">
+                    {getFormattedPrice(totalPrice)}
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -239,12 +309,16 @@ function useFormProvider() {
         {
           id: uuidv4(),
           size: '24x32',
-          colour: 'white',
+          topColour: 'white',
+          frameColour: 'white',
+          colour: 'white', // For compatibility
           quantity: 1,
           price: 10500
         }
       ],
       note: "",
+      deliveryFee: 0,
+      additionalCharges: 0,
     },
   });
 
