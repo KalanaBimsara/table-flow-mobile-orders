@@ -13,17 +13,47 @@ interface AppContextType {
   deleteOrder: (orderId: string) => Promise<void>;
   getFilteredOrders: (status?: OrderStatus) => Order[];
   getAssignedOrders: () => Order[];
+  getDeliveryPersonName: (userId: string) => string | null;
+}
+
+interface DeliveryPerson {
+  id: string;
+  name: string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [deliveryPeople, setDeliveryPeople] = useState<DeliveryPerson[]>([]);
   const { user, userRole } = useAuth();
 
   useEffect(() => {
     fetchOrders();
+    if (userRole === 'admin') {
+      fetchDeliveryPeople();
+    }
   }, [user, userRole]);
+
+  const fetchDeliveryPeople = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .eq('role', 'delivery');
+      
+      if (error) {
+        console.error('Error fetching delivery people:', error);
+        return;
+      }
+      
+      if (data) {
+        setDeliveryPeople(data);
+      }
+    } catch (error) {
+      console.error('Error fetching delivery people:', error);
+    }
+  };
 
   const fetchOrders = async () => {
     if (!user) {
@@ -290,6 +320,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return orders.filter(order => order.status === 'assigned');
   };
 
+  const getDeliveryPersonName = (userId: string) => {
+    const person = deliveryPeople.find(person => person.id === userId);
+    return person ? person.name : null;
+  };
+
   return (
     <AppContext.Provider 
       value={{ 
@@ -299,7 +334,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         completeOrder,
         deleteOrder,
         getFilteredOrders,
-        getAssignedOrders
+        getAssignedOrders,
+        getDeliveryPersonName
       }}
     >
       {children}

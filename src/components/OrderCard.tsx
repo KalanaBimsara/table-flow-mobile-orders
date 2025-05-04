@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign } from 'lucide-react';
+import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User } from 'lucide-react';
 import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -29,9 +29,10 @@ type OrderCardProps = {
 };
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }) => {
-  const { userRole, assignOrder, completeOrder, deleteOrder } = useApp();
+  const { userRole, assignOrder, completeOrder, deleteOrder, getDeliveryPersonName } = useApp();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const deliveryPersonName = order.assignedTo ? getDeliveryPersonName(order.assignedTo) : null;
   
   const handleAssignOrder = () => {
     if (!user) {
@@ -168,7 +169,16 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
             <span className="font-medium">Created: {format(new Date(order.createdAt), 'MMM d, yyyy')}</span>
           </div>
           
-          {order.status === 'assigned' && (
+          {(order.status === 'assigned' || order.status === 'completed') && (
+            <div className="flex items-center gap-2 mt-3">
+              <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
+              <span className="font-medium">
+                Assigned to: {deliveryPersonName || 'Unknown Delivery Person'}
+              </span>
+            </div>
+          )}
+          
+          {order.status === 'assigned' && !deliveryPersonName && (
             <div className="flex items-center gap-2 mt-3">
               <Truck size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">Assigned to delivery</span>
