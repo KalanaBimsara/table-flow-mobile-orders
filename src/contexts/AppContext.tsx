@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -75,8 +76,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: table.id,
           size: table.size,
           colour: table.colour,
-          topColour: table.colour,    // Default to the main colour
-          frameColour: table.colour,  // Default to the main colour
+          topColour: table.top_colour || table.colour,
+          frameColour: table.frame_colour || table.colour,
           quantity: table.quantity,
           price: table.price
         });
@@ -95,7 +96,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createdAt: new Date(order.created_at),
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
         assignedTo: order.delivery_person_id,
-        totalPrice: order.price
+        totalPrice: order.price,
+        deliveryFee: order.delivery_fee || 0,
+        additionalCharges: order.additional_charges || 0
       }));
   
       setOrders(ordersWithTablesAndDates);
@@ -110,7 +113,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const calculatedTotalPrice = orderData.tables.reduce((sum, table) => 
         sum + (table.price * table.quantity), 0);
       
-      const finalTotalPrice = calculatedTotalPrice;
+      const finalTotalPrice = calculatedTotalPrice + (orderData.deliveryFee || 0) + (orderData.additionalCharges || 0);
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -124,7 +127,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           status: 'pending',
           colour: orderData.tables[0].colour,
           table_size: orderData.tables[0].size,
-          quantity: orderData.tables.reduce((sum, table) => sum + table.quantity, 0)
+          quantity: orderData.tables.reduce((sum, table) => sum + table.quantity, 0),
+          delivery_fee: orderData.deliveryFee || 0,
+          additional_charges: orderData.additionalCharges || 0
         })
         .select('id')
         .single();
@@ -140,6 +145,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           order_id: order.id,
           size: table.size,
           colour: table.colour,
+          top_colour: table.topColour,
+          frame_colour: table.frameColour,
           quantity: table.quantity,
           price: table.price
         }));

@@ -128,7 +128,12 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
                       
                       <div className="flex items-center gap-2">
                         <Palette size={isMobile ? 16 : 20} className="flex-shrink-0 text-muted-foreground" />
-                        <span className="font-medium">Colour: {getColourLabel(table.colour)}</span>
+                        <span className="font-medium">Top Colour: {getColourLabel(table.topColour)}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Palette size={isMobile ? 16 : 20} className="flex-shrink-0 text-muted-foreground" />
+                        <span className="font-medium">Frame Colour: {getColourLabel(table.frameColour)}</span>
                       </div>
                       
                       <div className="flex items-center gap-2">
@@ -146,8 +151,28 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
                 <p className="text-muted-foreground text-sm md:text-base">No table details available.</p>
               )}
               
-              <div className="text-right text-base md:text-xl font-bold pt-2 border-t">
-                Total Price: {formatPrice(order.totalPrice || 0)}
+              <div className="grid grid-cols-2 gap-1 text-right pt-2 border-t">
+                <div className="text-sm text-muted-foreground text-right">Tables Cost:</div>
+                <div>{formatPrice(order.tables.reduce((sum, table) => sum + (table.price * table.quantity), 0))}</div>
+                
+                {(order.deliveryFee > 0) && (
+                  <>
+                    <div className="text-sm text-muted-foreground text-right">Delivery Fee:</div>
+                    <div>{formatPrice(order.deliveryFee || 0)}</div>
+                  </>
+                )}
+                
+                {(order.additionalCharges > 0) && (
+                  <>
+                    <div className="text-sm text-muted-foreground text-right">Additional Charges:</div>
+                    <div>{formatPrice(order.additionalCharges || 0)}</div>
+                  </>
+                )}
+                
+                <div className="text-base font-medium text-right">Total:</div>
+                <div className="text-base font-semibold">
+                  {formatPrice(order.totalPrice || 0)}
+                </div>
               </div>
             </div>
           </div>

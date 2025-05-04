@@ -13,29 +13,35 @@ export type Database = {
         Row: {
           colour: string
           created_at: string | null
+          frame_colour: string | null
           id: string
           order_id: string | null
           price: number
           quantity: number
           size: string
+          top_colour: string | null
         }
         Insert: {
           colour: string
           created_at?: string | null
+          frame_colour?: string | null
           id?: string
           order_id?: string | null
           price: number
           quantity: number
           size: string
+          top_colour?: string | null
         }
         Update: {
           colour?: string
           created_at?: string | null
+          frame_colour?: string | null
           id?: string
           order_id?: string | null
           price?: number
           quantity?: number
           size?: string
+          top_colour?: string | null
         }
         Relationships: [
           {
@@ -49,6 +55,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          additional_charges: number | null
           address: string
           colour: string
           completed_at: string | null
@@ -56,6 +63,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           customer_name: string
+          delivery_fee: number | null
           delivery_person_id: string | null
           delivery_status: string | null
           id: string
@@ -67,6 +75,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          additional_charges?: number | null
           address: string
           colour: string
           completed_at?: string | null
@@ -74,6 +83,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           customer_name: string
+          delivery_fee?: number | null
           delivery_person_id?: string | null
           delivery_status?: string | null
           id?: string
@@ -85,6 +95,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          additional_charges?: number | null
           address?: string
           colour?: string
           completed_at?: string | null
@@ -92,6 +103,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           customer_name?: string
+          delivery_fee?: number | null
           delivery_person_id?: string | null
           delivery_status?: string | null
           id?: string
