@@ -75,6 +75,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: table.id,
           size: table.size,
           colour: table.colour,
+          topColour: table.colour,    // Default to the main colour
+          frameColour: table.colour,  // Default to the main colour
           quantity: table.quantity,
           price: table.price
         });

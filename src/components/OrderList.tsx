@@ -41,7 +41,7 @@ export function OrderList() {
         return;
       }
 
-      // Transform the data to match the Order type structure
+      // Transform the data to match the Order type structure with the new properties
       const formattedOrders = data.map(order => ({
         id: order.id,
         customerName: order.customer_name,
@@ -51,11 +51,13 @@ export function OrderList() {
           id: order.id,
           size: order.table_size,
           colour: order.colour,
+          topColour: order.colour, // Use the same color for both topColour and frameColour as fallback
+          frameColour: order.colour, // Use the same color for both topColour and frameColour as fallback
           quantity: order.quantity,
           price: order.price / order.quantity
         }],
         note: order.note,
-        status: order.status as OrderStatus, // Explicitly cast to OrderStatus type
+        status: order.status as OrderStatus,
         createdAt: new Date(order.created_at),
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
         totalPrice: order.price,
