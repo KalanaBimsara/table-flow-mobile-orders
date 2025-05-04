@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2 } from 'lucide-react';
+import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign } from 'lucide-react';
 import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -107,7 +107,9 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
           
           <div className="flex items-center gap-2">
             <Phone size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
-            <span className="font-medium">{order.contactNumber}</span>
+            <a href={`tel:${order.contactNumber}`} className="font-medium text-blue-600 hover:underline">
+              {order.contactNumber}
+            </a>
           </div>
           
           <div className="mt-3">
@@ -140,10 +142,6 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
                         <Hash size={isMobile ? 16 : 20} className="flex-shrink-0 text-muted-foreground" />
                         <span className="font-medium">Quantity: {table.quantity} {table.quantity > 1 ? 'tables' : 'table'}</span>
                       </div>
-                      
-                      <div className="text-left sm:text-right font-bold">
-                        Price: {formatPrice(table.price)}
-                      </div>
                     </div>
                   </div>
                 ))
@@ -151,28 +149,9 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
                 <p className="text-muted-foreground text-sm md:text-base">No table details available.</p>
               )}
               
-              <div className="grid grid-cols-2 gap-1 text-right pt-2 border-t">
-                <div className="text-sm text-muted-foreground text-right">Tables Cost:</div>
-                <div>{formatPrice(order.tables.reduce((sum, table) => sum + (table.price * table.quantity), 0))}</div>
-                
-                {(order.deliveryFee > 0) && (
-                  <>
-                    <div className="text-sm text-muted-foreground text-right">Delivery Fee:</div>
-                    <div>{formatPrice(order.deliveryFee || 0)}</div>
-                  </>
-                )}
-                
-                {(order.additionalCharges > 0) && (
-                  <>
-                    <div className="text-sm text-muted-foreground text-right">Additional Charges:</div>
-                    <div>{formatPrice(order.additionalCharges || 0)}</div>
-                  </>
-                )}
-                
-                <div className="text-base font-medium text-right">Total:</div>
-                <div className="text-base font-semibold">
-                  {formatPrice(order.totalPrice || 0)}
-                </div>
+              <div className="flex justify-end items-center gap-2 pt-3 border-t">
+                <DollarSign size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
+                <span className="text-lg font-bold">Total: {formatPrice(order.totalPrice || 0)}</span>
               </div>
             </div>
           </div>
