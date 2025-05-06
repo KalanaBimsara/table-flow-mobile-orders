@@ -116,6 +116,87 @@ export type Database = {
         }
         Relationships: []
       }
+      production_bars: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          quantity: number
+          size: string
+          updated_at: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          size: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          size?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      production_legs: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          quantity: number
+          size: string
+          updated_at: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          size: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          size?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      production_table_tops: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          quantity: number
+          size: string
+          updated_at: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          size: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          size?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Menu, Home, Package, History, Table, X, ShoppingBag } from 'lucide-react';
+import { Menu, Home, Package, History, Table, X, ShoppingBag, Factory } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useApp } from '@/contexts/AppContext';
@@ -17,6 +17,11 @@ const AppHeader = () => {
     { href: '/orders', label: 'Orders', icon: Package },
     { href: '/history', label: 'Order History', icon: History },
   ];
+
+  // Add Production link for admin users
+  if (userRole === 'admin') {
+    navItems.push({ href: '/production', label: 'Production', icon: Factory });
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">

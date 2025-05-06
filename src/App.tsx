@@ -10,6 +10,7 @@ import AppHeaderWrapper from "@/components/AppHeaderWrapper";
 import Index from "./pages/Index";
 import Orders from "./pages/Orders";
 import OrderHistory from "./pages/OrderHistory";
+import Production from "./pages/Production";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -53,6 +54,14 @@ const App = () => (
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'customer', 'delivery']}>
                           <OrderHistory />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/production" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                          <Production />
                         </ProtectedRoute>
                       } 
                     />
