@@ -17,9 +17,7 @@ interface AppContextType {
 
 interface DeliveryPerson {
   id: string;
-  first_name: string;
-  last_name: string;
-  name: string;
+  name: string | null;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -40,7 +38,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, name')
+        .select('id, name')
         .eq('role', 'delivery');
       
       if (error) {
@@ -325,12 +323,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const person = deliveryPeople.find(person => person.id === userId);
     if (!person) return null;
     
-    // If we have first_name and last_name, use those
-    if (person.first_name && person.last_name) {
-      return `${person.first_name} ${person.last_name}`;
-    }
-    
-    // Otherwise fallback to name field
+    // Use the name field from the profile
     return person.name || null;
   };
 
