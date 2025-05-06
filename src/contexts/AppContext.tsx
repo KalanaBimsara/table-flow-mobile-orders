@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -107,8 +108,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: table.id,
           size: table.size,
           colour: table.colour,
-          topColour: table.topColour,
-          frameColour: table.frameColour,
+          topColour: table.top_colour || table.colour, // Fixed: using top_colour from database
+          frameColour: table.frame_colour || table.colour, // Fixed: using frame_colour from database
           quantity: table.quantity,
           price: table.price
         });
