@@ -31,6 +31,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
   const { userRole, assignOrder, completeOrder, deleteOrder, getDeliveryPersonName } = useApp();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  
+  // Get delivery person name if assigned
   const deliveryPersonName = order.assignedTo ? getDeliveryPersonName(order.assignedTo) : null;
   
   const handleAssignOrder = () => {
@@ -172,7 +174,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
             <div className="flex items-center gap-2 mt-3">
               <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">
-                Assigned to: {deliveryPersonName || 'Unknown Delivery Person'}
+                Assigned to: {deliveryPersonName || "Unknown Delivery Person"}
               </span>
             </div>
           )}

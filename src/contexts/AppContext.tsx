@@ -29,13 +29,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     fetchOrders();
-    if (userRole === 'admin') {
-      fetchDeliveryPeople();
-    }
+    fetchDeliveryPeople(); // Always fetch delivery people regardless of user role
   }, [user, userRole]);
 
   const fetchDeliveryPeople = async () => {
     try {
+      console.log("Fetching delivery people...");
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name')
@@ -47,7 +46,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       
       if (data) {
+        console.log("Delivery people fetched:", data);
         setDeliveryPeople(data);
+      } else {
+        console.log("No delivery people found");
       }
     } catch (error) {
       console.error('Error fetching delivery people:', error);
@@ -105,8 +107,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: table.id,
           size: table.size,
           colour: table.colour,
-          topColour: table.top_colour || table.colour,
-          frameColour: table.frame_colour || table.colour,
+          topColour: table.topColour,
+          frameColour: table.frameColour,
           quantity: table.quantity,
           price: table.price
         });
@@ -320,11 +322,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const getDeliveryPersonName = (userId: string) => {
+    console.log("Getting delivery person name for:", userId);
+    console.log("Available delivery people:", deliveryPeople);
+    
     const person = deliveryPeople.find(person => person.id === userId);
-    if (!person) return null;
+    console.log("Found delivery person:", person);
+    
+    if (!person) return "Unknown Delivery Person";
     
     // Use the name field from the profile
-    return person.name || null;
+    return person.name || "Unnamed Delivery Person";
   };
 
   return (
