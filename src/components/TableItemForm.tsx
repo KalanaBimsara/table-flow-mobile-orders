@@ -14,6 +14,11 @@ interface TableItemFormProps {
   showRemoveButton: boolean;
 }
 
+const frameColourOptions = [
+  { value: 'white', label: 'White' },
+  { value: 'black', label: 'Black' }
+];
+
 const TableItemForm: React.FC<TableItemFormProps> = ({ index, onRemove, showRemoveButton }) => {
   const form = useFormContext();
   
@@ -129,7 +134,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({ index, onRemove, showRemo
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {colourOptions.map((option) => (
+                  {frameColourOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
