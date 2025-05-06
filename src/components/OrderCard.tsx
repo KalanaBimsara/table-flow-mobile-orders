@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User } from 'lucide-react';
@@ -169,7 +168,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
             <span className="font-medium">Created: {format(new Date(order.createdAt), 'MMM d, yyyy')}</span>
           </div>
           
-          {(order.status === 'assigned' || order.status === 'completed') && (
+          {(order.status === 'assigned' || order.status === 'completed') && order.assignedTo && (
             <div className="flex items-center gap-2 mt-3">
               <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">
@@ -178,7 +177,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
             </div>
           )}
           
-          {order.status === 'assigned' && !deliveryPersonName && (
+          {order.status === 'assigned' && !order.assignedTo && (
             <div className="flex items-center gap-2 mt-3">
               <Truck size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">Assigned to delivery</span>
