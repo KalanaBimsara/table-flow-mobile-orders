@@ -23,8 +23,8 @@ interface Bar {
   created_at: string;
 }
 
-const COLOR_OPTIONS = ['White', 'Black', 'Brown', 'Grey', 'Natural'];
-const SIZE_OPTIONS = ['Small', 'Medium', 'Large', 'Extra Large'];
+const COLOR_OPTIONS = ['White', 'Black'];
+const SIZE_OPTIONS = ['32"', '36"', '48"', '60"'];
 
 const BarsProduction = () => {
   const [bars, setBars] = useState<Bar[]>([]);

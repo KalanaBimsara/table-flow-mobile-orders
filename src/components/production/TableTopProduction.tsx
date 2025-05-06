@@ -23,8 +23,8 @@ interface TableTop {
   created_at: string;
 }
 
-const COLOR_OPTIONS = ['White', 'Black', 'Brown', 'Grey', 'Natural'];
-const SIZE_OPTIONS = ['Small', 'Medium', 'Large', 'Extra Large'];
+const COLOR_OPTIONS = ['White', 'Black', 'American Ash White', 'Jungle Teak'];
+const SIZE_OPTIONS = ['24" x 32"', '24" x 36"', '24" x 48"', '24" x 60"'];
 
 const TableTopProduction = () => {
   const [tableTops, setTableTops] = useState<TableTop[]>([]);

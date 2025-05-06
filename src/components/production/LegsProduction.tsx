@@ -23,8 +23,8 @@ interface Leg {
   created_at: string;
 }
 
-const COLOR_OPTIONS = ['White', 'Black', 'Brown', 'Grey', 'Natural'];
-const SIZE_OPTIONS = ['Short', 'Standard', 'Tall', 'Extra Tall'];
+const COLOR_OPTIONS = ['White', 'Black'];
+const SIZE_OPTIONS = ['24"'];
 
 const LegsProduction = () => {
   const [legs, setLegs] = useState<Leg[]>([]);
