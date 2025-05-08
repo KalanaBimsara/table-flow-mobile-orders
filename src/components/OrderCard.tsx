@@ -9,41 +9,38 @@ import { useApp } from '@/contexts/AppContext';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 type OrderCardProps = {
   order: Order;
   onComplete?: () => void;
   actionButton?: React.ReactNode;
 };
-
-const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }) => {
-  const { userRole, assignOrder, completeOrder, deleteOrder, getDeliveryPersonName } = useApp();
-  const { user } = useAuth();
+const OrderCard: React.FC<OrderCardProps> = ({
+  order,
+  onComplete,
+  actionButton
+}) => {
+  const {
+    userRole,
+    assignOrder,
+    completeOrder,
+    deleteOrder,
+    getDeliveryPersonName
+  } = useApp();
+  const {
+    user
+  } = useAuth();
   const isMobile = useIsMobile();
-  
+
   // Get delivery person name if assigned
   const deliveryPersonName = order.assignedTo ? getDeliveryPersonName(order.assignedTo) : null;
-  
   const handleAssignOrder = () => {
     if (!user) {
       toast.error("You must be logged in to assign orders");
       return;
     }
-    
     assignOrder(order.id, user.id);
   };
-  
   const handleCompleteOrder = () => {
     if (onComplete) {
       onComplete();
@@ -51,21 +48,17 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
       completeOrder(order.id);
     }
   };
-
   const handleDeleteOrder = () => {
     deleteOrder(order.id);
   };
-
   const getTableSizeLabel = (value: string) => {
     const option = tableSizeOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   };
-
   const getColourLabel = (value: string) => {
     const option = colourOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   };
-
   const getStatusBadge = () => {
     switch (order.status) {
       case 'pending':
@@ -78,7 +71,6 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
         return null;
     }
   };
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -86,13 +78,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
       maximumFractionDigits: 0
     }).format(price);
   };
-
-  return (
-    <Card className={`order-card ${
-      order.status === 'pending' ? 'order-pending' : 
-      order.status === 'assigned' ? 'order-assigned' : 
-      'order-completed'
-    } ${isMobile ? 'text-base' : 'text-lg'}`}>
+  return <Card className={`order-card ${order.status === 'pending' ? 'order-pending' : order.status === 'assigned' ? 'order-assigned' : 'order-completed'} ${isMobile ? 'text-base' : 'text-lg'}`}>
       <CardContent className="pt-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
           <h3 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{order.customerName}</h3>
@@ -121,9 +107,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
             </div>
             
             <div className="space-y-3">
-              {order.tables && order.tables.length > 0 ? (
-                order.tables.map((table, index) => (
-                  <div key={table.id || index} className="border p-2 md:p-4 rounded-lg bg-gray-50">
+              {order.tables && order.tables.length > 0 ? order.tables.map((table, index) => <div key={table.id || index} className="border p-2 md:p-4 rounded-lg bg-gray-50">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm md:text-base">
                       <div className="flex items-center gap-2">
                         <Package size={isMobile ? 16 : 20} className="flex-shrink-0 text-muted-foreground" />
@@ -145,11 +129,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
                         <span className="font-medium">Quantity: {table.quantity} {table.quantity > 1 ? 'tables' : 'table'}</span>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-sm md:text-base">No table details available.</p>
-              )}
+                  </div>) : <p className="text-muted-foreground text-sm md:text-base">No table details available.</p>}
               
               <div className="flex justify-end items-center gap-2 pt-3 border-t">
                 <DollarSign size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
@@ -158,79 +138,49 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
             </div>
           </div>
           
-          {order.note && (
-            <div className="flex items-center gap-2 mt-3">
+          {order.note && <div className="flex items-center gap-2 mt-3">
               <StickyNote size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
-              <span className="font-medium break-words">{order.note}</span>
-            </div>
-          )}
+              <span className="break-words text-[#ff0000] font-bold text-lg">{order.note}</span>
+            </div>}
           
           <div className="flex items-center gap-2 mt-3">
             <Calendar size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
             <span className="font-medium">Created: {format(new Date(order.createdAt), 'MMM d, yyyy')}</span>
           </div>
           
-          {(order.status === 'assigned' || order.status === 'completed') && order.assignedTo && (
-            <div className="flex items-center gap-2 mt-3">
+          {(order.status === 'assigned' || order.status === 'completed') && order.assignedTo && <div className="flex items-center gap-2 mt-3">
               <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">
                 Assigned to: {deliveryPersonName || "Unknown Delivery Person"}
               </span>
-            </div>
-          )}
+            </div>}
           
-          {order.status === 'assigned' && !order.assignedTo && (
-            <div className="flex items-center gap-2 mt-3">
+          {order.status === 'assigned' && !order.assignedTo && <div className="flex items-center gap-2 mt-3">
               <Truck size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">Assigned to delivery</span>
-            </div>
-          )}
+            </div>}
           
-          {order.status === 'completed' && order.completedAt && (
-            <div className="flex items-center gap-2 mt-3">
+          {order.status === 'completed' && order.completedAt && <div className="flex items-center gap-2 mt-3">
               <CheckCircle2 size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">Completed: {format(new Date(order.completedAt), 'MMM d, yyyy')}</span>
-            </div>
-          )}
+            </div>}
         </div>
       </CardContent>
       
       <CardFooter className={`flex flex-wrap gap-2 ${isMobile ? 'justify-center' : 'justify-end'}`}>
-        {userRole === 'admin' && order.status === 'pending' && (
-          <Button 
-            size={isMobile ? "sm" : "default"} 
-            variant="outline"
-            onClick={handleAssignOrder}
-            className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}
-          >
+        {userRole === 'admin' && order.status === 'pending' && <Button size={isMobile ? "sm" : "default"} variant="outline" onClick={handleAssignOrder} className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}>
             Assign to Delivery
-          </Button>
-        )}
+          </Button>}
         
-        {((userRole === 'admin' && order.status === 'assigned') || 
-         (userRole === 'delivery' && order.status === 'assigned')) && (
-          <Button 
-            size={isMobile ? "sm" : "default"} 
-            variant="default"
-            onClick={handleCompleteOrder}
-            className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}
-          >
+        {(userRole === 'admin' && order.status === 'assigned' || userRole === 'delivery' && order.status === 'assigned') && <Button size={isMobile ? "sm" : "default"} variant="default" onClick={handleCompleteOrder} className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}>
             Mark Complete
-          </Button>
-        )}
+          </Button>}
 
-        {actionButton && (
-          <div className="w-full sm:w-auto">{actionButton}</div>
-        )}
+        {actionButton && <div className="w-full sm:w-auto">{actionButton}</div>}
         
-        {userRole === 'admin' && (
-          <AlertDialog>
+        {userRole === 'admin' && <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button 
-                size={isMobile ? "sm" : "default"} 
-                variant="destructive"
-                className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'} btn-delete-faded`}
-              >
+              <Button size={isMobile ? "sm" : "default"} variant="destructive" className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'} btn-delete-faded`}>
                 <Trash2 size={isMobile ? 14 : 18} className="mr-1" />
                 Delete Order
               </Button>
@@ -247,11 +197,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onComplete, actionButton }
                 <AlertDialogAction onClick={handleDeleteOrder}>Delete</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
-          </AlertDialog>
-        )}
+          </AlertDialog>}
       </CardFooter>
-    </Card>
-  );
+    </Card>;
 };
-
 export default OrderCard;
