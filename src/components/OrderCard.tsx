@@ -121,7 +121,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                       
                       <div className="flex items-center gap-2">
                         <Palette size={isMobile ? 16 : 20} className="flex-shrink-0 text-muted-foreground" />
-                        <span className="font-medium">Frame Colour: {getColourLabel(table.frameColour)}</span>
+                        <span className="font-medium">Leg Colour: {getColourLabel(table.frameColour)}</span>
                       </div>
                       
                       <div className="flex items-center gap-2">
