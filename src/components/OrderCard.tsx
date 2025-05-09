@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User } from 'lucide-react';
@@ -10,11 +11,15 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
 type OrderCardProps = {
   order: Order;
   onComplete?: () => void;
   actionButton?: React.ReactNode;
 };
+
 const OrderCard: React.FC<OrderCardProps> = ({
   order,
   onComplete,
@@ -31,9 +36,42 @@ const OrderCard: React.FC<OrderCardProps> = ({
     user
   } = useAuth();
   const isMobile = useIsMobile();
+  const [deliveryPersonName, setDeliveryPersonName] = useState<string | null>(null);
 
-  // Get delivery person name if assigned
-  const deliveryPersonName = order.assignedTo ? getDeliveryPersonName(order.assignedTo) : null;
+  // Fetch delivery person name directly from profiles table
+  useEffect(() => {
+    const fetchDeliveryPersonName = async () => {
+      if (order.assignedTo) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', order.assignedTo)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching delivery person name:', error);
+            setDeliveryPersonName('Unknown Delivery Person');
+            return;
+          }
+          
+          if (data && data.name) {
+            setDeliveryPersonName(data.name);
+          } else {
+            setDeliveryPersonName('Unnamed Delivery Person');
+          }
+        } catch (error) {
+          console.error('Error in fetching delivery person name:', error);
+          setDeliveryPersonName('Unknown Delivery Person');
+        }
+      }
+    };
+    
+    if (order.assignedTo) {
+      fetchDeliveryPersonName();
+    }
+  }, [order.assignedTo]);
+
   const handleAssignOrder = () => {
     if (!user) {
       toast.error("You must be logged in to assign orders");
@@ -41,6 +79,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
     }
     assignOrder(order.id, user.id);
   };
+  
   const handleCompleteOrder = () => {
     if (onComplete) {
       onComplete();
@@ -48,17 +87,21 @@ const OrderCard: React.FC<OrderCardProps> = ({
       completeOrder(order.id);
     }
   };
+  
   const handleDeleteOrder = () => {
     deleteOrder(order.id);
   };
+  
   const getTableSizeLabel = (value: string) => {
     const option = tableSizeOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   };
+  
   const getColourLabel = (value: string) => {
     const option = colourOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   };
+  
   const getStatusBadge = () => {
     switch (order.status) {
       case 'pending':
@@ -71,6 +114,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         return null;
     }
   };
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -78,6 +122,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       maximumFractionDigits: 0
     }).format(price);
   };
+  
   return <Card className={`order-card ${order.status === 'pending' ? 'order-pending' : order.status === 'assigned' ? 'order-assigned' : 'order-completed'} ${isMobile ? 'text-base' : 'text-lg'}`}>
       <CardContent className="pt-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
@@ -151,7 +196,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {(order.status === 'assigned' || order.status === 'completed') && order.assignedTo && <div className="flex items-center gap-2 mt-3">
               <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">
-                Assigned to: {deliveryPersonName || "Unknown Delivery Person"}
+                Assigned to: {deliveryPersonName || "Loading..."}
               </span>
             </div>}
           
