@@ -1,4 +1,3 @@
-
 export type TableItem = {
   id: string,
   size: string,
@@ -26,7 +25,8 @@ export type Order = {
   totalPrice: number,
   deliveryFee?: number,
   additionalCharges?: number,
-  assignedTo?: string
+  assignedTo?: string,
+  createdBy?: string  // Added the createdBy property
 };
 
 export const tableSizeOptions = [
