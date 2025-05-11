@@ -128,6 +128,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createdAt: new Date(order.created_at),
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
         assignedTo: order.delivery_person_id,
+        createdBy: order.created_by, // Make sure to map the created_by field from the database
         totalPrice: order.price,
         deliveryFee: order.delivery_fee || 0,
         additionalCharges: order.additional_charges || 0

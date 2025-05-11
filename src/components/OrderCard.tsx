@@ -48,7 +48,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
             .from('profiles')
             .select('name')
             .eq('id', order.assignedTo)
-            .single();
+            .maybeSingle();
           
           if (error) {
             console.error('Error fetching delivery person name:', error);
@@ -82,7 +82,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
             .from('profiles')
             .select('name')
             .eq('id', order.createdBy)
-            .single();
+            .maybeSingle();
           
           if (error) {
             console.error('Error fetching creator name:', error);
