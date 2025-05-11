@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User } from 'lucide-react';
+import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus } from 'lucide-react';
 import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -37,6 +37,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   } = useAuth();
   const isMobile = useIsMobile();
   const [deliveryPersonName, setDeliveryPersonName] = useState<string | null>(null);
+  const [creatorName, setCreatorName] = useState<string | null>(null);
 
   // Fetch delivery person name directly from profiles table
   useEffect(() => {
@@ -71,6 +72,40 @@ const OrderCard: React.FC<OrderCardProps> = ({
       fetchDeliveryPersonName();
     }
   }, [order.assignedTo]);
+
+  // Fetch order creator name from profiles table
+  useEffect(() => {
+    const fetchCreatorName = async () => {
+      if (order.createdBy && (userRole === 'admin' || userRole === 'delivery')) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', order.createdBy)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching creator name:', error);
+            setCreatorName('Unknown User');
+            return;
+          }
+          
+          if (data && data.name) {
+            setCreatorName(data.name);
+          } else {
+            setCreatorName('Unnamed User');
+          }
+        } catch (error) {
+          console.error('Error in fetching creator name:', error);
+          setCreatorName('Unknown User');
+        }
+      }
+    };
+    
+    if (order.createdBy && (userRole === 'admin' || userRole === 'delivery')) {
+      fetchCreatorName();
+    }
+  }, [order.createdBy, userRole]);
 
   const handleAssignOrder = () => {
     if (!user) {
@@ -192,6 +227,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
             <Calendar size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
             <span className="font-medium">Created: {format(new Date(order.createdAt), 'MMM d, yyyy')}</span>
           </div>
+          
+          {(userRole === 'admin' || userRole === 'delivery') && order.createdBy && <div className="flex items-center gap-2 mt-3">
+              <UserPlus size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
+              <span className="font-medium">
+                Added by: {creatorName || "Loading..."}
+              </span>
+            </div>}
           
           {(order.status === 'assigned' || order.status === 'completed') && order.assignedTo && <div className="flex items-center gap-2 mt-3">
               <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
