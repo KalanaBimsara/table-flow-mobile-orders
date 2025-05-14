@@ -40,7 +40,12 @@ class NotificationService {
     if (!('serviceWorker' in navigator)) return null;
     
     try {
-      return await navigator.serviceWorker.register('/notification-sw.js');
+      console.log('Attempting to register service worker...');
+      const registration = await navigator.serviceWorker.register('/notification-sw.js', {
+        scope: '/'
+      });
+      console.log('Service Worker registration successful with scope:', registration.scope);
+      return registration;
     } catch (error) {
       console.error('Service Worker registration failed:', error);
       return null;
@@ -50,11 +55,13 @@ class NotificationService {
   // Subscribe to push notifications
   public async subscribeToPush(registration: ServiceWorkerRegistration): Promise<PushSubscription | null> {
     try {
+      console.log('Attempting to subscribe to push...');
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(publicVapidKey)
       });
       
+      console.log('Push subscription successful:', subscription);
       return subscription;
     } catch (error) {
       console.error('Failed to subscribe to push:', error);
@@ -90,12 +97,30 @@ class NotificationService {
     
     try {
       const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, options);
+      
+      // Add mobile-friendly options
+      const mobileOptions = {
+        ...options,
+        vibrate: options.vibrate || [200, 100, 200],
+        tag: options.tag || 'default',
+        renotify: options.renotify !== undefined ? options.renotify : true,
+      };
+      
+      await registration.showNotification(title, mobileOptions);
       return true;
     } catch (error) {
       console.error('Error showing notification:', error);
       return false;
     }
+  }
+
+  // Test notification to directly check if notifications are working
+  public async testNotification(): Promise<boolean> {
+    return this.showNotification('Test Notification', {
+      body: 'This is a test notification to verify if notifications are working.',
+      icon: '/favicon.ico',
+      vibrate: [200, 100, 200]
+    });
   }
 }
 

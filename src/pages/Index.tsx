@@ -5,9 +5,10 @@ import { useApp } from '@/contexts/AppContext';
 import Dashboard from './Dashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationService from '@/services/NotificationService';
 
 const Index = () => {
-  const { userRole } = useAuth();
+  const { user, userRole } = useAuth();
   const { orders } = useApp();
 
   // Subscribe to changes on orders table to show notifications
@@ -34,22 +35,47 @@ const Index = () => {
           
           // Try to send push notification if service worker is ready
           try {
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-              const orderData = {
-                customerName: payload.new.customer_name,
-                tables: [{
-                  quantity: payload.new.quantity
-                }]
-              };
+            if ('serviceWorker' in navigator) {
+              console.log('Service worker detected, attempting to send push notification');
               
-              // Call edge function to send push notification
-              await fetch('/api/send-push-notification', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ order: orderData }),
-              });
+              // Check if service worker is activated
+              if (navigator.serviceWorker.controller) {
+                const orderData = {
+                  customerName: payload.new.customer_name,
+                  tables: [{
+                    quantity: payload.new.quantity
+                  }]
+                };
+                
+                console.log('Calling edge function to send push notification');
+                
+                // Call edge function to send push notification
+                await fetch('/api/send-push-notification', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ order: orderData }),
+                });
+                
+                // If we're on mobile, also try to show a notification directly
+                if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                  await NotificationService.showNotification(
+                    'New Order Added', 
+                    {
+                      body: `Customer: ${payload.new.customer_name}, Tables: ${payload.new.quantity}`,
+                      vibrate: [200, 100, 200]
+                    }
+                  );
+                }
+              } else {
+                console.log('Service worker controller not found, registering...');
+                // If service worker controller is not found, try to register it
+                const registration = await NotificationService.registerServiceWorker();
+                if (registration) {
+                  console.log('Successfully registered service worker');
+                }
+              }
             }
           } catch (error) {
             console.error('Failed to send push notification:', error);
@@ -58,11 +84,13 @@ const Index = () => {
       )
       .subscribe();
     
+    console.log('Subscribed to order notifications');
+    
     // Cleanup subscription on unmount
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userRole]);
+  }, [userRole, user]);
   
   return <Dashboard />;
 };

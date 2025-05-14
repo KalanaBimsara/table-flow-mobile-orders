@@ -20,6 +20,20 @@ export function useNotification() {
       if (supported) {
         const currentPermission = NotificationService.getPermissionStatus();
         setPermission(currentPermission);
+        
+        // If permission is already granted, check if service worker is ready
+        if (currentPermission === 'granted' && 'serviceWorker' in navigator) {
+          try {
+            const registration = await navigator.serviceWorker.ready;
+            const existingSubscription = await registration.pushManager.getSubscription();
+            if (existingSubscription) {
+              setSubscription(existingSubscription);
+              console.log('Existing push subscription found');
+            }
+          } catch (error) {
+            console.error('Error checking existing subscription:', error);
+          }
+        }
       }
     };
 
@@ -76,6 +90,17 @@ export function useNotification() {
       } else {
         setSubscription(newSubscription);
         toast.success('Successfully subscribed to notifications');
+        
+        // Send a test notification after subscription
+        setTimeout(() => {
+          NotificationService.testNotification()
+            .then(success => {
+              if (!success) {
+                console.warn('Test notification may not have been displayed');
+              }
+            })
+            .catch(err => console.error('Error sending test notification:', err));
+        }, 2000);
       }
     } catch (error) {
       console.error('Error subscribing to push notifications:', error);

@@ -9,6 +9,9 @@ self.addEventListener('push', event => {
     body: data.body || '',
     icon: data.icon || '/favicon.ico',
     badge: data.badge || '/favicon.ico',
+    vibrate: [200, 100, 200], // Add vibration pattern for mobile
+    tag: data.tag || 'default', // Add tag to group similar notifications
+    renotify: true, // Notify even if there's a notification with same tag
     data: {
       url: data.url || self.location.origin
     }
@@ -40,5 +43,17 @@ self.addEventListener('notificationclick', event => {
         return clients.openWindow(url);
       }
     })
+  );
+});
+
+// Handle push subscription change
+self.addEventListener('pushsubscriptionchange', event => {
+  console.log('Subscription expired');
+  event.waitUntil(
+    self.registration.pushManager.subscribe({ userVisibleOnly: true })
+      .then(subscription => {
+        console.log('New subscription generated');
+        // Here you would ideally send the new subscription to your server
+      })
   );
 });
