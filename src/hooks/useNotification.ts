@@ -61,10 +61,13 @@ export function useNotification() {
         return;
       }
 
+      // Convert the PushSubscription to a plain object that can be stored as JSON
+      const subscriptionJSON = JSON.parse(JSON.stringify(newSubscription));
+
       // Save the subscription to the database
       const { error } = await supabase.from('push_subscriptions').insert({
         user_id: user.id,
-        subscription: newSubscription
+        subscription: subscriptionJSON
       });
 
       if (error) {
