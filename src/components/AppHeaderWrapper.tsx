@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,11 +15,15 @@ const AppHeaderWrapper = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
-  const { setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
 
   return (
     <header className="bg-background sticky top-0 z-40 w-full border-b">
@@ -31,9 +36,7 @@ const AppHeaderWrapper = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
-                setTheme(theme => (theme === "light" ? "dark" : "light"))
-              }}
+              onClick={toggleTheme}
             >
               <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
