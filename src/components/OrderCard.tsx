@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus } from 'lucide-react';
@@ -40,14 +39,18 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [creatorName, setCreatorName] = useState<string | null>(null);
 
   // Fetch delivery person name directly from profiles table
+  // Updated to use the correct field delivery_person_id
   useEffect(() => {
     const fetchDeliveryPersonName = async () => {
-      if (order.assignedTo) {
+      // Make sure we're using the correct field from the order object
+      const deliveryPersonId = order.assignedTo || order.delivery_person_id;
+      
+      if (deliveryPersonId) {
         try {
           const { data, error } = await supabase
             .from('profiles')
             .select('name')
-            .eq('id', order.assignedTo)
+            .eq('id', deliveryPersonId)
             .maybeSingle();
           
           if (error) {
@@ -68,10 +71,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
       }
     };
     
-    if (order.assignedTo) {
+    // Check both possible field names for the delivery person ID
+    if (order.assignedTo || order.delivery_person_id) {
       fetchDeliveryPersonName();
     }
-  }, [order.assignedTo]);
+  }, [order.assignedTo, order.delivery_person_id]);
 
   // Fetch order creator name from profiles table
   useEffect(() => {
@@ -235,14 +239,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
               </span>
             </div>}
           
-          {(order.status === 'assigned' || order.status === 'completed') && order.assignedTo && <div className="flex items-center gap-2 mt-3">
+          {/* Update condition to check both possible field names */}
+          {(order.status === 'assigned' || order.status === 'completed') && 
+           (order.assignedTo || order.delivery_person_id) && 
+           <div className="flex items-center gap-2 mt-3">
               <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">
                 Assigned to: {deliveryPersonName || "Loading..."}
               </span>
             </div>}
           
-          {order.status === 'assigned' && !order.assignedTo && <div className="flex items-center gap-2 mt-3">
+          {order.status === 'assigned' && !order.assignedTo && !order.delivery_person_id && <div className="flex items-center gap-2 mt-3">
               <Truck size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">Assigned to delivery</span>
             </div>}
