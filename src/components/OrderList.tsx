@@ -8,10 +8,10 @@ import { Package, Truck, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { Order, OrderStatus } from '@/types/order';
 
-// Define the type for the Supabase orders table response
+// Define the types for the Supabase responses
 type OrderResponse = {
   id: string;
   customer_name: string;
@@ -19,8 +19,6 @@ type OrderResponse = {
   contact_number: string;
   table_size: string;
   colour: string;
-  top_colour?: string | null;
-  frame_colour?: string | null;
   quantity: number;
   price: number;
   note: string | null;
@@ -28,6 +26,17 @@ type OrderResponse = {
   created_at: string;
   completed_at: string | null;
   delivery_person_id: string | null;
+};
+
+type OrderTableResponse = {
+  id: string;
+  order_id: string;
+  size: string;
+  colour: string;
+  top_colour: string | null;
+  frame_colour: string | null;
+  quantity: number;
+  price: number;
 };
 
 export function OrderList() {
@@ -49,31 +58,68 @@ export function OrderList() {
 
   const fetchAvailableOrders = async () => {
     try {
-      const { data, error } = await supabase
+      // First, fetch the pending orders
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
         .eq('status', 'pending');
 
-      if (error) {
-        console.error('Error fetching available orders:', error);
+      if (ordersError) {
+        console.error('Error fetching available orders:', ordersError);
         toast.error('Failed to fetch available orders');
         return;
       }
 
+      if (!ordersData || ordersData.length === 0) {
+        setAvailableOrders([]);
+        return;
+      }
+
+      // Extract order IDs to fetch related table data
+      const orderIds = ordersData.map(order => order.id);
+
+      // Fetch the order_tables data for these orders
+      const { data: tablesData, error: tablesError } = await supabase
+        .from('order_tables')
+        .select('*')
+        .in('order_id', orderIds);
+
+      if (tablesError) {
+        console.error('Error fetching order tables:', tablesError);
+        toast.error('Failed to fetch table details');
+        return;
+      }
+
+      // Group tables by order_id
+      const tablesByOrder = (tablesData || []).reduce((acc, table) => {
+        if (!acc[table.order_id]) {
+          acc[table.order_id] = [];
+        }
+        acc[table.order_id].push({
+          id: table.id,
+          size: table.size,
+          colour: table.colour,
+          topColour: table.top_colour || table.colour,
+          frameColour: table.frame_colour || table.colour,
+          quantity: table.quantity,
+          price: table.price
+        });
+        return acc;
+      }, {} as Record<string, any[]>);
+
       // Transform the data to match the Order type structure with the correct color properties
-      const formattedOrders = (data as OrderResponse[]).map(order => ({
+      const formattedOrders = (ordersData as OrderResponse[]).map(order => ({
         id: order.id,
         customerName: order.customer_name,
         address: order.address,
         contactNumber: order.contact_number,
-        tables: [{
+        // Use tables data if available, otherwise create a fallback
+        tables: tablesByOrder[order.id] || [{
           id: order.id,
           size: order.table_size,
           colour: order.colour,
-          // Fix the color mismatch by using the top_colour and frame_colour if available
-          // Otherwise fallback to the general colour field
-          topColour: order.top_colour || order.colour,
-          frameColour: order.frame_colour || order.colour,
+          topColour: order.colour,
+          frameColour: order.colour,
           quantity: order.quantity,
           price: order.price / order.quantity
         }],
