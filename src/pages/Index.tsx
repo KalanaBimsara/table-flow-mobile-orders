@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '@/contexts/AppContext';
@@ -6,6 +5,7 @@ import Dashboard from './Dashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationService from '@/services/NotificationService';
+import { ExtendedNotificationOptions } from '@/types/notification';
 
 const Index = () => {
   const { user, userRole } = useAuth();
@@ -60,12 +60,14 @@ const Index = () => {
                 
                 // If we're on mobile, also try to show a notification directly
                 if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                  const notificationOptions: ExtendedNotificationOptions = {
+                    body: `Customer: ${payload.new.customer_name}, Tables: ${payload.new.quantity}`,
+                    vibrate: [200, 100, 200]
+                  };
+                  
                   await NotificationService.showNotification(
                     'New Order Added', 
-                    {
-                      body: `Customer: ${payload.new.customer_name}, Tables: ${payload.new.quantity}`,
-                      vibrate: [200, 100, 200]
-                    }
+                    notificationOptions
                   );
                 }
               } else {

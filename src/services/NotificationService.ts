@@ -1,4 +1,6 @@
 
+import { ExtendedNotificationOptions } from '@/types/notification';
+
 const publicVapidKey = 'BGm0tUk4CuS7HjKeZv1d-8c_vKLBb0mASyvQ2uCp9Uyl0MmK2XCC13thF0XFdx-OIQNWnQ8xlIK1ntfOCJQ6uIw';
 
 class NotificationService {
@@ -87,7 +89,7 @@ class NotificationService {
   }
 
   // Display a notification
-  public async showNotification(title: string, options: NotificationOptions = {}): Promise<boolean> {
+  public async showNotification(title: string, options: ExtendedNotificationOptions = {}): Promise<boolean> {
     if (!('Notification' in window)) return false;
     
     if (Notification.permission !== 'granted') {
