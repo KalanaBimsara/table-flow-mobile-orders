@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
@@ -9,6 +10,25 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Order, OrderStatus } from '@/types/order';
+
+// Define the type for the Supabase orders table response
+type OrderResponse = {
+  id: string;
+  customer_name: string;
+  address: string;
+  contact_number: string;
+  table_size: string;
+  colour: string;
+  top_colour?: string | null;
+  frame_colour?: string | null;
+  quantity: number;
+  price: number;
+  note: string | null;
+  status: string;
+  created_at: string;
+  completed_at: string | null;
+  delivery_person_id: string | null;
+};
 
 export function OrderList() {
   const { getFilteredOrders, orders, assignOrder, completeOrder } = useApp();
@@ -41,7 +61,7 @@ export function OrderList() {
       }
 
       // Transform the data to match the Order type structure with the correct color properties
-      const formattedOrders = data.map(order => ({
+      const formattedOrders = (data as OrderResponse[]).map(order => ({
         id: order.id,
         customerName: order.customer_name,
         address: order.address,
