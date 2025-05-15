@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
@@ -41,7 +40,7 @@ export function OrderList() {
         return;
       }
 
-      // Transform the data to match the Order type structure with the new properties
+      // Transform the data to match the Order type structure with the correct color properties
       const formattedOrders = data.map(order => ({
         id: order.id,
         customerName: order.customer_name,
@@ -51,8 +50,10 @@ export function OrderList() {
           id: order.id,
           size: order.table_size,
           colour: order.colour,
-          topColour: order.colour, // Use the same color for both topColour and frameColour as fallback
-          frameColour: order.colour, // Use the same color for both topColour and frameColour as fallback
+          // Fix the color mismatch by using the top_colour and frame_colour if available
+          // Otherwise fallback to the general colour field
+          topColour: order.top_colour || order.colour,
+          frameColour: order.frame_colour || order.colour,
           quantity: order.quantity,
           price: order.price / order.quantity
         }],
