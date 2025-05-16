@@ -225,7 +225,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {(order.status === 'assigned' || order.status === 'completed') && (order.assignedTo || order.delivery_person_id) && <div className="flex items-center gap-2 mt-3">
               <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium text-sky-700 text-base">
-                Assigned to: {deliveryPersonName || "Loading..."}
+                Delivery Assigned to: {deliveryPersonName || "Loading..."}
               </span>
             </div>}
           
