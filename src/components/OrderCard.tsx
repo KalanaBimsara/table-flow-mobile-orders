@@ -12,13 +12,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
 type OrderCardProps = {
   order: Order;
   onComplete?: () => void;
   actionButton?: React.ReactNode;
 };
-
 const OrderCard: React.FC<OrderCardProps> = ({
   order,
   onComplete,
@@ -44,21 +42,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
     const fetchDeliveryPersonName = async () => {
       // Make sure we're using the correct field from the order object
       const deliveryPersonId = order.assignedTo || order.delivery_person_id;
-      
       if (deliveryPersonId) {
         try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', deliveryPersonId)
-            .maybeSingle();
-          
+          const {
+            data,
+            error
+          } = await supabase.from('profiles').select('name').eq('id', deliveryPersonId).maybeSingle();
           if (error) {
             console.error('Error fetching delivery person name:', error);
             setDeliveryPersonName('Unknown Delivery Person');
             return;
           }
-          
           if (data && data.name) {
             setDeliveryPersonName(data.name);
           } else {
@@ -70,7 +64,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         }
       }
     };
-    
+
     // Check both possible field names for the delivery person ID
     if (order.assignedTo || order.delivery_person_id) {
       fetchDeliveryPersonName();
@@ -82,18 +76,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
     const fetchCreatorName = async () => {
       if (order.createdBy && (userRole === 'admin' || userRole === 'delivery')) {
         try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', order.createdBy)
-            .maybeSingle();
-          
+          const {
+            data,
+            error
+          } = await supabase.from('profiles').select('name').eq('id', order.createdBy).maybeSingle();
           if (error) {
             console.error('Error fetching creator name:', error);
             setCreatorName('Unknown User');
             return;
           }
-          
           if (data && data.name) {
             setCreatorName(data.name);
           } else {
@@ -105,12 +96,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
         }
       }
     };
-    
     if (order.createdBy && (userRole === 'admin' || userRole === 'delivery')) {
       fetchCreatorName();
     }
   }, [order.createdBy, userRole]);
-
   const handleAssignOrder = () => {
     if (!user) {
       toast.error("You must be logged in to assign orders");
@@ -118,7 +107,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
     }
     assignOrder(order.id, user.id);
   };
-  
   const handleCompleteOrder = () => {
     if (onComplete) {
       onComplete();
@@ -126,21 +114,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
       completeOrder(order.id);
     }
   };
-  
   const handleDeleteOrder = () => {
     deleteOrder(order.id);
   };
-  
   const getTableSizeLabel = (value: string) => {
     const option = tableSizeOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   };
-  
   const getColourLabel = (value: string) => {
     const option = colourOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   };
-  
   const getStatusBadge = () => {
     switch (order.status) {
       case 'pending':
@@ -153,7 +137,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
         return null;
     }
   };
-  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -161,7 +144,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
       maximumFractionDigits: 0
     }).format(price);
   };
-  
   return <Card className={`order-card ${order.status === 'pending' ? 'order-pending' : order.status === 'assigned' ? 'order-assigned' : 'order-completed'} ${isMobile ? 'text-base' : 'text-lg'}`}>
       <CardContent className="pt-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
@@ -234,15 +216,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
           
           {(userRole === 'admin' || userRole === 'delivery') && order.createdBy && <div className="flex items-center gap-2 mt-3">
               <UserPlus size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
-              <span className="font-medium">
+              <span className="font-medium text-green-700">
                 Added by: {creatorName || "Loading..."}
               </span>
             </div>}
           
           {/* Update condition to check both possible field names */}
-          {(order.status === 'assigned' || order.status === 'completed') && 
-           (order.assignedTo || order.delivery_person_id) && 
-           <div className="flex items-center gap-2 mt-3">
+          {(order.status === 'assigned' || order.status === 'completed') && (order.assignedTo || order.delivery_person_id) && <div className="flex items-center gap-2 mt-3">
               <User size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium">
                 Assigned to: {deliveryPersonName || "Loading..."}
