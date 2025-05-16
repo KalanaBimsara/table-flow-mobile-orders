@@ -211,9 +211,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
           
           <div className="flex items-center gap-2 mt-3">
             <Calendar size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
-            <span className="font-medium">Created: {format(new Date(order.createdAt), 'MMM d, yyyy')}</span>
+            <span className="font-medium">
+              Created: {format(new Date(order.createdAt), 'MMM d, yyyy, h:mm a')}
+            </span>
           </div>
-          
+
           {(userRole === 'admin' || userRole === 'delivery') && order.createdBy && <div className="flex items-center gap-2 mt-3">
               <UserPlus size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium text-green-700">
