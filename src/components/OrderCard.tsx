@@ -217,7 +217,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {(userRole === 'admin' || userRole === 'delivery') && order.createdBy && <div className="flex items-center gap-2 mt-3">
               <UserPlus size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium text-green-700">
-                Added by: {creatorName || "Loading..."}
+                Sales Person: {creatorName || "Loading..."}
               </span>
             </div>}
           
