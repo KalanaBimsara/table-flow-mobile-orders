@@ -4,10 +4,21 @@ import { useApp } from '@/contexts/AppContext';
 import OrderCard from '@/components/OrderCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const OrderHistory: React.FC = () => {
   const { getFilteredOrders } = useApp();
+  const { user } = useAuth();
   const completedOrders = getFilteredOrders('completed');
+
+  // Filter completed orders based on the current user if they're a delivery person
+  const filteredCompletedOrders = user 
+    ? completedOrders.filter(order => 
+        !order.assignedTo && !order.delivery_person_id || 
+        order.assignedTo === user.id || 
+        order.delivery_person_id === user.id
+      )
+    : completedOrders;
 
   return (
     <div className="container py-6">
@@ -25,8 +36,8 @@ const OrderHistory: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {completedOrders.length > 0 ? (
-              completedOrders.map(order => (
+            {filteredCompletedOrders.length > 0 ? (
+              filteredCompletedOrders.map(order => (
                 <OrderCard key={order.id} order={order} />
               ))
             ) : (

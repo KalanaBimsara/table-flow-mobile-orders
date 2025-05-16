@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';

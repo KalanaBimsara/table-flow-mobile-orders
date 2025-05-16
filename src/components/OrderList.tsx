@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
@@ -186,8 +185,8 @@ export function OrderList() {
             
             <TabsContent value="myDeliveries" className="mt-4">
               <div className="space-y-6">
-                {assignedOrders.length > 0 ? (
-                  assignedOrders.filter(order => order.assignedTo === user?.id).map(order => (
+                {assignedOrders.filter(order => order.assignedTo === user?.id || order.delivery_person_id === user?.id).length > 0 ? (
+                  assignedOrders.filter(order => order.assignedTo === user?.id || order.delivery_person_id === user?.id).map(order => (
                     <OrderCard 
                       key={order.id} 
                       order={order}
@@ -231,8 +230,8 @@ export function OrderList() {
             
             <TabsContent value="completed" className="mt-4">
               <div className="space-y-6">
-                {completedOrders.filter(order => order.assignedTo === user?.id).length > 0 ? (
-                  completedOrders.filter(order => order.assignedTo === user?.id).map(order => (
+                {completedOrders.filter(order => order.assignedTo === user?.id || order.delivery_person_id === user?.id).length > 0 ? (
+                  completedOrders.filter(order => order.assignedTo === user?.id || order.delivery_person_id === user?.id).map(order => (
                     <OrderCard key={order.id} order={order} />
                   ))
                 ) : (
