@@ -70,6 +70,7 @@ export type Database = {
           note: string | null
           price: number
           quantity: number
+          sales_person_name: string | null
           status: string | null
           table_size: string
           updated_at: string | null
@@ -90,6 +91,7 @@ export type Database = {
           note?: string | null
           price: number
           quantity: number
+          sales_person_name?: string | null
           status?: string | null
           table_size: string
           updated_at?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           note?: string | null
           price?: number
           quantity?: number
+          sales_person_name?: string | null
           status?: string | null
           table_size?: string
           updated_at?: string | null

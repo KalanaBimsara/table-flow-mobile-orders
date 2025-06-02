@@ -3,7 +3,8 @@ import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Truck, CheckCircle2, ShoppingBag } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Package, Truck, CheckCircle2, ShoppingBag, Filter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,15 +40,17 @@ type OrderTableResponse = {
 };
 
 export function OrderList() {
-  const { getFilteredOrders, orders, assignOrder, completeOrder } = useApp();
+  const { getFilteredOrders, orders, assignOrder, completeOrder, getSalesPersons } = useApp();
   const { userRole, user } = useAuth();
   const isMobile = useIsMobile();
+  const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
 
-  const pendingOrders = getFilteredOrders('pending');
-  const assignedOrders = getFilteredOrders('assigned');
-  const completedOrders = getFilteredOrders('completed');
+  const pendingOrders = getFilteredOrders('pending', selectedSalesPerson);
+  const assignedOrders = getFilteredOrders('assigned', selectedSalesPerson);
+  const completedOrders = getFilteredOrders('completed', selectedSalesPerson);
   
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
+  const salesPersons = getSalesPersons();
 
   React.useEffect(() => {
     if (userRole === 'delivery') {
@@ -330,7 +333,7 @@ export function OrderList() {
     );
   }
 
-  // For admin users, show all orders with tabs
+  // For admin users, show all orders with tabs and sales person filter
   return (
     <Card className="w-full">
       <CardHeader className={isMobile ? "text-center" : ""}>
@@ -340,6 +343,29 @@ export function OrderList() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Sales Person Filter */}
+        {salesPersons.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Filter size={16} />
+              <label className="text-sm font-medium">Filter by Sales Person:</label>
+            </div>
+            <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
+              <SelectTrigger className="w-full md:w-64">
+                <SelectValue placeholder="Select sales person" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                <SelectItem value="all">All Sales Persons</SelectItem>
+                {salesPersons.map(salesPerson => (
+                  <SelectItem key={salesPerson} value={salesPerson}>
+                    {salesPerson}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <Tabs defaultValue="pending">
           <TabsList className="grid w-full grid-cols-3 gap-1">
             <TabsTrigger value="pending" className="flex flex-col items-center justify-center py-2">
@@ -367,7 +393,9 @@ export function OrderList() {
                 ))
               ) : (
                 <p className="text-center py-8 text-muted-foreground text-lg">
-                  No pending orders found.
+                  {selectedSalesPerson === 'all' 
+                    ? 'No pending orders found.' 
+                    : `No pending orders found for ${selectedSalesPerson}.`}
                 </p>
               )}
             </div>
@@ -381,7 +409,9 @@ export function OrderList() {
                 ))
               ) : (
                 <p className="text-center py-8 text-muted-foreground text-lg">
-                  No assigned orders found.
+                  {selectedSalesPerson === 'all' 
+                    ? 'No assigned orders found.' 
+                    : `No assigned orders found for ${selectedSalesPerson}.`}
                 </p>
               )}
             </div>
@@ -395,7 +425,9 @@ export function OrderList() {
                 ))
               ) : (
                 <p className="text-center py-8 text-muted-foreground text-lg">
-                  No completed orders found.
+                  {selectedSalesPerson === 'all' 
+                    ? 'No completed orders found.' 
+                    : `No completed orders found for ${selectedSalesPerson}.`}
                 </p>
               )}
             </div>

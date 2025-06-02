@@ -1,4 +1,3 @@
-
 export type TableItem = {
   id: string,
   size: string,
@@ -28,7 +27,8 @@ export type Order = {
   additionalCharges?: number,
   assignedTo?: string,
   delivery_person_id?: string,  // Added to match database column name
-  createdBy?: string
+  createdBy?: string,
+  salesPersonName?: string  // Added for sales person tracking
 };
 
 export const tableSizeOptions = [

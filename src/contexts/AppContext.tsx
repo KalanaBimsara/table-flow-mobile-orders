@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -11,9 +10,10 @@ interface AppContextType {
   assignOrder: (orderId: string, assignedTo: string) => Promise<void>;
   completeOrder: (orderId: string) => Promise<void>;
   deleteOrder: (orderId: string) => Promise<void>;
-  getFilteredOrders: (status?: OrderStatus) => Order[];
+  getFilteredOrders: (status?: OrderStatus, salesPersonName?: string) => Order[];
   getAssignedOrders: () => Order[];
   getDeliveryPersonName: (userId: string) => string | null;
+  getSalesPersons: () => string[];
 }
 
 interface DeliveryPerson {
@@ -108,8 +108,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: table.id,
           size: table.size,
           colour: table.colour,
-          topColour: table.top_colour || table.colour, // Fixed: using top_colour from database
-          frameColour: table.frame_colour || table.colour, // Fixed: using frame_colour from database
+          topColour: table.top_colour || table.colour,
+          frameColour: table.frame_colour || table.colour,
           quantity: table.quantity,
           price: table.price
         });
@@ -128,13 +128,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createdAt: new Date(order.created_at),
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
         assignedTo: order.delivery_person_id,
-        createdBy: order.created_by, // Make sure to map the created_by field from the database
+        createdBy: order.created_by,
         totalPrice: order.price,
         deliveryFee: order.delivery_fee || 0,
-        additionalCharges: order.additional_charges || 0
+        additionalCharges: order.additional_charges || 0,
+        salesPersonName: order.sales_person_name
       }));
 
-      // Sort orders by creation date (latest first) - already done in the query, but ensuring consistency
+      // Sort orders by creation date (latest first)
       const sortedOrders = ordersWithTablesAndDates.sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
@@ -153,6 +154,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       const finalTotalPrice = calculatedTotalPrice + (orderData.deliveryFee || 0) + (orderData.additionalCharges || 0);
 
+      // Get current user's name for sales_person_name
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', user?.id)
+        .single();
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -167,7 +175,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           table_size: orderData.tables[0].size,
           quantity: orderData.tables.reduce((sum, table) => sum + table.quantity, 0),
           delivery_fee: orderData.deliveryFee || 0,
-          additional_charges: orderData.additionalCharges || 0
+          additional_charges: orderData.additionalCharges || 0,
+          sales_person_name: profileData?.name || null
         })
         .select('id')
         .single();
@@ -319,8 +328,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const getFilteredOrders = (status?: OrderStatus) => {
-    const filteredOrders = status ? orders.filter(order => order.status === status) : orders;
+  const getFilteredOrders = (status?: OrderStatus, salesPersonName?: string) => {
+    let filteredOrders = status ? orders.filter(order => order.status === status) : orders;
+    
+    if (salesPersonName && salesPersonName !== 'all') {
+      filteredOrders = filteredOrders.filter(order => order.salesPersonName === salesPersonName);
+    }
+    
     // Sort by creation date (latest first)
     return filteredOrders.sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -335,6 +349,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const getSalesPersons = () => {
+    const salesPersons = orders
+      .map(order => order.salesPersonName)
+      .filter((name): name is string => name !== null && name !== undefined && name !== '')
+      .filter((name, index, array) => array.indexOf(name) === index);
+    
+    return salesPersons.sort();
+  };
+
   const getDeliveryPersonName = (userId: string) => {
     console.log("Getting delivery person name for:", userId);
     console.log("Available delivery people:", deliveryPeople);
@@ -344,7 +367,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     if (!person) return "Unknown Delivery Person";
     
-    // Use the name field from the profile
     return person.name || "Unnamed Delivery Person";
   };
 
@@ -358,7 +380,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteOrder,
         getFilteredOrders,
         getAssignedOrders,
-        getDeliveryPersonName
+        getDeliveryPersonName,
+        getSalesPersons
       }}
     >
       {children}
