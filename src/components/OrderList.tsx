@@ -57,11 +57,12 @@ export function OrderList() {
 
   const fetchAvailableOrders = async () => {
     try {
-      // First, fetch the pending orders
+      // First, fetch the pending orders ordered by creation date (latest first)
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
 
       if (ordersError) {
         console.error('Error fetching available orders:', ordersError);
@@ -130,7 +131,12 @@ export function OrderList() {
         assignedTo: order.delivery_person_id
       }));
 
-      setAvailableOrders(formattedOrders);
+      // Sort by creation date (latest first) - already sorted by query but ensuring consistency
+      const sortedOrders = formattedOrders.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      setAvailableOrders(sortedOrders);
     } catch (error) {
       console.error('Error processing available orders:', error);
       toast.error('An error occurred while fetching orders');

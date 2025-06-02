@@ -1,170 +1,343 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Package2, Layers3, Box } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { Package, Layers, Construction } from 'lucide-react';
 
 interface StockItem {
-  color: string;
+  id: string;
   size: string;
-  total_quantity: number;
+  color: string;
+  quantity: number;
+  created_at: string;
 }
 
-const StockOverview = () => {
-  const [tableTopStock, setTableTopStock] = useState<StockItem[]>([]);
-  const [barsStock, setBarsStock] = useState<StockItem[]>([]);
-  const [legsStock, setLegsStock] = useState<StockItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const StockOverview: React.FC = () => {
+  const [tableTops, setTableTops] = useState<StockItem[]>([]);
+  const [bars, setBars] = useState<StockItem[]>([]);
+  const [legs, setLegs] = useState<StockItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAllStock = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        // Fetch table tops stock
-        const { data: tableTopsData, error: tableTopsError } = await supabase
-          .from('production_table_tops')
-          .select('color, size, quantity')
-          .order('color', { ascending: true })
-          .order('size', { ascending: true });
-        
-        if (tableTopsError) throw tableTopsError;
-        
-        // Fetch bars stock
-        const { data: barsData, error: barsError } = await supabase
-          .from('production_bars')
-          .select('color, size, quantity')
-          .order('color', { ascending: true })
-          .order('size', { ascending: true });
-        
-        if (barsError) throw barsError;
-        
-        // Fetch legs stock
-        const { data: legsData, error: legsError } = await supabase
-          .from('production_legs')
-          .select('color, size, quantity')
-          .order('color', { ascending: true })
-          .order('size', { ascending: true });
-        
-        if (legsError) throw legsError;
-        
-        // Process and aggregate the data
-        const tableTopsAggregated = aggregateStockByColorAndSize(tableTopsData || []);
-        const barsAggregated = aggregateStockByColorAndSize(barsData || []);
-        const legsAggregated = aggregateStockByColorAndSize(legsData || []);
-        
-        setTableTopStock(tableTopsAggregated);
-        setBarsStock(barsAggregated);
-        setLegsStock(legsAggregated);
-      } catch (err) {
-        console.error('Error fetching stock data:', err);
-        setError('Failed to load stock data. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchAllStock();
+    fetchStockData();
   }, []);
 
-  // Helper function to aggregate stock by color and size
-  const aggregateStockByColorAndSize = (items: any[]): StockItem[] => {
-    const aggregated: Record<string, StockItem> = {};
-    
-    items.forEach(item => {
-      const key = `${item.color}-${item.size}`;
-      if (!aggregated[key]) {
-        aggregated[key] = {
-          color: item.color,
-          size: item.size,
-          total_quantity: 0
-        };
+  const fetchStockData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch table tops ordered by creation date (latest first)
+      const { data: topsData, error: topsError } = await supabase
+        .from('production_table_tops')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (topsError) {
+        console.error('Error fetching table tops:', topsError);
+      } else {
+        setTableTops(topsData || []);
       }
-      aggregated[key].total_quantity += item.quantity;
-    });
-    
-    return Object.values(aggregated);
+
+      // Fetch bars ordered by creation date (latest first)
+      const { data: barsData, error: barsError } = await supabase
+        .from('production_bars')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (barsError) {
+        console.error('Error fetching bars:', barsError);
+      } else {
+        setBars(barsData || []);
+      }
+
+      // Fetch legs ordered by creation date (latest first)
+      const { data: legsData, error: legsError } = await supabase
+        .from('production_legs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (legsError) {
+        console.error('Error fetching legs:', legsError);
+      } else {
+        setLegs(legsData || []);
+      }
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderStockTable = (items: StockItem[], title: string, icon: React.ReactNode) => {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            {icon}
-            {title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-4">Loading stock data...</div>
-          ) : error ? (
-            <div className="text-center py-4 text-red-500">{error}</div>
-          ) : items.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              No {title.toLowerCase()} items in stock.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Color</TableHead>
-                  <TableHead>Size</TableHead>
-                  <TableHead className="text-right">Quantity</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.color}</TableCell>
-                    <TableCell>{item.size}</TableCell>
-                    <TableCell className="text-right font-medium">{item.total_quantity}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+  const aggregateStock = (items: StockItem[]) => {
+    const aggregated = items.reduce((acc, item) => {
+      const key = `${item.size}-${item.color}`;
+      if (!acc[key]) {
+        acc[key] = {
+          size: item.size,
+          color: item.color,
+          quantity: 0,
+          latestDate: item.created_at
+        };
+      }
+      acc[key].quantity += item.quantity;
+      // Keep track of the latest creation date for this combination
+      if (new Date(item.created_at) > new Date(acc[key].latestDate)) {
+        acc[key].latestDate = item.created_at;
+      }
+      return acc;
+    }, {} as Record<string, { size: string; color: string; quantity: number; latestDate: string }>);
+
+    // Convert to array and sort by latest date (most recent first)
+    return Object.values(aggregated).sort((a, b) => 
+      new Date(b.latestDate).getTime() - new Date(a.latestDate).getTime()
     );
   };
 
+  const getStockLevelBadge = (quantity: number) => {
+    if (quantity === 0) {
+      return <Badge variant="destructive">Out of Stock</Badge>;
+    } else if (quantity <= 5) {
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Low Stock</Badge>;
+    } else {
+      return <Badge variant="outline" className="bg-green-100 text-green-800">In Stock</Badge>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const aggregatedTops = aggregateStock(tableTops);
+  const aggregatedBars = aggregateStock(bars);
+  const aggregatedLegs = aggregateStock(legs);
+
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold mb-4">Current Inventory Stock</h2>
-      
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All Items</TabsTrigger>
-          <TabsTrigger value="tabletops">Table Tops</TabsTrigger>
-          <TabsTrigger value="bars">Bars</TabsTrigger>
-          <TabsTrigger value="legs">Legs</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {renderStockTable(tableTopStock, "Table Tops", <Layers3 className="h-5 w-5" />)}
-            {renderStockTable(barsStock, "Bars", <Package2 className="h-5 w-5" />)}
-            {renderStockTable(legsStock, "Legs", <Box className="h-5 w-5" />)}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Table Tops */}
+        <Card>
+          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+            <div className="flex items-center space-x-2">
+              <Layers className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-lg">Table Tops</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {aggregatedTops.length > 0 ? (
+                aggregatedTops.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center p-2 border rounded">
+                    <div className="text-sm">
+                      <div className="font-medium">{item.size}</div>
+                      <div className="text-muted-foreground">{item.color}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{item.quantity}</div>
+                      {getStockLevelBadge(item.quantity)}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-4">No table tops in stock</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bars */}
+        <Card>
+          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+            <div className="flex items-center space-x-2">
+              <Package className="h-5 w-5 text-green-600" />
+              <CardTitle className="text-lg">Bars</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {aggregatedBars.length > 0 ? (
+                aggregatedBars.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center p-2 border rounded">
+                    <div className="text-sm">
+                      <div className="font-medium">{item.size}</div>
+                      <div className="text-muted-foreground">{item.color}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{item.quantity}</div>
+                      {getStockLevelBadge(item.quantity)}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-4">No bars in stock</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Legs */}
+        <Card>
+          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+            <div className="flex items-center space-x-2">
+              <Construction className="h-5 w-5 text-orange-600" />
+              <CardTitle className="text-lg">Legs</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {aggregatedLegs.length > 0 ? (
+                aggregatedLegs.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center p-2 border rounded">
+                    <div className="text-sm">
+                      <div className="font-medium">{item.size}</div>
+                      <div className="text-muted-foreground">{item.color}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{item.quantity}</div>
+                      {getStockLevelBadge(item.quantity)}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-4">No legs in stock</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Table View */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Detailed Stock Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Table Tops Table */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Layers className="h-5 w-5 text-blue-600" />
+                Table Tops
+              </h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Color</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {aggregatedTops.length > 0 ? (
+                    aggregatedTops.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{item.size}</TableCell>
+                        <TableCell>{item.color}</TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>{getStockLevelBadge(item.quantity)}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                        No table tops in stock
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Bars Table */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Package className="h-5 w-5 text-green-600" />
+                Bars
+              </h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Color</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {aggregatedBars.length > 0 ? (
+                    aggregatedBars.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{item.size}</TableCell>
+                        <TableCell>{item.color}</TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>{getStockLevelBadge(item.quantity)}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                        No bars in stock
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Legs Table */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Construction className="h-5 w-5 text-orange-600" />
+                Legs
+              </h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Color</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {aggregatedLegs.length > 0 ? (
+                    aggregatedLegs.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{item.size}</TableCell>
+                        <TableCell>{item.color}</TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>{getStockLevelBadge(item.quantity)}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                        No legs in stock
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="tabletops">
-          {renderStockTable(tableTopStock, "Table Tops", <Layers3 className="h-5 w-5" />)}
-        </TabsContent>
-        
-        <TabsContent value="bars">
-          {renderStockTable(barsStock, "Bars", <Package2 className="h-5 w-5" />)}
-        </TabsContent>
-        
-        <TabsContent value="legs">
-          {renderStockTable(legsStock, "Legs", <Box className="h-5 w-5" />)}
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

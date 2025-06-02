@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -65,7 +66,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       console.log("Fetching orders with user role:", userRole);
   
-      let query = supabase.from('orders').select('*');
+      let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
   
       if (userRole === 'customer') {
         query = query.eq('created_by', user.id);
@@ -132,8 +133,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deliveryFee: order.delivery_fee || 0,
         additionalCharges: order.additional_charges || 0
       }));
+
+      // Sort orders by creation date (latest first) - already done in the query, but ensuring consistency
+      const sortedOrders = ordersWithTablesAndDates.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
   
-      setOrders(ordersWithTablesAndDates);
+      setOrders(sortedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('An unexpected error occurred while fetching orders');
@@ -314,12 +320,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const getFilteredOrders = (status?: OrderStatus) => {
-    if (!status) return orders;
-    return orders.filter(order => order.status === status);
+    const filteredOrders = status ? orders.filter(order => order.status === status) : orders;
+    // Sort by creation date (latest first)
+    return filteredOrders.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   };
 
   const getAssignedOrders = () => {
-    return orders.filter(order => order.status === 'assigned');
+    const assignedOrders = orders.filter(order => order.status === 'assigned');
+    // Sort by creation date (latest first)
+    return assignedOrders.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   };
 
   const getDeliveryPersonName = (userId: string) => {
