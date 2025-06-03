@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,29 +10,32 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ShoppingBag } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2, ShoppingBag, Mail } from 'lucide-react';
 import { Navigate, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
-const registerSchema = z.object({
+const activationRequestSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   role: z.string().min(1, { message: "Please select a role" }),
+  reason: z.string().min(10, { message: "Please provide a reason for account access (minimum 10 characters)" }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type ActivationRequestFormValues = z.infer<typeof activationRequestSchema>;
 
 const Auth: React.FC = () => {
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, loading, signIn } = useAuth();
   const [authLoading, setAuthLoading] = useState(false);
+  const [requestLoading, setRequestLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('login');
 
   const loginForm = useForm<LoginFormValues>({
@@ -42,14 +46,14 @@ const Auth: React.FC = () => {
     },
   });
 
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+  const activationRequestForm = useForm<ActivationRequestFormValues>({
+    resolver: zodResolver(activationRequestSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
       email: '',
-      password: '',
       role: '',
+      reason: '',
     },
   });
 
@@ -64,15 +68,29 @@ const Auth: React.FC = () => {
     }
   };
 
-  const onRegisterSubmit = async (data: RegisterFormValues) => {
-    setAuthLoading(true);
+  const onActivationRequestSubmit = async (data: ActivationRequestFormValues) => {
+    setRequestLoading(true);
     try {
-      await signUp(data.email, data.password, data.firstName, data.lastName, data.role);
+      const { error } = await supabase.functions.invoke('send-activation-request', {
+        body: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          role: data.role,
+          reason: data.reason,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success('Account activation request sent successfully! You will be notified once your account is approved.');
+      activationRequestForm.reset();
       setActiveTab('login');
-    } catch (error) {
-      console.error("Registration error:", error);
+    } catch (error: any) {
+      console.error("Activation request error:", error);
+      toast.error(error.message || 'Failed to send activation request');
     } finally {
-      setAuthLoading(false);
+      setRequestLoading(false);
     }
   };
 
@@ -86,14 +104,14 @@ const Auth: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-2xl text-center">Welcome to TableFlow</CardTitle>
           <CardDescription className="text-center">
-            Sign in to your account or create a new one
+            Sign in to your account or request access
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="request">Request Access</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
@@ -151,12 +169,12 @@ const Auth: React.FC = () => {
               </Form>
             </TabsContent>
             
-            <TabsContent value="register">
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 mt-4">
+            <TabsContent value="request">
+              <Form {...activationRequestForm}>
+                <form onSubmit={activationRequestForm.handleSubmit(onActivationRequestSubmit)} className="space-y-4 mt-4">
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={registerForm.control}
+                      control={activationRequestForm.control}
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
@@ -170,7 +188,7 @@ const Auth: React.FC = () => {
                     />
                     
                     <FormField
-                      control={registerForm.control}
+                      control={activationRequestForm.control}
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
@@ -185,7 +203,7 @@ const Auth: React.FC = () => {
                   </div>
                   
                   <FormField
-                    control={registerForm.control}
+                    control={activationRequestForm.control}
                     name="email"
                     render={({ field }) => (
                       <FormItem>
@@ -199,13 +217,21 @@ const Auth: React.FC = () => {
                   />
                   
                   <FormField
-                    control={registerForm.control}
-                    name="password"
+                    control={activationRequestForm.control}
+                    name="role"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Requested Role</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} />
+                          <select 
+                            {...field} 
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Select a role</option>
+                            <option value="customer">Customer</option>
+                            <option value="delivery">Delivery</option>
+                            <option value="seller">Seller</option>
+                          </select>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -213,37 +239,33 @@ const Auth: React.FC = () => {
                   />
                   
                   <FormField
-                    control={registerForm.control}
-                    name="role"
+                    control={activationRequestForm.control}
+                    name="reason"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="customer">Customer</SelectItem>
-                            <SelectItem value="delivery">Delivery</SelectItem>
-                            <SelectItem value="seller">Seller</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Reason for Access</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Please explain why you need access to this system..."
+                            {...field}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   
-                  <Button type="submit" className="w-full" disabled={authLoading}>
-                    {authLoading ? (
+                  <Button type="submit" className="w-full" disabled={requestLoading}>
+                    {requestLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
+                        Sending request...
                       </>
                     ) : (
-                      'Create Account'
+                      <>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Request Account Access
+                      </>
                     )}
                   </Button>
 
