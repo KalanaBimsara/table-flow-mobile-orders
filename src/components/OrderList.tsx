@@ -50,13 +50,15 @@ export function OrderList() {
   const completedOrders = getFilteredOrders('completed', selectedSalesPerson);
   
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
+  const [deliveryCompletedOrders, setDeliveryCompletedOrders] = useState<Order[]>([]);
   const salesPersons = getSalesPersons();
 
   React.useEffect(() => {
     if (userRole === 'delivery') {
       fetchAvailableOrders();
+      fetchDeliveryCompletedOrders();
     }
-  }, [userRole]);
+  }, [userRole, user]);
 
   const fetchAvailableOrders = async () => {
     try {
@@ -146,6 +148,98 @@ export function OrderList() {
     }
   };
 
+  const fetchDeliveryCompletedOrders = async () => {
+    if (!user) return;
+
+    try {
+      console.log('Fetching completed orders for delivery person:', user.id);
+      
+      // Fetch completed orders for this delivery person ordered by completed_at (latest first)
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('status', 'completed')
+        .eq('delivery_person_id', user.id)
+        .order('completed_at', { ascending: false });
+
+      if (ordersError) {
+        console.error('Error fetching completed orders:', ordersError);
+        toast.error('Failed to fetch completed orders');
+        return;
+      }
+
+      if (!ordersData || ordersData.length === 0) {
+        console.log('No completed orders found for delivery person');
+        setDeliveryCompletedOrders([]);
+        return;
+      }
+
+      console.log('Found completed orders:', ordersData.length);
+
+      // Extract order IDs to fetch related table data
+      const orderIds = ordersData.map(order => order.id);
+
+      // Fetch the order_tables data for these orders
+      const { data: tablesData, error: tablesError } = await supabase
+        .from('order_tables')
+        .select('*')
+        .in('order_id', orderIds);
+
+      if (tablesError) {
+        console.error('Error fetching order tables:', tablesError);
+        toast.error('Failed to fetch table details');
+        return;
+      }
+
+      // Group tables by order_id
+      const tablesByOrder = (tablesData || []).reduce((acc, table) => {
+        if (!acc[table.order_id]) {
+          acc[table.order_id] = [];
+        }
+        acc[table.order_id].push({
+          id: table.id,
+          size: table.size,
+          colour: table.colour,
+          topColour: table.top_colour || table.colour,
+          frameColour: table.frame_colour || table.colour,
+          quantity: table.quantity,
+          price: table.price
+        });
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      // Transform the data to match the Order type structure
+      const formattedOrders = (ordersData as OrderResponse[]).map(order => ({
+        id: order.id,
+        customerName: order.customer_name,
+        address: order.address,
+        contactNumber: order.contact_number,
+        tables: tablesByOrder[order.id] || [{
+          id: order.id,
+          size: order.table_size,
+          colour: order.colour,
+          topColour: order.colour,
+          frameColour: order.colour,
+          quantity: order.quantity,
+          price: order.price / order.quantity
+        }],
+        note: order.note,
+        status: order.status as OrderStatus,
+        createdAt: new Date(order.created_at),
+        completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
+        totalPrice: order.price,
+        assignedTo: order.delivery_person_id,
+        delivery_person_id: order.delivery_person_id
+      }));
+
+      console.log('Formatted completed orders:', formattedOrders);
+      setDeliveryCompletedOrders(formattedOrders);
+    } catch (error) {
+      console.error('Error processing completed orders:', error);
+      toast.error('An error occurred while fetching completed orders');
+    }
+  };
+
   const handleSelfAssign = async (orderId: string) => {
     if (!user) {
       toast.error('You must be logged in to assign orders');
@@ -199,7 +293,11 @@ export function OrderList() {
                     <OrderCard 
                       key={order.id} 
                       order={order}
-                      onComplete={() => completeOrder(order.id)}
+                      onComplete={() => {
+                        completeOrder(order.id);
+                        // Refresh completed orders after completing an order
+                        setTimeout(() => fetchDeliveryCompletedOrders(), 1000);
+                      }}
                     />
                   ))
                 ) : (
@@ -239,8 +337,8 @@ export function OrderList() {
             
             <TabsContent value="completed" className="mt-4">
               <div className="space-y-6">
-                {completedOrders.filter(order => order.assignedTo === user?.id || order.delivery_person_id === user?.id).length > 0 ? (
-                  completedOrders.filter(order => order.assignedTo === user?.id || order.delivery_person_id === user?.id).map(order => (
+                {deliveryCompletedOrders.length > 0 ? (
+                  deliveryCompletedOrders.map(order => (
                     <OrderCard key={order.id} order={order} />
                   ))
                 ) : (
