@@ -67,7 +67,7 @@ src/
 
 1. **Clone the Repo:**
    ```bash
-   git clone https://github.com/your-username/tableflow.git
+   git clone https://github.com/KalanaBimsara/table-flow-mobile-orders.git
    cd tableflow
    ```
 
@@ -114,7 +114,7 @@ src/
 
 ## 🙋‍♂️ Author
 
-Built by **Methupa** with love for furniture businesses 🪑
+Built by **Kalana**
 
 ---
 
