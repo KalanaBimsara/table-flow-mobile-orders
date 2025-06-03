@@ -28,7 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { firstName, lastName, email, role, reason }: ActivationRequestData = await req.json();
 
     // Email to admin (you)
-    const adminEmail = "admin@tableflow.com"; // Replace with your actual admin email
+    const adminEmail = "kalanabimsara8@gmail.com";
     
     const emailResponse = await resend.emails.send({
       from: "TableFlow <noreply@resend.dev>", // Replace with your domain
