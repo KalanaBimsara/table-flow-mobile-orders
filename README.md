@@ -1,73 +1,123 @@
-# Welcome to your Lovable project
+# TableFlow - Furniture Order Management System 🪑📦
 
-## Project info
+TableFlow is a role-based web application built to manage table orders, assign delivery tasks, and track production and completion efficiently. The platform is tailored for small to medium-scale furniture businesses to streamline the order and delivery process.
 
-**URL**: https://lovable.dev/projects/ee8805aa-94a6-4403-9bba-08c907978239
+---
 
-## How can I edit this code?
+## 🚀 Features
 
-There are several ways of editing your application.
+### 🔐 Authentication
+- Secure login/signup using Supabase Auth.
+- Role-based access: `admin`, `customer`, `delivery`.
 
-**Use Lovable**
+### 🧑‍💼 Admin Dashboard
+- Full access to all orders and production data.
+- Can view, assign, complete, or delete any order.
+- Can assign delivery persons to pending orders.
+- Access to a **Production Panel** to track production-related updates.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ee8805aa-94a6-4403-9bba-08c907978239) and start prompting.
+### 👤 Customer Dashboard
+- Place new table orders using a structured form.
+- View and track status of their own orders (Pending, Assigned, Completed).
+- See delivery status and order history.
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🚚 Delivery Person Dashboard
+- View all available (unassigned) delivery jobs.
+- Assign themselves to orders.
+- Mark assigned orders as "Completed".
+- View their delivery history.
 
-**Use your preferred IDE**
+### 📦 Order Management
+- Add multiple tables per order with size, colour, quantity, and price.
+- Auto-calculate total price based on table selection.
+- Special instructions and delivery notes support.
+- Order status: `pending`, `assigned`, `completed`.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 🔔 Notifications
+- Optional real-time order updates and notification button.
+- Toast messages for actions like assign, complete, delete.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## 🧱 Tech Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+| Frontend         | Backend/API     | Database       | Auth & Storage  |
+|------------------|------------------|----------------|-----------------|
+| React + Vite     | Supabase Functions / REST | Supabase Postgres | Supabase Auth   |
+| TypeScript       | React Router     | Supabase Realtime | Supabase Storage (optional) |
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+---
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 📁 Project Structure
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+src/
+├── components/         # Reusable UI components
+├── contexts/           # Global context (Auth, App)
+├── hooks/              # Custom hooks (e.g., use-mobile)
+├── pages/              # Page views: Orders, History, Production, Auth
+├── types/              # Global TypeScript types (Order, TableItem)
+├── integrations/       # Supabase client setup
+└── App.tsx             # App routing & layout
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🛠 Setup Instructions
 
-**Use GitHub Codespaces**
+1. **Clone the Repo:**
+   ```bash
+   git clone https://github.com/your-username/tableflow.git
+   cd tableflow
+   ```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-## What technologies are used for this project?
+3. **Set up Supabase:**
+   - Create a [Supabase](https://supabase.com) project.
+   - Create tables: `orders`, `order_tables`, `profiles`.
+   - Add roles/claims to match (`admin`, `customer`, `delivery`).
+   - Add your Supabase project URL and anon key in `.env`:
 
-This project is built with:
+     ```env
+     VITE_SUPABASE_URL=https://your-project.supabase.co
+     VITE_SUPABASE_ANON_KEY=your-anon-key
+     ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+4. **Run the App Locally:**
+   ```bash
+   npm run dev
+   ```
 
-## How can I deploy this project?
+5. **(Optional) Convert to Android App:**
+   Using Capacitor:
+   ```bash
+   npm install @capacitor/android
+   npx cap add android
+   npx cap open android
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/ee8805aa-94a6-4403-9bba-08c907978239) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## 🧩 Future Enhancements
 
-Yes it is!
+- Add proof of delivery (digital signatures or images)
+- Add route optimization for delivery
+- Inventory & production tracking dashboard
+- SMS/WhatsApp notifications
+- Admin reports and analytics
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🙋‍♂️ Author
+
+Built by **Methupa** with love for furniture businesses 🪑
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
