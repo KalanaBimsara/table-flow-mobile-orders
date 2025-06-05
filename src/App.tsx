@@ -15,7 +15,7 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AppProvider } from "./contexts/AppContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AppHeaderWrapper from "./components/AppHeaderWrapper";
+import AppLayout from "./components/AppLayout";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -33,8 +33,8 @@ function App() {
                   <Routes>
                     <Route path="/auth" element={<ProtectedRoute public><Auth /></ProtectedRoute>} />
                     <Route path="/order" element={<ProtectedRoute public><PublicOrderForm /></ProtectedRoute>} />
-                    <Route element={<AppHeaderWrapper />}>
-                      <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                    <Route path="/" element={<AppLayout />}>
+                      <Route index element={<ProtectedRoute><Index /></ProtectedRoute>} />
                       <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
                       <Route path="/history" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
                       <Route path="/production" element={<ProtectedRoute allowedRoles={['admin']}><Production /></ProtectedRoute>} />
