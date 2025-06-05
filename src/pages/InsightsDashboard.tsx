@@ -67,8 +67,8 @@ const InsightsDashboard: React.FC = () => {
         return format(date, 'MMM dd');
       }).reverse();
 
-      const dailyOrdersMap = new Map();
-      const dailyCompletedMap = new Map();
+      const dailyOrdersMap = new Map<string, number>();
+      const dailyCompletedMap = new Map<string, number>();
 
       orders.forEach(order => {
         const orderDate = format(new Date(order.created_at), 'MMM dd');
@@ -86,7 +86,7 @@ const InsightsDashboard: React.FC = () => {
       }));
 
       // Process size distribution
-      const sizeMap = new Map();
+      const sizeMap = new Map<string, number>();
       let totalTables = 0;
 
       orders.forEach(order => {
@@ -106,7 +106,7 @@ const InsightsDashboard: React.FC = () => {
       }));
 
       // Process colour distribution
-      const colourMap = new Map();
+      const colourMap = new Map<string, number>();
       orders.forEach(order => {
         if (order.order_tables) {
           order.order_tables.forEach((table: any) => {
@@ -122,10 +122,10 @@ const InsightsDashboard: React.FC = () => {
       }));
 
       // Process monthly revenue (last 6 months)
-      const monthlyRevenueMap = new Map();
+      const monthlyRevenueMap = new Map<string, number>();
       orders.forEach(order => {
         const month = format(new Date(order.created_at), 'MMM yyyy');
-        const revenue = parseFloat(order.price) || 0;
+        const revenue = parseFloat(order.price.toString()) || 0;
         monthlyRevenueMap.set(month, (monthlyRevenueMap.get(month) || 0) + revenue);
       });
 
@@ -134,10 +134,10 @@ const InsightsDashboard: React.FC = () => {
         .slice(-6);
 
       // Process sales person stats
-      const salesPersonMap = new Map();
+      const salesPersonMap = new Map<string, { orders: number; revenue: number }>();
       orders.forEach(order => {
         const salesPerson = order.sales_person_name || 'Unknown';
-        const revenue = parseFloat(order.price) || 0;
+        const revenue = parseFloat(order.price.toString()) || 0;
         const existing = salesPersonMap.get(salesPerson) || { orders: 0, revenue: 0 };
         salesPersonMap.set(salesPerson, {
           orders: existing.orders + 1,
@@ -155,7 +155,7 @@ const InsightsDashboard: React.FC = () => {
       const totalOrders = orders.length;
       const completedOrders = orders.filter(order => order.status === 'completed').length;
       const pendingOrders = orders.filter(order => order.status === 'pending').length;
-      const totalRevenue = orders.reduce((sum, order) => sum + (parseFloat(order.price) || 0), 0);
+      const totalRevenue = orders.reduce((sum, order) => sum + (parseFloat(order.price.toString()) || 0), 0);
       const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
       setDashboardData({
@@ -358,7 +358,7 @@ const InsightsDashboard: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <ChartTooltip formatter={(value) => [`LKR ${value.toLocaleString()}`, 'Revenue']} />
+                  <ChartTooltip formatter={(value) => [`LKR ${Number(value).toLocaleString()}`, 'Revenue']} />
                   <Line type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
