@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 import { Moon, Sun, Factory } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ui/theme-provider";
 import NotificationButton from "@/components/NotificationButton";
 import { useApp } from "@/contexts/AppContext";
 
