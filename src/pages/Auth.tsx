@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, ShoppingBag, Mail } from 'lucide-react';
+import { Loader2, ShoppingBag, Mail, ArrowLeft } from 'lucide-react';
 import { Navigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -19,6 +19,10 @@ import { toast } from 'sonner';
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
 });
 
 const activationRequestSchema = z.object({
@@ -30,19 +34,29 @@ const activationRequestSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 type ActivationRequestFormValues = z.infer<typeof activationRequestSchema>;
 
 const Auth: React.FC = () => {
   const { user, loading, signIn } = useAuth();
   const [authLoading, setAuthLoading] = useState(false);
   const [requestLoading, setRequestLoading] = useState(false);
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('login');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
+    },
+  });
+
+  const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: '',
     },
   });
 
@@ -65,6 +79,26 @@ const Auth: React.FC = () => {
       console.error("Login error:", error);
     } finally {
       setAuthLoading(false);
+    }
+  };
+
+  const onForgotPasswordSubmit = async (data: ForgotPasswordFormValues) => {
+    setForgotPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Password reset email sent! Please check your inbox.');
+      forgotPasswordForm.reset();
+      setShowForgotPassword(false);
+    } catch (error: any) {
+      console.error("Forgot password error:", error);
+      toast.error(error.message || 'Failed to send password reset email');
+    } finally {
+      setForgotPasswordLoading(false);
     }
   };
 
@@ -115,58 +149,120 @@ const Auth: React.FC = () => {
             </TabsList>
             
             <TabsContent value="login">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 mt-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="your@email.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button type="submit" className="w-full" disabled={authLoading}>
-                    {authLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      'Sign In'
-                    )}
-                  </Button>
-
-                  <div className="text-center mt-4">
-                    <p className="text-sm text-muted-foreground mb-2">Want to place an order without an account?</p>
-                    <Link to="/order">
-                      <Button variant="outline" className="w-full">
-                        <ShoppingBag size={16} className="mr-2" />
-                        Order as Guest
-                      </Button>
-                    </Link>
+              {showForgotPassword ? (
+                <div className="mt-4">
+                  <div className="flex items-center mb-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowForgotPassword(false)}
+                      className="p-0 h-auto"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to Login
+                    </Button>
                   </div>
-                </form>
-              </Form>
+                  <h3 className="text-lg font-semibold mb-2">Reset Password</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Enter your email address and we'll send you a link to reset your password.
+                  </p>
+                  <Form {...forgotPasswordForm}>
+                    <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-4">
+                      <FormField
+                        control={forgotPasswordForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="your@email.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button type="submit" className="w-full" disabled={forgotPasswordLoading}>
+                        {forgotPasswordLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Send Reset Email
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+              ) : (
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 mt-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="your@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button type="submit" className="w-full" disabled={authLoading}>
+                      {authLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Signing in...
+                        </>
+                      ) : (
+                        'Sign In'
+                      )}
+                    </Button>
+
+                    <div className="text-center">
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-sm p-0"
+                        onClick={() => setShowForgotPassword(true)}
+                      >
+                        Forgot your password?
+                      </Button>
+                    </div>
+
+                    <div className="text-center mt-4">
+                      <p className="text-sm text-muted-foreground mb-2">Want to place an order without an account?</p>
+                      <Link to="/order">
+                        <Button variant="outline" className="w-full">
+                          <ShoppingBag size={16} className="mr-2" />
+                          Order as Guest
+                        </Button>
+                      </Link>
+                    </div>
+                  </form>
+                </Form>
+              )}
             </TabsContent>
             
             <TabsContent value="request">
