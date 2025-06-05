@@ -12,15 +12,19 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+
 type OrderCardProps = {
   order: Order;
   onComplete?: () => void;
   actionButton?: React.ReactNode;
+  showSalesPerson?: boolean;
 };
+
 const OrderCard: React.FC<OrderCardProps> = ({
   order,
   onComplete,
-  actionButton
+  actionButton,
+  showSalesPerson = false
 }) => {
   const {
     userRole,
@@ -100,6 +104,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       fetchCreatorName();
     }
   }, [order.createdBy, userRole]);
+
   const handleAssignOrder = () => {
     if (!user) {
       toast.error("You must be logged in to assign orders");
@@ -216,7 +221,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </span>
           </div>
 
-          {(userRole === 'admin' || userRole === 'delivery') && order.createdBy && <div className="flex items-center gap-2 mt-3">
+          {showSalesPerson && order.salesPersonName && (
+            <div className="flex items-center gap-2 mt-3">
+              <UserPlus size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
+              <span className="font-medium text-green-700">
+                Sales Person: {order.salesPersonName}
+              </span>
+            </div>
+          )}
+
+          {(userRole === 'admin' || userRole === 'delivery') && order.createdBy && !showSalesPerson && <div className="flex items-center gap-2 mt-3">
               <UserPlus size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
               <span className="font-medium text-green-700">
                 Sales Person: {creatorName || "Loading..."}
@@ -277,4 +291,5 @@ const OrderCard: React.FC<OrderCardProps> = ({
       </CardFooter>
     </Card>;
 };
+
 export default OrderCard;
