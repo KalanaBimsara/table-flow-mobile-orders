@@ -26,6 +26,7 @@ type OrderResponse = {
   created_at: string;
   completed_at: string | null;
   delivery_person_id: string | null;
+  sales_person_name: string | null;  // Added this field
 };
 
 type OrderTableResponse = {
@@ -133,7 +134,8 @@ export function OrderList() {
         createdAt: new Date(order.created_at),
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
         totalPrice: order.price,
-        assignedTo: order.delivery_person_id
+        assignedTo: order.delivery_person_id,
+        salesPersonName: order.sales_person_name  // Include sales person name
       }));
 
       // Sort by creation date (latest first) - already sorted by query but ensuring consistency
@@ -229,7 +231,8 @@ export function OrderList() {
         completedAt: order.completed_at ? new Date(order.completed_at) : undefined,
         totalPrice: order.price,
         assignedTo: order.delivery_person_id,
-        delivery_person_id: order.delivery_person_id
+        delivery_person_id: order.delivery_person_id,
+        salesPersonName: order.sales_person_name  // Include sales person name
       }));
 
       console.log('Formatted completed orders:', formattedOrders);
@@ -316,6 +319,7 @@ export function OrderList() {
                       <OrderCard 
                         key={order.id} 
                         order={order}
+                        showSalesPerson={true}
                         actionButton={
                           <button 
                             onClick={() => handleSelfAssign(order.id)}
