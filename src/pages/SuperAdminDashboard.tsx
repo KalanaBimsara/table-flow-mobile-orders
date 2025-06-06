@@ -47,6 +47,7 @@ const SuperAdminDashboard = () => {
   const { user, signOut } = useSuperAdminAuth();
   const [stats, setStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   if (!user) {
     return <Navigate to="/super-admin/login" replace />;
@@ -59,16 +60,30 @@ const SuperAdminDashboard = () => {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Get today's stats directly from orders table since analytics table might not exist
+      console.log('Loading analytics data...');
+      
+      // Get today's stats directly from orders table
       const today = new Date().toISOString().split('T')[0];
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      
+      console.log('Fetching today\'s orders for date:', today);
       
       // Get today's orders
-      const { data: todayOrders } = await supabase
+      const { data: todayOrders, error: todayError } = await supabase
         .from('orders')
         .select('id, price, delivery_fee, additional_charges, status, created_at')
         .gte('created_at', today)
-        .lt('created_at', new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]);
+        .lt('created_at', tomorrowStr);
+
+      if (todayError) {
+        console.error('Error fetching today\'s orders:', todayError);
+      } else {
+        console.log('Today\'s orders:', todayOrders);
+      }
 
       const todayStats = {
         total_orders: todayOrders?.length || 0,
@@ -78,14 +93,24 @@ const SuperAdminDashboard = () => {
           sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0
       };
 
+      console.log('Today\'s stats:', todayStats);
+
       // Get week's data (last 7 days)
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       
-      const { data: weekOrders } = await supabase
+      console.log('Fetching week\'s orders from:', weekAgo.toISOString());
+      
+      const { data: weekOrders, error: weekError } = await supabase
         .from('orders')
         .select('id, price, delivery_fee, additional_charges, status, created_at')
         .gte('created_at', weekAgo.toISOString());
+
+      if (weekError) {
+        console.error('Error fetching week\'s orders:', weekError);
+      } else {
+        console.log('Week\'s orders:', weekOrders);
+      }
 
       // Group by date
       const weekData: DailyAnalyticsData[] = [];
@@ -108,18 +133,35 @@ const SuperAdminDashboard = () => {
         });
       }
 
+      console.log('Week data:', weekData);
+
       // Get monthly data (last 6 months) 
       const monthData: MonthlyAnalyticsData[] = [];
       for (let i = 5; i >= 0; i--) {
         const date = new Date();
         date.setMonth(date.getMonth() - i);
-        const monthStr = date.toISOString().substring(0, 7); // YYYY-MM format
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const monthStr = `${year}-${month}`;
         
-        const { data: monthOrders } = await supabase
+        // Get the first day of current month and first day of next month
+        const startDate = `${year}-${month}-01`;
+        const nextMonth = new Date(year, date.getMonth() + 1, 1);
+        const endDate = nextMonth.toISOString().split('T')[0];
+        
+        console.log(`Fetching orders for month ${monthStr} between ${startDate} and ${endDate}`);
+        
+        const { data: monthOrders, error: monthError } = await supabase
           .from('orders')
           .select('id, price, delivery_fee, additional_charges, created_at')
-          .gte('created_at', `${monthStr}-01`)
-          .lt('created_at', `${monthStr}-32`);
+          .gte('created_at', startDate)
+          .lt('created_at', endDate);
+        
+        if (monthError) {
+          console.error(`Error fetching month ${monthStr} orders:`, monthError);
+        } else {
+          console.log(`Month ${monthStr} orders:`, monthOrders);
+        }
         
         const totalRevenue = monthOrders?.reduce((sum, order) => 
           sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0;
@@ -132,19 +174,33 @@ const SuperAdminDashboard = () => {
         });
       }
 
+      console.log('Month data:', monthData);
+
       // Get overall stats
-      const { data: allOrders } = await supabase
+      const { data: allOrders, error: allOrdersError } = await supabase
         .from('orders')
         .select('id, price, delivery_fee, additional_charges, status');
 
-      const { data: allUsers } = await supabase
+      if (allOrdersError) {
+        console.error('Error fetching all orders:', allOrdersError);
+      } else {
+        console.log('All orders count:', allOrders?.length);
+      }
+
+      const { data: allUsers, error: allUsersError } = await supabase
         .from('profiles')
         .select('id');
+
+      if (allUsersError) {
+        console.error('Error fetching all users:', allUsersError);
+      } else {
+        console.log('All users count:', allUsers?.length);
+      }
 
       const totalRevenue = allOrders?.reduce((sum, order) => 
         sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0;
 
-      setStats({
+      const finalStats = {
         today: todayStats,
         week: weekData,
         month: monthData,
@@ -154,9 +210,13 @@ const SuperAdminDashboard = () => {
           total_revenue: totalRevenue,
           avg_order_value: allOrders?.length ? totalRevenue / allOrders.length : 0
         }
-      });
+      };
+
+      console.log('Final stats:', finalStats);
+      setStats(finalStats);
     } catch (error) {
       console.error('Failed to load analytics:', error);
+      setError('Failed to load analytics data');
     } finally {
       setLoading(false);
     }
@@ -165,12 +225,26 @@ const SuperAdminDashboard = () => {
   const pieData = stats ? [
     { name: 'Completed', value: stats.today.completed_orders, color: COLORS[0] },
     { name: 'Pending', value: stats.today.pending_orders, color: COLORS[1] },
-  ] : [];
+  ].filter(item => item.value > 0) : [];
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <RefreshCw className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={loadAnalytics}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
@@ -232,7 +306,7 @@ const SuperAdminDashboard = () => {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{stats?.overview.total_revenue.toLocaleString() || 0}</div>
+              <div className="text-2xl font-bold">LKR {stats?.overview.total_revenue.toLocaleString() || 0}</div>
             </CardContent>
           </Card>
 
@@ -242,7 +316,7 @@ const SuperAdminDashboard = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹{Math.round(stats?.overview.avg_order_value || 0)}</div>
+              <div className="text-2xl font-bold">LKR {Math.round(stats?.overview.avg_order_value || 0).toLocaleString()}</div>
             </CardContent>
           </Card>
         </div>
@@ -284,32 +358,38 @@ const SuperAdminDashboard = () => {
               <CardDescription>Distribution of order statuses today</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer
-                config={{
-                  completed: { label: "Completed", color: "#10b981" },
-                  pending: { label: "Pending", color: "#f59e0b" },
-                }}
-                className="h-[300px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              {pieData.length > 0 ? (
+                <ChartContainer
+                  config={{
+                    completed: { label: "Completed", color: "#10b981" },
+                    pending: { label: "Pending", color: "#f59e0b" },
+                  }}
+                  className="h-[300px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  No orders today
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -318,7 +398,7 @@ const SuperAdminDashboard = () => {
         <Card>
           <CardHeader>
             <CardTitle>Monthly Revenue Trend</CardTitle>
-            <CardDescription>Revenue performance over the last 6 months</CardDescription>
+            <CardDescription>Revenue performance over the last 6 months (LKR)</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer
