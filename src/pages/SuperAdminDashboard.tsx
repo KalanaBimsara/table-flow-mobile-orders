@@ -4,24 +4,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Shield, Users, Package, TrendingUp, DollarSign, Calendar, LogOut, RefreshCw } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, DollarSign, LogOut, RefreshCw } from 'lucide-react';
 import { useSuperAdminAuth } from '@/contexts/SuperAdminAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
 
-type AnalyticsData = {
+type DailyAnalyticsData = {
   total_orders: number;
   completed_orders: number;
   pending_orders: number;
   total_revenue: number;
-  date?: string;
-  month?: string;
+  date: string;
+};
+
+type MonthlyAnalyticsData = {
+  total_orders: number;
+  total_revenue: number;
+  avg_order_value: number;
+  month: string;
 };
 
 type OrderStats = {
-  today: AnalyticsData;
-  week: AnalyticsData[];
-  month: AnalyticsData[];
+  today: {
+    total_orders: number;
+    completed_orders: number;
+    pending_orders: number;
+    total_revenue: number;
+  };
+  week: DailyAnalyticsData[];
+  month: MonthlyAnalyticsData[];
   overview: {
     total_users: number;
     total_orders: number;
@@ -49,68 +60,105 @@ const SuperAdminDashboard = () => {
     try {
       setLoading(true);
       
-      // Get today's stats
+      // Get today's stats directly from orders table since analytics table might not exist
       const today = new Date().toISOString().split('T')[0];
-      const { data: todayData } = await supabase
-        .from('daily_analytics')
-        .select('*')
-        .eq('date', today)
-        .single();
+      
+      // Get today's orders
+      const { data: todayOrders } = await supabase
+        .from('orders')
+        .select('id, price, delivery_fee, additional_charges, status, created_at')
+        .gte('created_at', today)
+        .lt('created_at', new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]);
 
-      // Get week's stats (last 7 days)
+      const todayStats = {
+        total_orders: todayOrders?.length || 0,
+        completed_orders: todayOrders?.filter(o => o.status === 'completed').length || 0,
+        pending_orders: todayOrders?.filter(o => o.status === 'pending').length || 0,
+        total_revenue: todayOrders?.reduce((sum, order) => 
+          sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0
+      };
+
+      // Get week's data (last 7 days)
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      const { data: weekData } = await supabase
-        .from('daily_analytics')
-        .select('*')
-        .gte('date', weekAgo.toISOString().split('T')[0])
-        .order('date');
+      
+      const { data: weekOrders } = await supabase
+        .from('orders')
+        .select('id, price, delivery_fee, additional_charges, status, created_at')
+        .gte('created_at', weekAgo.toISOString());
 
-      // Get month's stats (last 6 months)
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      const { data: monthData } = await supabase
-        .from('monthly_analytics')
-        .select('*')
-        .gte('month', sixMonthsAgo.toISOString().split('T')[0])
-        .order('month');
+      // Group by date
+      const weekData: DailyAnalyticsData[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const dayOrders = weekOrders?.filter(o => 
+          o.created_at?.startsWith(dateStr)
+        ) || [];
+        
+        weekData.push({
+          date: dateStr,
+          total_orders: dayOrders.length,
+          completed_orders: dayOrders.filter(o => o.status === 'completed').length,
+          pending_orders: dayOrders.filter(o => o.status === 'pending').length,
+          total_revenue: dayOrders.reduce((sum, order) => 
+            sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0)
+        });
+      }
+
+      // Get monthly data (last 6 months) 
+      const monthData: MonthlyAnalyticsData[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthStr = date.toISOString().substring(0, 7); // YYYY-MM format
+        
+        const { data: monthOrders } = await supabase
+          .from('orders')
+          .select('id, price, delivery_fee, additional_charges, created_at')
+          .gte('created_at', `${monthStr}-01`)
+          .lt('created_at', `${monthStr}-32`);
+        
+        const totalRevenue = monthOrders?.reduce((sum, order) => 
+          sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0;
+        
+        monthData.push({
+          month: monthStr,
+          total_orders: monthOrders?.length || 0,
+          total_revenue: totalRevenue,
+          avg_order_value: monthOrders?.length ? totalRevenue / monthOrders.length : 0
+        });
+      }
 
       // Get overall stats
-      const { data: ordersData } = await supabase
+      const { data: allOrders } = await supabase
         .from('orders')
         .select('id, price, delivery_fee, additional_charges, status');
 
-      const { data: usersData } = await supabase
+      const { data: allUsers } = await supabase
         .from('profiles')
         .select('id');
 
-      const totalRevenue = ordersData?.reduce((sum, order) => 
+      const totalRevenue = allOrders?.reduce((sum, order) => 
         sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0;
 
       setStats({
-        today: todayData || { total_orders: 0, completed_orders: 0, pending_orders: 0, total_revenue: 0 },
-        week: weekData || [],
-        month: monthData || [],
+        today: todayStats,
+        week: weekData,
+        month: monthData,
         overview: {
-          total_users: usersData?.length || 0,
-          total_orders: ordersData?.length || 0,
+          total_users: allUsers?.length || 0,
+          total_orders: allOrders?.length || 0,
           total_revenue: totalRevenue,
-          avg_order_value: ordersData?.length ? totalRevenue / ordersData.length : 0
+          avg_order_value: allOrders?.length ? totalRevenue / allOrders.length : 0
         }
       });
     } catch (error) {
       console.error('Failed to load analytics:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const updateAnalytics = async () => {
-    try {
-      await supabase.rpc('update_daily_analytics');
-      await loadAnalytics();
-    } catch (error) {
-      console.error('Failed to update analytics:', error);
     }
   };
 
@@ -141,7 +189,7 @@ const SuperAdminDashboard = () => {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Welcome, {user.username}
               </span>
-              <Button variant="outline" size="sm" onClick={updateAnalytics}>
+              <Button variant="outline" size="sm" onClick={loadAnalytics}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh Data
               </Button>

@@ -23,86 +23,88 @@ import PublicOrderForm from "./pages/PublicOrderForm";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light">
-      <ThemeProviderContextProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Super Admin Routes - Completely Separate System */}
-              <Route path="/super-admin/*" element={
-                <SuperAdminAuthProvider>
-                  <Routes>
-                    <Route path="login" element={<SuperAdminLogin />} />
-                    <Route path="dashboard" element={
-                      <SuperAdminProtectedRoute>
-                        <SuperAdminDashboard />
-                      </SuperAdminProtectedRoute>
-                    } />
-                  </Routes>
-                </SuperAdminAuthProvider>
-              } />
-              
-              {/* Main Application Routes */}
-              <Route path="/*" element={
-                <AuthProvider>
-                  <AppProvider>
-                    <Toaster />
-                    <Sonner />
-                    <div className="min-h-screen flex flex-col">
-                      <AppHeaderWrapper />
-                      <main className="flex-1">
-                        <Routes>
-                          <Route path="/auth" element={<Auth />} />
-                          <Route 
-                            path="/order" 
-                            element={
-                              <ProtectedRoute public={true}>
-                                <PublicOrderForm />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route element={<ProtectedRoute />}>
-                            <Route path="/" element={<Index />} />
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light">
+        <ThemeProviderContextProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Super Admin Routes - Completely Separate System */}
+                <Route path="/super-admin/*" element={
+                  <SuperAdminAuthProvider>
+                    <Routes>
+                      <Route path="login" element={<SuperAdminLogin />} />
+                      <Route path="dashboard" element={
+                        <SuperAdminProtectedRoute>
+                          <SuperAdminDashboard />
+                        </SuperAdminProtectedRoute>
+                      } />
+                    </Routes>
+                  </SuperAdminAuthProvider>
+                } />
+                
+                {/* Main Application Routes */}
+                <Route path="/*" element={
+                  <AuthProvider>
+                    <AppProvider>
+                      <Toaster />
+                      <Sonner />
+                      <div className="min-h-screen flex flex-col">
+                        <AppHeaderWrapper />
+                        <main className="flex-1">
+                          <Routes>
+                            <Route path="/auth" element={<Auth />} />
                             <Route 
-                              path="/orders" 
+                              path="/order" 
                               element={
-                                <ProtectedRoute allowedRoles={['admin', 'customer', 'delivery']}>
-                                  <Orders />
+                                <ProtectedRoute public={true}>
+                                  <PublicOrderForm />
                                 </ProtectedRoute>
                               } 
                             />
-                            <Route 
-                              path="/history" 
-                              element={
-                                <ProtectedRoute allowedRoles={['admin', 'customer', 'delivery']}>
-                                  <OrderHistory />
-                                </ProtectedRoute>
-                              } 
-                            />
-                            <Route 
-                              path="/production" 
-                              element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                  <Production />
-                                </ProtectedRoute>
-                              } 
-                            />
-                          </Route>
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </main>
-                    </div>
-                  </AppProvider>
-                </AuthProvider>
-              } />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProviderContextProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+                            <Route element={<ProtectedRoute />}>
+                              <Route path="/" element={<Index />} />
+                              <Route 
+                                path="/orders" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['admin', 'customer', 'delivery']}>
+                                    <Orders />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/history" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['admin', 'customer', 'delivery']}>
+                                    <OrderHistory />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/production" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['admin']}>
+                                    <Production />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                            </Route>
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </main>
+                      </div>
+                    </AppProvider>
+                  </AuthProvider>
+                } />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProviderContextProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
