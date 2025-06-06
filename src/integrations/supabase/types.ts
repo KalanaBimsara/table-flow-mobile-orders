@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      daily_analytics: {
+        Row: {
+          completed_orders: number | null
+          created_at: string
+          date: string
+          id: string
+          pending_orders: number | null
+          total_orders: number | null
+          total_revenue: number | null
+        }
+        Insert: {
+          completed_orders?: number | null
+          created_at?: string
+          date: string
+          id?: string
+          pending_orders?: number | null
+          total_orders?: number | null
+          total_revenue?: number | null
+        }
+        Update: {
+          completed_orders?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          pending_orders?: number | null
+          total_orders?: number | null
+          total_revenue?: number | null
+        }
+        Relationships: []
+      }
+      monthly_analytics: {
+        Row: {
+          avg_order_value: number | null
+          created_at: string
+          id: string
+          month: string
+          total_orders: number | null
+          total_revenue: number | null
+        }
+        Insert: {
+          avg_order_value?: number | null
+          created_at?: string
+          id?: string
+          month: string
+          total_orders?: number | null
+          total_revenue?: number | null
+        }
+        Update: {
+          avg_order_value?: number | null
+          created_at?: string
+          id?: string
+          month?: string
+          total_orders?: number | null
+          total_revenue?: number | null
+        }
+        Relationships: []
+      }
       order_tables: {
         Row: {
           colour: string
@@ -242,12 +299,77 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admin_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          session_token: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          session_token: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_token?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "super_admin_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "super_admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      super_admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          last_login: string | null
+          password_hash: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          last_login?: string | null
+          password_hash: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          last_login?: string | null
+          password_hash?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_daily_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "customer" | "seller" | "delivery" | "admin"
