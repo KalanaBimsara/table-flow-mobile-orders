@@ -8,6 +8,7 @@ import { Shield, Users, Package, TrendingUp, DollarSign, LogOut, RefreshCw } fro
 import { useSuperAdminAuth } from '@/contexts/SuperAdminAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
+import OrderDetailsTable from '@/components/OrderDetailsTable';
 
 type DailyAnalyticsData = {
   total_orders: number;
@@ -22,6 +23,21 @@ type MonthlyAnalyticsData = {
   total_revenue: number;
   avg_order_value: number;
   month: string;
+};
+
+type OrderDetail = {
+  id: string;
+  customer_name: string;
+  address: string;
+  contact_number: string;
+  status: string;
+  price: number;
+  delivery_fee: number;
+  additional_charges: number;
+  created_at: string;
+  table_size: string;
+  quantity: number;
+  sales_person_name?: string;
 };
 
 type OrderStats = {
@@ -39,6 +55,7 @@ type OrderStats = {
     total_revenue: number;
     avg_order_value: number;
   };
+  recentOrders: OrderDetail[];
 };
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'];
@@ -64,20 +81,16 @@ const SuperAdminDashboard = () => {
       
       console.log('Loading analytics data...');
       
-      // Get today's stats directly from orders table
+      // Get today's stats
       const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = tomorrow.toISOString().split('T')[0];
       
       console.log('Fetching today\'s orders for date:', today);
       
-      // Get today's orders
       const { data: todayOrders, error: todayError } = await supabase
         .from('orders')
-        .select('id, price, delivery_fee, additional_charges, status, created_at')
-        .gte('created_at', today)
-        .lt('created_at', tomorrowStr);
+        .select('*')
+        .gte('created_at', today + 'T00:00:00')
+        .lt('created_at', today + 'T23:59:59');
 
       if (todayError) {
         console.error('Error fetching today\'s orders:', todayError);
@@ -93,49 +106,49 @@ const SuperAdminDashboard = () => {
           sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0
       };
 
-      console.log('Today\'s stats:', todayStats);
-
-      // Get week's data (last 7 days)
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      
-      console.log('Fetching week\'s orders from:', weekAgo.toISOString());
-      
-      const { data: weekOrders, error: weekError } = await supabase
+      // Get recent orders (last 20)
+      const { data: recentOrders, error: recentError } = await supabase
         .from('orders')
-        .select('id, price, delivery_fee, additional_charges, status, created_at')
-        .gte('created_at', weekAgo.toISOString());
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-      if (weekError) {
-        console.error('Error fetching week\'s orders:', weekError);
+      if (recentError) {
+        console.error('Error fetching recent orders:', recentError);
       } else {
-        console.log('Week\'s orders:', weekOrders);
+        console.log('Recent orders:', recentOrders);
       }
 
-      // Group by date
+      // Get week's data (last 7 days)
       const weekData: DailyAnalyticsData[] = [];
       for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
         
-        const dayOrders = weekOrders?.filter(o => 
-          o.created_at?.startsWith(dateStr)
-        ) || [];
+        const { data: dayOrders, error: dayError } = await supabase
+          .from('orders')
+          .select('*')
+          .gte('created_at', dateStr + 'T00:00:00')
+          .lt('created_at', dateStr + 'T23:59:59');
+        
+        if (dayError) {
+          console.error(`Error fetching orders for ${dateStr}:`, dayError);
+        }
         
         weekData.push({
           date: dateStr,
-          total_orders: dayOrders.length,
-          completed_orders: dayOrders.filter(o => o.status === 'completed').length,
-          pending_orders: dayOrders.filter(o => o.status === 'pending').length,
-          total_revenue: dayOrders.reduce((sum, order) => 
-            sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0)
+          total_orders: dayOrders?.length || 0,
+          completed_orders: dayOrders?.filter(o => o.status === 'completed').length || 0,
+          pending_orders: dayOrders?.filter(o => o.status === 'pending').length || 0,
+          total_revenue: dayOrders?.reduce((sum, order) => 
+            sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0
         });
       }
 
       console.log('Week data:', weekData);
 
-      // Get monthly data (last 6 months) 
+      // Get monthly data (last 6 months)
       const monthData: MonthlyAnalyticsData[] = [];
       for (let i = 5; i >= 0; i--) {
         const date = new Date();
@@ -144,16 +157,15 @@ const SuperAdminDashboard = () => {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const monthStr = `${year}-${month}`;
         
-        // Get the first day of current month and first day of next month
-        const startDate = `${year}-${month}-01`;
+        const startDate = `${year}-${month}-01T00:00:00`;
         const nextMonth = new Date(year, date.getMonth() + 1, 1);
-        const endDate = nextMonth.toISOString().split('T')[0];
+        const endDate = nextMonth.toISOString();
         
         console.log(`Fetching orders for month ${monthStr} between ${startDate} and ${endDate}`);
         
         const { data: monthOrders, error: monthError } = await supabase
           .from('orders')
-          .select('id, price, delivery_fee, additional_charges, created_at')
+          .select('*')
           .gte('created_at', startDate)
           .lt('created_at', endDate);
         
@@ -179,7 +191,7 @@ const SuperAdminDashboard = () => {
       // Get overall stats
       const { data: allOrders, error: allOrdersError } = await supabase
         .from('orders')
-        .select('id, price, delivery_fee, additional_charges, status');
+        .select('*');
 
       if (allOrdersError) {
         console.error('Error fetching all orders:', allOrdersError);
@@ -209,7 +221,8 @@ const SuperAdminDashboard = () => {
           total_orders: allOrders?.length || 0,
           total_revenue: totalRevenue,
           avg_order_value: allOrders?.length ? totalRevenue / allOrders.length : 0
-        }
+        },
+        recentOrders: recentOrders || []
       };
 
       console.log('Final stats:', finalStats);
@@ -222,7 +235,7 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const pieData = stats ? [
+  const pieData = stats && stats.today.total_orders > 0 ? [
     { name: 'Completed', value: stats.today.completed_orders, color: COLORS[0] },
     { name: 'Pending', value: stats.today.pending_orders, color: COLORS[1] },
   ].filter(item => item.value > 0) : [];
@@ -319,6 +332,14 @@ const SuperAdminDashboard = () => {
               <div className="text-2xl font-bold">LKR {Math.round(stats?.overview.avg_order_value || 0).toLocaleString()}</div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Order Details Table */}
+        <div className="mb-8">
+          <OrderDetailsTable 
+            orders={stats?.recentOrders || []} 
+            loading={loading}
+          />
         </div>
 
         {/* Charts Grid */}
