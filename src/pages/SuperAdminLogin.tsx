@@ -118,9 +118,9 @@ const SuperAdminLogin = () => {
             
             <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
               <p className="text-sm text-amber-800 dark:text-amber-200">
-                <strong>Default credentials:</strong><br />
-                Username: superadmin<br />
-                Password: admin123
+                <strong>Valid credentials:</strong><br />
+                Username: superadmin, Password: admin123<br />
+                Username: admin, Password: superadmin2024
               </p>
             </div>
           </CardContent>

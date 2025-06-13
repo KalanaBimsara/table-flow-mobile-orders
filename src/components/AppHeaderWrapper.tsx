@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
-import { Moon, Sun, Factory } from "lucide-react";
+import { Moon, Sun, Factory, Shield } from "lucide-react";
 import { useTheme } from "@/components/ui/theme-provider";
 import NotificationButton from "@/components/NotificationButton";
 import { useApp } from "@/contexts/AppContext";
@@ -49,6 +50,18 @@ const AppHeaderWrapper = () => {
             </Button>
           )}
 
+          {/* ✅ Show "Super Admin" button for admin users */}
+          {userRole === "admin" && (
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/super-admin/login")}
+              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              <Shield size={16} className="mr-2" />
+              Super Admin
+            </Button>
+          )}
+
           {mounted && (
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
               <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -73,6 +86,15 @@ const AppHeaderWrapper = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {userRole === "admin" && (
+                  <>
+                    <DropdownMenuItem onClick={() => navigate("/super-admin/login")}>
+                      <Shield className="mr-2 h-4 w-4" />
+                      Super Admin
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={() => signOut()}>
                   Sign Out
                 </DropdownMenuItem>
