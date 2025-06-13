@@ -4,23 +4,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Shield, Users, Package, TrendingUp, DollarSign, LogOut, RefreshCw } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, DollarSign, LogOut, RefreshCw, TrendingDown } from 'lucide-react';
 import { useSuperAdminAuth } from '@/contexts/SuperAdminAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
 import OrderDetailsTable from '@/components/OrderDetailsTable';
+import { getFactoryPrice, calculateOrderProfit } from '@/types/order';
 
 type DailyAnalyticsData = {
   total_orders: number;
   completed_orders: number;
   pending_orders: number;
   total_revenue: number;
+  total_profit: number;
   date: string;
 };
 
 type MonthlyAnalyticsData = {
   total_orders: number;
   total_revenue: number;
+  total_profit: number;
   avg_order_value: number;
   month: string;
 };
@@ -46,6 +49,7 @@ type OrderStats = {
     completed_orders: number;
     pending_orders: number;
     total_revenue: number;
+    total_profit: number;
   };
   week: DailyAnalyticsData[];
   month: MonthlyAnalyticsData[];
@@ -53,6 +57,7 @@ type OrderStats = {
     total_users: number;
     total_orders: number;
     total_revenue: number;
+    total_profit: number;
     avg_order_value: number;
   };
   recentOrders: OrderDetail[];
@@ -73,6 +78,13 @@ const SuperAdminDashboard = () => {
   useEffect(() => {
     loadAnalytics();
   }, []);
+
+  const calculateProfit = (order: any) => {
+    const salesPrice = order.price || 0;
+    const tableSize = order.table_size;
+    const quantity = order.quantity || 1;
+    return calculateOrderProfit(salesPrice, tableSize, quantity);
+  };
 
   const loadAnalytics = async () => {
     try {
@@ -98,12 +110,15 @@ const SuperAdminDashboard = () => {
         console.log('Today\'s orders:', todayOrders);
       }
 
+      const todayProfit = todayOrders?.reduce((sum, order) => sum + calculateProfit(order), 0) || 0;
+
       const todayStats = {
         total_orders: todayOrders?.length || 0,
         completed_orders: todayOrders?.filter(o => o.status === 'completed').length || 0,
         pending_orders: todayOrders?.filter(o => o.status === 'pending').length || 0,
         total_revenue: todayOrders?.reduce((sum, order) => 
-          sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0
+          sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0,
+        total_profit: todayProfit
       };
 
       // Get recent orders (last 20)
@@ -136,13 +151,16 @@ const SuperAdminDashboard = () => {
           console.error(`Error fetching orders for ${dateStr}:`, dayError);
         }
         
+        const dayProfit = dayOrders?.reduce((sum, order) => sum + calculateProfit(order), 0) || 0;
+        
         weekData.push({
           date: dateStr,
           total_orders: dayOrders?.length || 0,
           completed_orders: dayOrders?.filter(o => o.status === 'completed').length || 0,
           pending_orders: dayOrders?.filter(o => o.status === 'pending').length || 0,
           total_revenue: dayOrders?.reduce((sum, order) => 
-            sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0
+            sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0,
+          total_profit: dayProfit
         });
       }
 
@@ -178,10 +196,13 @@ const SuperAdminDashboard = () => {
         const totalRevenue = monthOrders?.reduce((sum, order) => 
           sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0;
         
+        const totalProfit = monthOrders?.reduce((sum, order) => sum + calculateProfit(order), 0) || 0;
+        
         monthData.push({
           month: monthStr,
           total_orders: monthOrders?.length || 0,
           total_revenue: totalRevenue,
+          total_profit: totalProfit,
           avg_order_value: monthOrders?.length ? totalRevenue / monthOrders.length : 0
         });
       }
@@ -211,6 +232,8 @@ const SuperAdminDashboard = () => {
 
       const totalRevenue = allOrders?.reduce((sum, order) => 
         sum + (order.price || 0) + (order.delivery_fee || 0) + (order.additional_charges || 0), 0) || 0;
+      
+      const totalProfit = allOrders?.reduce((sum, order) => sum + calculateProfit(order), 0) || 0;
 
       const finalStats = {
         today: todayStats,
@@ -220,6 +243,7 @@ const SuperAdminDashboard = () => {
           total_users: allUsers?.length || 0,
           total_orders: allOrders?.length || 0,
           total_revenue: totalRevenue,
+          total_profit: totalProfit,
           avg_order_value: allOrders?.length ? totalRevenue / allOrders.length : 0
         },
         recentOrders: recentOrders || []
@@ -292,7 +316,7 @@ const SuperAdminDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -325,8 +349,18 @@ const SuperAdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">LKR {stats?.overview.total_profit.toLocaleString() || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">LKR {Math.round(stats?.overview.avg_order_value || 0).toLocaleString()}</div>
@@ -415,31 +449,60 @@ const SuperAdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Monthly Revenue Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Revenue Trend</CardTitle>
-            <CardDescription>Revenue performance over the last 6 months (LKR)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                total_revenue: { label: "Revenue", color: "#10b981" },
-              }}
-              className="h-[400px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stats?.month || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="total_revenue" stroke="#10b981" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        {/* Revenue and Profit Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Monthly Revenue Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Revenue Trend</CardTitle>
+              <CardDescription>Revenue performance over the last 6 months (LKR)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={{
+                  total_revenue: { label: "Revenue", color: "#10b981" },
+                }}
+                className="h-[400px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={stats?.month || []}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line type="monotone" dataKey="total_revenue" stroke="#10b981" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Monthly Profit Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Profit Trend</CardTitle>
+              <CardDescription>Profit analysis over the last 6 months (LKR)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={{
+                  total_profit: { label: "Profit", color: "#f59e0b" },
+                }}
+                className="h-[400px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats?.month || []}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="total_profit" fill="#f59e0b" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

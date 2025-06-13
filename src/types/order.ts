@@ -1,3 +1,4 @@
+
 export type TableItem = {
   id: string,
   size: string,
@@ -81,3 +82,59 @@ export const colourOptions = [
   { value: 'ash_white', label: 'American Ash White' },
   { value: 'teak', label: 'Jungle Teak' }
 ];
+
+// Factory price mapping based on the provided chart
+export const factoryPriceMap: Record<string, number> = {
+  // Standard sizes
+  '24x32': 7750,
+  '24x36': 8250,
+  '24x48': 8750,
+  '24x60': 10750,
+  '24x72': 14750,
+  '24x84': 17250,
+  '24x96': 17250,
+  
+  // Medium sizes
+  '30x48': 17250,
+  '36x48': 17250,
+  '48x48': 17250,
+  
+  // Large sizes
+  '30x60': 21250,
+  '36x60': 21250,
+  '48x60': 21250,
+  
+  // Extra large sizes
+  '30x72': 29250,
+  '36x72': 29250,
+  '48x72': 29250,
+  
+  // Jumbo sizes
+  '30x84': 34250,
+  '36x84': 34250,
+  '48x84': 34250,
+  '30x96': 34250,
+  '36x96': 34250,
+  '48x96': 34250,
+  
+  // L-Shaped tables
+  'l-A': 21500,
+  'l-B': 22500,
+  'l-C': 22500,
+  'l-D': 24500,
+  'l-E': 23500,
+  'l-F': 24500,
+  'l-G': 24500,
+  'l-H': 26500
+};
+
+// Helper function to get factory price for a table size
+export const getFactoryPrice = (tableSize: string): number => {
+  return factoryPriceMap[tableSize] || 0;
+};
+
+// Helper function to calculate profit for an order
+export const calculateOrderProfit = (salesPrice: number, tableSize: string, quantity: number): number => {
+  const factoryPrice = getFactoryPrice(tableSize);
+  return (salesPrice - factoryPrice) * quantity;
+};
