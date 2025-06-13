@@ -262,9 +262,29 @@ const OrderCard: React.FC<OrderCardProps> = ({
             Assign to Delivery
           </Button>}
         
-        {(userRole === 'admin' && order.status === 'assigned' || userRole === 'delivery' && order.status === 'assigned') && <Button size={isMobile ? "sm" : "default"} variant="default" onClick={handleCompleteOrder} className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}>
-            Mark Complete
-          </Button>}
+        {(userRole === 'admin' && order.status === 'assigned' || userRole === 'delivery' && order.status === 'assigned') && 
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size={isMobile ? "sm" : "default"} variant="default" className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}>
+                Mark Complete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Order Completion</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to mark this order as completed? This action will finalize the order for customer "{order.customerName}".
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleCompleteOrder}>
+                  Yes, Mark Complete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        }
 
         {actionButton && <div className="w-full sm:w-auto">{actionButton}</div>}
         
