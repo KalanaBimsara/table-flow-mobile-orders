@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Shield, Users, Package, TrendingUp, DollarSign, LogOut, RefreshCw, TrendingDown } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
+import { Shield, Users, Package, TrendingUp, DollarSign, LogOut, RefreshCw, Calendar, CalendarDays, Clock } from 'lucide-react';
 import { useSuperAdminAuth } from '@/contexts/SuperAdminAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
@@ -154,7 +155,7 @@ const SuperAdminDashboard = () => {
         const dayProfit = dayOrders?.reduce((sum, order) => sum + calculateProfit(order), 0) || 0;
         
         weekData.push({
-          date: dateStr,
+          date: new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           total_orders: dayOrders?.length || 0,
           completed_orders: dayOrders?.filter(o => o.status === 'completed').length || 0,
           pending_orders: dayOrders?.filter(o => o.status === 'pending').length || 0,
@@ -199,7 +200,7 @@ const SuperAdminDashboard = () => {
         const totalProfit = monthOrders?.reduce((sum, order) => sum + calculateProfit(order), 0) || 0;
         
         monthData.push({
-          month: monthStr,
+          month: new Date(year, date.getMonth()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
           total_orders: monthOrders?.length || 0,
           total_revenue: totalRevenue,
           total_profit: totalProfit,
@@ -360,7 +361,7 @@ const SuperAdminDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">LKR {Math.round(stats?.overview.avg_order_value || 0).toLocaleString()}</div>
@@ -368,140 +369,273 @@ const SuperAdminDashboard = () => {
           </Card>
         </div>
 
+        {/* Today's Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-700">Today's Orders</CardTitle>
+              <Clock className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-900">{stats?.today.total_orders || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-700">Today's Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-900">LKR {stats?.today.total_revenue.toLocaleString() || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-purple-200 bg-purple-50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-purple-700">Today's Profit</CardTitle>
+              <TrendingUp className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-900">LKR {stats?.today.total_profit.toLocaleString() || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-orange-200 bg-orange-50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-orange-700">Completed Today</CardTitle>
+              <Package className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-900">{stats?.today.completed_orders || 0}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabbed Analytics */}
+        <Tabs defaultValue="daily" className="mb-8">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="daily" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Daily View
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              Weekly View
+            </TabsTrigger>
+            <TabsTrigger value="monthly" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Monthly View
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="daily" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Today's Order Status */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Today's Order Status</CardTitle>
+                  <CardDescription>Distribution of order statuses today</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {pieData.length > 0 ? (
+                    <ChartContainer
+                      config={{
+                        completed: { label: "Completed", color: "#10b981" },
+                        pending: { label: "Pending", color: "#f59e0b" },
+                      }}
+                      className="h-[300px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label
+                          >
+                            {pieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-gray-500">
+                      No orders today
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Daily Metrics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Today's Performance</CardTitle>
+                  <CardDescription>Key metrics for today</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <span className="text-sm font-medium text-blue-700">Total Orders</span>
+                    <span className="text-lg font-bold text-blue-900">{stats?.today.total_orders || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <span className="text-sm font-medium text-green-700">Revenue</span>
+                    <span className="text-lg font-bold text-green-900">LKR {stats?.today.total_revenue.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <span className="text-sm font-medium text-purple-700">Profit</span>
+                    <span className="text-lg font-bold text-purple-900">LKR {stats?.today.total_profit.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                    <span className="text-sm font-medium text-orange-700">Completion Rate</span>
+                    <span className="text-lg font-bold text-orange-900">
+                      {stats?.today.total_orders ? Math.round((stats.today.completed_orders / stats.today.total_orders) * 100) : 0}%
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="weekly" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Weekly Orders Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Weekly Orders Trend</CardTitle>
+                  <CardDescription>Orders over the last 7 days</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      total_orders: { label: "Total Orders", color: "#3b82f6" },
+                      completed_orders: { label: "Completed", color: "#10b981" },
+                    }}
+                    className="h-[300px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={stats?.week || []}>
+                        <defs>
+                          <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                          </linearGradient>
+                          <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Area type="monotone" dataKey="total_orders" stroke="#3b82f6" fillOpacity={1} fill="url(#colorTotal)" />
+                        <Area type="monotone" dataKey="completed_orders" stroke="#10b981" fillOpacity={1} fill="url(#colorCompleted)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              {/* Weekly Revenue & Profit */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Weekly Revenue & Profit</CardTitle>
+                  <CardDescription>Financial performance over the last 7 days</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      total_revenue: { label: "Revenue", color: "#10b981" },
+                      total_profit: { label: "Profit", color: "#f59e0b" },
+                    }}
+                    className="h-[300px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats?.week || []}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="total_revenue" fill="#10b981" />
+                        <Bar dataKey="total_profit" fill="#f59e0b" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="monthly" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Monthly Revenue Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Monthly Revenue Trend</CardTitle>
+                  <CardDescription>Revenue performance over the last 6 months (LKR)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      total_revenue: { label: "Revenue", color: "#10b981" },
+                    }}
+                    className="h-[400px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={stats?.month || []}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line type="monotone" dataKey="total_revenue" stroke="#10b981" strokeWidth={3} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              {/* Monthly Profit Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Monthly Profit Trend</CardTitle>
+                  <CardDescription>Profit analysis over the last 6 months (LKR)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      total_profit: { label: "Profit", color: "#f59e0b" },
+                    }}
+                    className="h-[400px]"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats?.month || []}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="total_profit" fill="#f59e0b" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+
         {/* Order Details Table */}
         <div className="mb-8">
           <OrderDetailsTable 
             orders={stats?.recentOrders || []} 
             loading={loading}
           />
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Weekly Orders Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Weekly Orders Trend</CardTitle>
-              <CardDescription>Orders over the last 7 days</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  total_orders: { label: "Total Orders", color: "#3b82f6" },
-                  completed_orders: { label: "Completed", color: "#10b981" },
-                }}
-                className="h-[300px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats?.week || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="total_orders" fill="#3b82f6" />
-                    <Bar dataKey="completed_orders" fill="#10b981" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* Today's Order Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Today's Order Status</CardTitle>
-              <CardDescription>Distribution of order statuses today</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pieData.length > 0 ? (
-                <ChartContainer
-                  config={{
-                    completed: { label: "Completed", color: "#10b981" },
-                    pending: { label: "Pending", color: "#f59e0b" },
-                  }}
-                  className="h-[300px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              ) : (
-                <div className="h-[300px] flex items-center justify-center text-gray-500">
-                  No orders today
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Revenue and Profit Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Monthly Revenue Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Revenue Trend</CardTitle>
-              <CardDescription>Revenue performance over the last 6 months (LKR)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  total_revenue: { label: "Revenue", color: "#10b981" },
-                }}
-                className="h-[400px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={stats?.month || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line type="monotone" dataKey="total_revenue" stroke="#10b981" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* Monthly Profit Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Profit Trend</CardTitle>
-              <CardDescription>Profit analysis over the last 6 months (LKR)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  total_profit: { label: "Profit", color: "#f59e0b" },
-                }}
-                className="h-[400px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats?.month || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="total_profit" fill="#f59e0b" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
         </div>
       </main>
     </div>
