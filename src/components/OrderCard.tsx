@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus } from 'lucide-react';
+import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus, LockKeyhole } from 'lucide-react';
 import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -10,8 +10,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 type OrderCardProps = {
   order: Order;
@@ -19,6 +20,8 @@ type OrderCardProps = {
   actionButton?: React.ReactNode;
   showSalesPerson?: boolean;
 };
+
+const DELETE_CONFIRMATION_PASSWORD = "kalana123@";
 
 const OrderCard: React.FC<OrderCardProps> = ({
   order,
@@ -39,6 +42,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const isMobile = useIsMobile();
   const [deliveryPersonName, setDeliveryPersonName] = useState<string | null>(null);
   const [creatorName, setCreatorName] = useState<string | null>(null);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch delivery person name directly from profiles table
   // Updated to use the correct field delivery_person_id
@@ -121,6 +126,24 @@ const OrderCard: React.FC<OrderCardProps> = ({
   };
   const handleDeleteOrder = () => {
     deleteOrder(order.id);
+  };
+  const handleDeleteOrderWithPassword = () => {
+    if (deletePassword === DELETE_CONFIRMATION_PASSWORD) {
+      deleteOrder(order.id);
+      toast.success('Order deleted successfully!');
+      setIsDeleteDialogOpen(false);
+      setDeletePassword(''); // Reset password
+    } else {
+      toast.error('Incorrect password. Order not deleted.');
+    }
+  };
+  const openDeleteDialog = () => {
+    setDeletePassword(''); // Clear password field when dialog opens
+    setIsDeleteDialogOpen(true);
+  };
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setDeletePassword(''); // Clear password field when dialog closes
   };
   const getTableSizeLabel = (value: string) => {
     const option = tableSizeOptions.find(opt => opt.value === value);
@@ -288,26 +311,48 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
         {actionButton && <div className="w-full sm:w-auto">{actionButton}</div>}
         
-        {userRole === 'admin' && <AlertDialog>
+        {userRole === 'admin' && (
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <AlertDialogTrigger asChild>
-              <Button size={isMobile ? "sm" : "default"} variant="destructive" className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'} btn-delete-faded`}>
+              <Button
+                size={isMobile ? "sm" : "default"}
+                variant="destructive"
+                className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'} btn-delete-faded`}
+                onClick={openDeleteDialog}
+              >
                 <Trash2 size={isMobile ? 14 : 18} className="mr-1" />
                 Delete Order
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>Confirm Order Deletion</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the order from the database.
+                  To delete this order, please enter the confirmation password. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              <div className="space-y-2 my-4">
+                <Label htmlFor="delete-password">Password</Label>
+                <div className="flex items-center space-x-2">
+                  <LockKeyhole className="h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="delete-password"
+                    type="password"
+                    placeholder="Enter deletion password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                  />
+                </div>
+              </div>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteOrder}>Delete</AlertDialogAction>
+                <AlertDialogCancel onClick={closeDeleteDialog}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteOrderWithPassword}>
+                  Confirm Delete
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
-          </AlertDialog>}
+          </AlertDialog>
+        )}
       </CardFooter>
     </Card>;
 };
