@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
 import OrderDetailsTable from '@/components/OrderDetailsTable';
 import { getFactoryPrice, calculateOrderProfit } from '@/types/order';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type DailyAnalyticsData = {
   total_orders: number;
@@ -70,6 +71,7 @@ const SuperAdminDashboard = () => {
   const [stats, setStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   if (!user) {
     return <Navigate to="/super-admin/login" replace />;
@@ -289,24 +291,36 @@ const SuperAdminDashboard = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="bg-white dark:bg-slate-800 border-b shadow-sm">
+      <header className="bg-white dark:bg-slate-800 border-b shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Shield className="h-8 w-8 text-red-600" />
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Super Admin Dashboard</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Super Admin</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                Welcome, {user.username}
-              </span>
-              <Button variant="outline" size="sm" onClick={loadAnalytics}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Data
+            <div className="flex items-center space-x-2">
+              {!isMobile && (
+                 <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:inline">
+                    Welcome, {user.username}
+                 </span>
+              )}
+              <Button 
+                variant="outline" 
+                size={isMobile ? "icon" : "sm"} 
+                onClick={loadAnalytics}
+                aria-label={isMobile ? "Refresh Data" : undefined}
+              >
+                <RefreshCw className={isMobile ? "h-5 w-5" : "h-4 w-4 mr-2"} />
+                {!isMobile && "Refresh"}
               </Button>
-              <Button variant="destructive" size="sm" onClick={signOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+              <Button 
+                variant="destructive" 
+                size={isMobile ? "icon" : "sm"} 
+                onClick={signOut}
+                aria-label={isMobile ? "Sign Out" : undefined}
+              >
+                <LogOut className={isMobile ? "h-5 w-5" : "h-4 w-4 mr-2"} />
+                {!isMobile && "Sign Out"}
               </Button>
             </div>
           </div>
@@ -370,43 +384,43 @@ const SuperAdminDashboard = () => {
 
         {/* Today's Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-blue-200 bg-blue-50">
+          <Card className="border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700">Today's Orders</CardTitle>
-              <Clock className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Today's Orders</CardTitle>
+              <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-900">{stats?.today.total_orders || 0}</div>
+              <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats?.today.total_orders || 0}</div>
             </CardContent>
           </Card>
 
-          <Card className="border-green-200 bg-green-50">
+          <Card className="border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Today's Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Today's Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-900">LKR {stats?.today.total_revenue.toLocaleString() || 0}</div>
+              <div className="text-2xl font-bold text-green-900 dark:text-green-100">LKR {stats?.today.total_revenue.toLocaleString() || 0}</div>
             </CardContent>
           </Card>
 
-          <Card className="border-purple-200 bg-purple-50">
+          <Card className="border-purple-200 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700">Today's Profit</CardTitle>
-              <TrendingUp className="h-4 w-4 text-purple-600" />
+              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Today's Profit</CardTitle>
+              <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-900">LKR {stats?.today.total_profit.toLocaleString() || 0}</div>
+              <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">LKR {stats?.today.total_profit.toLocaleString() || 0}</div>
             </CardContent>
           </Card>
 
-          <Card className="border-orange-200 bg-orange-50">
+          <Card className="border-orange-200 bg-orange-50 dark:border-orange-700 dark:bg-orange-900/30">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700">Completed Today</CardTitle>
-              <Package className="h-4 w-4 text-orange-600" />
+              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">Completed Today</CardTitle>
+              <Package className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-900">{stats?.today.completed_orders || 0}</div>
+              <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">{stats?.today.completed_orders || 0}</div>
             </CardContent>
           </Card>
         </div>
@@ -443,7 +457,7 @@ const SuperAdminDashboard = () => {
                         completed: { label: "Completed", color: "#10b981" },
                         pending: { label: "Pending", color: "#f59e0b" },
                       }}
-                      className="h-[200px] sm:h-[250px] lg:h-[300px]"
+                      className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -451,7 +465,7 @@ const SuperAdminDashboard = () => {
                             data={pieData}
                             cx="50%"
                             cy="50%"
-                            outerRadius={80}
+                            outerRadius={isMobile ? 60: 80}
                             fill="#8884d8"
                             dataKey="value"
                             label
@@ -465,7 +479,7 @@ const SuperAdminDashboard = () => {
                       </ResponsiveContainer>
                     </ChartContainer>
                   ) : (
-                    <div className="h-[200px] sm:h-[250px] lg:h-[300px] flex items-center justify-center text-gray-500">
+                    <div className="h-[200px] min-[380px]:h-[250px] sm:h-[300px] flex items-center justify-center text-gray-500">
                       No orders today
                     </div>
                   )}
@@ -479,21 +493,21 @@ const SuperAdminDashboard = () => {
                   <CardDescription>Key metrics for today</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span className="text-sm font-medium text-blue-700">Total Orders</span>
-                    <span className="text-lg font-bold text-blue-900">{stats?.today.total_orders || 0}</span>
+                  <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Orders</span>
+                    <span className="text-lg font-bold text-blue-900 dark:text-blue-100">{stats?.today.total_orders || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="text-sm font-medium text-green-700">Revenue</span>
-                    <span className="text-lg font-bold text-green-900">LKR {stats?.today.total_revenue.toLocaleString() || 0}</span>
+                  <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                    <span className="text-sm font-medium text-green-700 dark:text-green-300">Revenue</span>
+                    <span className="text-lg font-bold text-green-900 dark:text-green-100">LKR {stats?.today.total_revenue.toLocaleString() || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                    <span className="text-sm font-medium text-purple-700">Profit</span>
-                    <span className="text-lg font-bold text-purple-900">LKR {stats?.today.total_profit.toLocaleString() || 0}</span>
+                  <div className="flex justify-between items-center p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Profit</span>
+                    <span className="text-lg font-bold text-purple-900 dark:text-purple-100">LKR {stats?.today.total_profit.toLocaleString() || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                    <span className="text-sm font-medium text-orange-700">Completion Rate</span>
-                    <span className="text-lg font-bold text-orange-900">
+                  <div className="flex justify-between items-center p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
+                    <span className="text-sm font-medium text-orange-700 dark:text-orange-300">Completion Rate</span>
+                    <span className="text-lg font-bold text-orange-900 dark:text-orange-100">
                       {stats?.today.total_orders ? Math.round((stats.today.completed_orders / stats.today.total_orders) * 100) : 0}%
                     </span>
                   </div>
@@ -516,7 +530,7 @@ const SuperAdminDashboard = () => {
                       total_orders: { label: "Total Orders", color: "#3b82f6" },
                       completed_orders: { label: "Completed", color: "#10b981" },
                     }}
-                    className="h-[200px] sm:h-[250px] lg:h-[300px]"
+                    className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={stats?.week || []}>
@@ -554,7 +568,7 @@ const SuperAdminDashboard = () => {
                       total_revenue: { label: "Revenue", color: "#10b981" },
                       total_profit: { label: "Profit", color: "#f59e0b" },
                     }}
-                    className="h-[200px] sm:h-[250px] lg:h-[300px]"
+                    className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.week || []}>
@@ -585,7 +599,7 @@ const SuperAdminDashboard = () => {
                     config={{
                       total_revenue: { label: "Revenue", color: "#10b981" },
                     }}
-                    className="h-[250px] sm:h-[300px] lg:h-[400px]"
+                    className="h-[250px] min-[380px]:h-[300px] sm:h-[400px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={stats?.month || []}>
@@ -611,7 +625,7 @@ const SuperAdminDashboard = () => {
                     config={{
                       total_profit: { label: "Profit", color: "#f59e0b" },
                     }}
-                    className="h-[250px] sm:h-[300px] lg:h-[400px]"
+                    className="h-[250px] min-[380px]:h-[300px] sm:h-[400px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.month || []}>
