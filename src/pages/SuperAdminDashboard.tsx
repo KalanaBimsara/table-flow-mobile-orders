@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -414,7 +413,7 @@ const SuperAdminDashboard = () => {
 
         {/* Tabbed Analytics */}
         <Tabs defaultValue="daily" className="mb-8">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3">
             <TabsTrigger value="daily" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               Daily View
@@ -429,7 +428,7 @@ const SuperAdminDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="daily" className="space-y-6">
+          <TabsContent value="daily" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Today's Order Status */}
               <Card>
@@ -444,7 +443,7 @@ const SuperAdminDashboard = () => {
                         completed: { label: "Completed", color: "#10b981" },
                         pending: { label: "Pending", color: "#f59e0b" },
                       }}
-                      className="h-[300px]"
+                      className="h-[200px] sm:h-[250px] lg:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -466,7 +465,7 @@ const SuperAdminDashboard = () => {
                       </ResponsiveContainer>
                     </ChartContainer>
                   ) : (
-                    <div className="h-[300px] flex items-center justify-center text-gray-500">
+                    <div className="h-[200px] sm:h-[250px] lg:h-[300px] flex items-center justify-center text-gray-500">
                       No orders today
                     </div>
                   )}
@@ -503,7 +502,7 @@ const SuperAdminDashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="weekly" className="space-y-6">
+          <TabsContent value="weekly" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Weekly Orders Chart */}
               <Card>
@@ -517,7 +516,7 @@ const SuperAdminDashboard = () => {
                       total_orders: { label: "Total Orders", color: "#3b82f6" },
                       completed_orders: { label: "Completed", color: "#10b981" },
                     }}
-                    className="h-[300px]"
+                    className="h-[200px] sm:h-[250px] lg:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={stats?.week || []}>
@@ -532,8 +531,8 @@ const SuperAdminDashboard = () => {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Area type="monotone" dataKey="total_orders" stroke="#3b82f6" fillOpacity={1} fill="url(#colorTotal)" />
                         <Area type="monotone" dataKey="completed_orders" stroke="#10b981" fillOpacity={1} fill="url(#colorCompleted)" />
@@ -555,16 +554,16 @@ const SuperAdminDashboard = () => {
                       total_revenue: { label: "Revenue", color: "#10b981" },
                       total_profit: { label: "Profit", color: "#f59e0b" },
                     }}
-                    className="h-[300px]"
+                    className="h-[200px] sm:h-[250px] lg:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.week || []}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="total_revenue" fill="#10b981" />
-                        <Bar dataKey="total_profit" fill="#f59e0b" />
+                        <Bar dataKey="total_revenue" fill="var(--color-total_revenue)" />
+                        <Bar dataKey="total_profit" fill="var(--color-total_profit)" />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -573,7 +572,7 @@ const SuperAdminDashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="monthly" className="space-y-6">
+          <TabsContent value="monthly" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Monthly Revenue Chart */}
               <Card>
@@ -586,15 +585,15 @@ const SuperAdminDashboard = () => {
                     config={{
                       total_revenue: { label: "Revenue", color: "#10b981" },
                     }}
-                    className="h-[400px]"
+                    className="h-[250px] sm:h-[300px] lg:h-[400px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={stats?.month || []}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="total_revenue" stroke="#10b981" strokeWidth={3} />
+                        <Line type="monotone" dataKey="total_revenue" stroke="var(--color-total_revenue)" strokeWidth={3} />
                       </LineChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -612,15 +611,15 @@ const SuperAdminDashboard = () => {
                     config={{
                       total_profit: { label: "Profit", color: "#f59e0b" },
                     }}
-                    className="h-[400px]"
+                    className="h-[250px] sm:h-[300px] lg:h-[400px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.month || []}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="total_profit" fill="#f59e0b" />
+                        <Bar dataKey="total_profit" fill="var(--color-total_profit)" />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
