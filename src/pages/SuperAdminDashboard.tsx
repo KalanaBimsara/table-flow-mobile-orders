@@ -530,7 +530,7 @@ const SuperAdminDashboard = () => {
                       total_orders: { label: "Total Orders", color: "#3b82f6" },
                       completed_orders: { label: "Completed", color: "#10b981" },
                     }}
-                    className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
+                    className="h-[180px] min-[380px]:h-[220px] sm:h-[280px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={stats?.week || []}>
@@ -545,8 +545,8 @@ const SuperAdminDashboard = () => {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Area type="monotone" dataKey="total_orders" stroke="#3b82f6" fillOpacity={1} fill="url(#colorTotal)" />
                         <Area type="monotone" dataKey="completed_orders" stroke="#10b981" fillOpacity={1} fill="url(#colorCompleted)" />
@@ -568,13 +568,13 @@ const SuperAdminDashboard = () => {
                       total_revenue: { label: "Revenue", color: "#10b981" },
                       total_profit: { label: "Profit", color: "#f59e0b" },
                     }}
-                    className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
+                    className="h-[180px] min-[380px]:h-[220px] sm:h-[280px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.week || []}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="total_revenue" fill="var(--color-total_revenue)" />
                         <Bar dataKey="total_profit" fill="var(--color-total_profit)" />
@@ -599,13 +599,13 @@ const SuperAdminDashboard = () => {
                     config={{
                       total_revenue: { label: "Revenue", color: "#10b981" },
                     }}
-                    className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
+                    className="h-[180px] min-[380px]:h-[220px] sm:h-[280px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={stats?.month || []}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Line type="monotone" dataKey="total_revenue" stroke="var(--color-total_revenue)" strokeWidth={3} />
                       </LineChart>
@@ -625,13 +625,13 @@ const SuperAdminDashboard = () => {
                     config={{
                       total_profit: { label: "Profit", color: "#f59e0b" },
                     }}
-                    className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
+                    className="h-[180px] min-[380px]:h-[220px] sm:h-[280px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.month || []}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="total_profit" fill="var(--color-total_profit)" />
                       </BarChart>
