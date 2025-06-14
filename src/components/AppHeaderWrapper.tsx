@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,24 +40,31 @@ const AppHeaderWrapper = () => {
           Table Flow
         </Button>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4"> {/* Adjusted space-x for mobile */}
           {/* ✅ Show "Production" button for admin users */}
           {userRole === "admin" && (
-            <Button variant="outline" onClick={() => navigate("/production")}>
-              <Factory size={16} className="mr-2" />
-              Production
+            <Button
+              variant="outline"
+              onClick={() => navigate("/production")}
+              size={isMobile ? "icon" : "default"}
+              aria-label={isMobile ? "Production" : undefined}
+            >
+              <Factory size={16} className={isMobile ? "" : "mr-2"} />
+              {!isMobile && "Production"}
             </Button>
           )}
 
           {/* ✅ Show "Super Admin" button for admin users */}
           {userRole === "admin" && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => navigate("/super-admin/login")}
               className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              size={isMobile ? "icon" : "default"}
+              aria-label={isMobile ? "Super Admin" : undefined}
             >
-              <Shield size={16} className="mr-2" />
-              Super Admin
+              <Shield size={16} className={isMobile ? "" : "mr-2"} />
+              {!isMobile && "Super Admin"}
             </Button>
           )}
 
@@ -101,7 +107,7 @@ const AppHeaderWrapper = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={() => navigate("/auth")}>
+            <Button onClick={() => navigate("/auth")} size={isMobile ? "sm" : "default"}> {/* Optionally adjust login button size too */}
               {isMobile ? "Login" : "Login / Register"}
             </Button>
           )}
