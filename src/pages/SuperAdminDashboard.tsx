@@ -530,7 +530,7 @@ const SuperAdminDashboard = () => {
                       total_orders: { label: "Total Orders", color: "#3b82f6" },
                       completed_orders: { label: "Completed", color: "#10b981" },
                     }}
-                    className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
+                    className="h-[250px] sm:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={stats?.week || []}>
@@ -568,7 +568,7 @@ const SuperAdminDashboard = () => {
                       total_revenue: { label: "Revenue", color: "#10b981" },
                       total_profit: { label: "Profit", color: "#f59e0b" },
                     }}
-                    className="h-[200px] min-[380px]:h-[250px] sm:h-[300px]"
+                    className="h-[250px] sm:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.week || []}>
@@ -599,7 +599,7 @@ const SuperAdminDashboard = () => {
                     config={{
                       total_revenue: { label: "Revenue", color: "#10b981" },
                     }}
-                    className="h-[250px] min-[380px]:h-[300px] sm:h-[400px]"
+                    className="h-[250px] sm:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={stats?.month || []}>
@@ -625,7 +625,7 @@ const SuperAdminDashboard = () => {
                     config={{
                       total_profit: { label: "Profit", color: "#f59e0b" },
                     }}
-                    className="h-[250px] min-[380px]:h-[300px] sm:h-[400px]"
+                    className="h-[250px] sm:h-[300px]"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.month || []}>
