@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -105,7 +104,7 @@ export function NewOrderForm() {
     frameColour: 'white',
     colour: 'white', // For compatibility
     quantity: 1,
-    price: 10500  // Default price for 24x32 table
+    price: 11000  // Updated default price for 24x32 table
   });
 
   // Add a new table to the form
@@ -313,7 +312,7 @@ function useFormProvider() {
           frameColour: 'white',
           colour: 'white', // For compatibility
           quantity: 1,
-          price: 10500
+          price: 11000  // Updated default price
         }
       ],
       note: "",
