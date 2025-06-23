@@ -65,6 +65,78 @@ export function OrderList() {
   const [deliveryCompletedOrders, setDeliveryCompletedOrders] = useState<Order[]>([]);
   const salesPersons = getSalesPersons();
 
+  // Apply date and customer name filters to completed orders
+  const searchFilteredCompletedOrders = useMemo(() => {
+    let filtered = completedOrders;
+
+    // Filter by customer name
+    if (customerNameSearch.trim()) {
+      filtered = filtered.filter(order => 
+        order.customerName.toLowerCase().includes(customerNameSearch.toLowerCase().trim())
+      );
+    }
+
+    // Filter by date range
+    if (searchFromDate || searchToDate) {
+      filtered = filtered.filter(order => {
+        if (!order.completedAt) return false;
+        
+        const completedDate = order.completedAt;
+        
+        if (searchFromDate && searchToDate) {
+          return isWithinInterval(completedDate, {
+            start: startOfDay(searchFromDate),
+            end: endOfDay(searchToDate)
+          });
+        } else if (searchFromDate) {
+          return completedDate >= startOfDay(searchFromDate);
+        } else if (searchToDate) {
+          return completedDate <= endOfDay(searchToDate);
+        }
+        
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [completedOrders, searchFromDate, searchToDate, customerNameSearch]);
+
+  // Group completed orders by completion date
+  const groupedCompletedOrders = useMemo(() => {
+    const groups: { [key: string]: typeof searchFilteredCompletedOrders } = {};
+    
+    searchFilteredCompletedOrders.forEach(order => {
+      if (order.completedAt) {
+        const dateKey = format(order.completedAt, 'yyyy-MM-dd');
+        if (!groups[dateKey]) {
+          groups[dateKey] = [];
+        }
+        groups[dateKey].push(order);
+      }
+    });
+
+    // Sort each group by completion time (latest first)
+    Object.keys(groups).forEach(dateKey => {
+      groups[dateKey].sort((a, b) => {
+        if (!a.completedAt || !b.completedAt) return 0;
+        return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+      });
+    });
+
+    return groups;
+  }, [searchFilteredCompletedOrders]);
+
+  // Get sorted date keys (most recent first)
+  const sortedCompletedDateKeys = Object.keys(groupedCompletedOrders).sort((a, b) => b.localeCompare(a));
+
+  const clearCompletedFilters = () => {
+    setSearchFromDate(undefined);
+    setSearchToDate(undefined);
+    setCustomerNameSearch('');
+  };
+
+  const hasActiveCompletedFilters = searchFromDate || searchToDate || customerNameSearch.trim();
+
   React.useEffect(() => {
     if (userRole === 'delivery') {
       fetchAvailableOrders();
