@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import OrderCard from './OrderCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, Truck, CheckCircle2, ShoppingBag, Filter } from 'lucide-react';
+import { Package, Truck, CheckCircle2, ShoppingBag, Filter, Calendar, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Order, OrderStatus } from '@/types/order';
+import { DatePicker } from '@/components/DatePicker';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 
 // Define the types for the Supabase responses
 type OrderResponse = {
@@ -45,6 +51,11 @@ export function OrderList() {
   const { userRole, user } = useAuth();
   const isMobile = useIsMobile();
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
+  
+  // Date search states
+  const [searchFromDate, setSearchFromDate] = useState<Date | undefined>();
+  const [searchToDate, setSearchToDate] = useState<Date | undefined>();
+  const [customerNameSearch, setCustomerNameSearch] = useState('');
 
   const pendingOrders = getFilteredOrders('pending', selectedSalesPerson);
   const assignedOrders = getFilteredOrders('assigned', selectedSalesPerson);
@@ -520,18 +531,98 @@ export function OrderList() {
           </TabsContent>
           
           <TabsContent value="completed" className="mt-4">
-            <div className="space-y-4">
-              {completedOrders.length > 0 ? (
-                completedOrders.map(order => (
-                  <OrderCard key={order.id} order={order} />
-                ))
-              ) : (
-                <p className="text-center py-8 text-muted-foreground text-lg">
-                  {selectedSalesPerson === 'all' 
-                    ? 'No completed orders found.' 
-                    : `No completed orders found for ${selectedSalesPerson}.`}
-                </p>
-              )}
+            <div className="space-y-6">
+              {/* Search and Filter Section for Completed Orders */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Search size={16} />
+                  <Label className="text-sm font-medium">Search Completed Orders</Label>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="completed-customer-search" className="text-sm">Customer Name</Label>
+                    <Input
+                      id="completed-customer-search"
+                      placeholder="Search by customer name..."
+                      value={customerNameSearch}
+                      onChange={(e) => setCustomerNameSearch(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm">From Date</Label>
+                    <DatePicker
+                      date={searchFromDate}
+                      onSelect={setSearchFromDate}
+                      placeholder="Select start date"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm">To Date</Label>
+                    <DatePicker
+                      date={searchToDate}
+                      onSelect={setSearchToDate}
+                      placeholder="Select end date"
+                    />
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={clearCompletedFilters}
+                      disabled={!hasActiveCompletedFilters}
+                      className="w-full"
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+
+                {hasActiveCompletedFilters && (
+                  <div className="text-sm text-muted-foreground">
+                    Showing {searchFilteredCompletedOrders.length} of {completedOrders.length} completed orders
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Orders grouped by completion date */}
+              <div className="space-y-6">
+                {sortedCompletedDateKeys.length > 0 ? (
+                  sortedCompletedDateKeys.map(dateKey => (
+                    <div key={dateKey} className="space-y-4">
+                      <div className="flex items-center gap-2 sticky top-0 bg-background py-2 border-b">
+                        <Calendar size={16} />
+                        <h3 className="font-semibold text-lg">
+                          {format(parseISO(dateKey), 'EEEE, MMMM do, yyyy')}
+                        </h3>
+                        <span className="text-sm text-muted-foreground">
+                          ({groupedCompletedOrders[dateKey].length} order{groupedCompletedOrders[dateKey].length !== 1 ? 's' : ''})
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-4 pl-6">
+                        {groupedCompletedOrders[dateKey].map(order => (
+                          <OrderCard key={order.id} order={order} />
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-muted-foreground text-lg">
+                    {hasActiveCompletedFilters 
+                      ? 'No completed orders found matching your search criteria.'
+                      : (selectedSalesPerson === 'all' 
+                          ? 'No completed orders found.' 
+                          : `No completed orders found for ${selectedSalesPerson}.`)
+                    }
+                  </p>
+                )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
