@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -154,12 +155,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       const finalTotalPrice = calculatedTotalPrice + (orderData.deliveryFee || 0) + (orderData.additionalCharges || 0);
 
-      // Get current user's name for sales_person_name
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', user?.id)
-        .single();
+      // Get current user's name for sales_person_name (if authenticated)
+      let profileData = null;
+      if (user?.id) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+        profileData = data;
+      }
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -168,7 +173,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           address: orderData.address,
           contact_number: orderData.contactNumber,
           note: orderData.note || null,
-          created_by: user?.id || null,
+          created_by: user?.id || null, // Allow null for guest orders
           price: finalTotalPrice,
           status: 'pending',
           colour: orderData.tables[0].colour,
