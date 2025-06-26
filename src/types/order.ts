@@ -8,7 +8,7 @@ export type TableItem = {
   price: number
 };
 
-export type OrderStatus = 'pending_approval' | 'pending' | 'assigned' | 'completed';
+export type OrderStatus = 'pending' | 'assigned' | 'completed';
 
 export type UserRole = 'admin' | 'delivery' | 'customer';
 
@@ -28,9 +28,7 @@ export type Order = {
   assignedTo?: string,
   delivery_person_id?: string,  // Added to match database column name
   createdBy?: string,
-  salesPersonName?: string,  // Added for sales person tracking
-  approvedBy?: string,  // Added for approval tracking
-  approvedAt?: Date     // Added for approval timestamp
+  salesPersonName?: string  // Added for sales person tracking
 };
 
 export const tableSizeOptions = [

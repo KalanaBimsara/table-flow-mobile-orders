@@ -155,8 +155,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
   };
   const getStatusBadge = () => {
     switch (order.status) {
-      case 'pending_approval':
-        return <Badge variant="outline" className="bg-orange-100 text-orange-800 text-sm md:text-base px-2 md:px-3 py-1">Pending Approval</Badge>;
       case 'pending':
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-sm md:text-base px-2 md:px-3 py-1">Pending</Badge>;
       case 'assigned':

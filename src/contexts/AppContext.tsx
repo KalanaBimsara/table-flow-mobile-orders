@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
@@ -10,10 +11,8 @@ interface AppContextType {
   assignOrder: (orderId: string, assignedTo: string) => Promise<void>;
   completeOrder: (orderId: string) => Promise<void>;
   deleteOrder: (orderId: string) => Promise<void>;
-  approveOrder: (orderId: string) => Promise<void>;
   getFilteredOrders: (status?: OrderStatus, salesPersonName?: string) => Order[];
   getAssignedOrders: () => Order[];
-  getPendingApprovalOrders: () => Order[];
   getDeliveryPersonName: (userId: string) => string | null;
   getSalesPersons: () => string[];
 }
@@ -167,9 +166,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         profileData = data;
       }
 
-      // Determine initial status based on whether user is authenticated
-      const initialStatus = user?.id ? 'pending' : 'pending_approval';
-
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -179,7 +175,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           note: orderData.note || null,
           created_by: user?.id || null, // Allow null for guest orders
           price: finalTotalPrice,
-          status: initialStatus,
+          status: 'pending',
           colour: orderData.tables[0].colour,
           table_size: orderData.tables[0].size,
           quantity: orderData.tables.reduce((sum, table) => sum + table.quantity, 0),
@@ -219,55 +215,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       fetchOrders();
-      
-      if (user?.id) {
-        toast.success('Order created successfully!');
-      } else {
-        toast.success('Order submitted for approval! An admin will review it shortly.');
-      }
+      toast.success('Order created successfully!');
     } catch (error) {
       console.error('Error adding order:', error);
-      toast.error('An unexpected error occurred');
-    }
-  };
-
-  const approveOrder = async (orderId: string) => {
-    try {
-      console.log(`Approving order ${orderId}`);
-      
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          status: 'pending',
-          approved_by: user?.id,
-          approved_at: new Date().toISOString()
-        })
-        .eq('id', orderId);
-
-      if (error) {
-        console.error('Error approving order:', error);
-        toast.error('Failed to approve order: ' + error.message);
-        return;
-      }
-
-      console.log(`Order ${orderId} approved successfully`);
-
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { 
-                ...order, 
-                status: 'pending' as OrderStatus, 
-                approvedBy: user?.id || undefined,
-                approvedAt: new Date()
-              } 
-            : order
-        )
-      );
-      
-      toast.success('Order approved successfully');
-    } catch (error) {
-      console.error('Error approving order:', error);
       toast.error('An unexpected error occurred');
     }
   };
@@ -404,14 +354,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const getPendingApprovalOrders = () => {
-    const approvalOrders = orders.filter(order => order.status === 'pending_approval');
-    // Sort by creation date (latest first)
-    return approvalOrders.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  };
-
   const getSalesPersons = () => {
     const salesPersons = orders
       .map(order => order.salesPersonName)
@@ -441,10 +383,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         assignOrder,
         completeOrder,
         deleteOrder,
-        approveOrder,
         getFilteredOrders,
         getAssignedOrders,
-        getPendingApprovalOrders,
         getDeliveryPersonName,
         getSalesPersons
       }}
