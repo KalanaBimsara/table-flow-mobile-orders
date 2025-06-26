@@ -47,7 +47,7 @@ type OrderTableResponse = {
 };
 
 export function OrderList() {
-  const { getFilteredOrders, orders, assignOrder, completeOrder, getSalesPersons } = useApp();
+  const { getFilteredOrders, orders, assignOrder, completeOrder, getSalesPersons, approveOrder, getPendingApprovalOrders } = useApp();
   const { userRole, user } = useAuth();
   const isMobile = useIsMobile();
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
@@ -60,6 +60,7 @@ export function OrderList() {
   const pendingOrders = getFilteredOrders('pending', selectedSalesPerson);
   const assignedOrders = getFilteredOrders('assigned', selectedSalesPerson);
   const completedOrders = getFilteredOrders('completed', selectedSalesPerson);
+  const pendingApprovalOrders = getPendingApprovalOrders();
   
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
   const [deliveryCompletedOrders, setDeliveryCompletedOrders] = useState<Order[]>([]);
@@ -518,7 +519,7 @@ export function OrderList() {
     );
   }
 
-  // For admin users, show all orders with tabs and sales person filter
+  // For admin users, show all orders with tabs including approval tab
   return (
     <Card className="w-full">
       <CardHeader className={isMobile ? "text-center" : ""}>
@@ -551,8 +552,13 @@ export function OrderList() {
           </div>
         )}
 
-        <Tabs defaultValue="pending">
-          <TabsList className="grid w-full grid-cols-3 gap-1">
+        <Tabs defaultValue="pending_approval">
+          <TabsList className="grid w-full grid-cols-4 gap-1">
+            <TabsTrigger value="pending_approval" className="flex flex-col items-center justify-center py-2">
+              <Package size={isMobile ? 14 : 16} />
+              <span className="tab-text text-xs">Approval</span>
+              <span className="mobile-tab-count">({pendingApprovalOrders.length})</span>
+            </TabsTrigger>
             <TabsTrigger value="pending" className="flex flex-col items-center justify-center py-2">
               <Package size={isMobile ? 14 : 16} />
               <span className="tab-text text-xs">Pending</span>
@@ -569,6 +575,31 @@ export function OrderList() {
               <span className="mobile-tab-count">({completedOrders.length})</span>
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="pending_approval" className="mt-4">
+            <div className="space-y-4">
+              {pendingApprovalOrders.length > 0 ? (
+                pendingApprovalOrders.map(order => (
+                  <OrderCard 
+                    key={order.id} 
+                    order={order}
+                    actionButton={
+                      <Button
+                        onClick={() => approveOrder(order.id)}
+                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+                      >
+                        Approve Order
+                      </Button>
+                    }
+                  />
+                ))
+              ) : (
+                <p className="text-center py-8 text-muted-foreground text-lg">
+                  No orders pending approval.
+                </p>
+              )}
+            </div>
+          </TabsContent>
           
           <TabsContent value="pending" className="mt-4">
             <div className="space-y-4">
