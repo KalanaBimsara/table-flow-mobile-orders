@@ -38,45 +38,6 @@ const formSchema = z.object({
 
 type OrderFormValues = z.infer<typeof formSchema>;
 
-// Delivery charge mapping based on table sizes
-const getDeliveryChargeForSize = (size: string): number => {
-  const sizeMap: { [key: string]: number } = {
-    '24x32': 2400, // 2 × 2.5
-    '24x36': 2400, // 2 × 2.5
-    '24x48': 2600, // 2 × 3
-    '24x60': 2600, // 2 × 3
-    '24x72': 2700, // 2 × 4
-    '24x84': 2700, // 2 × 4
-    '24x96': 2700, // 2 × 4
-    '30x48': 2700, // 2 × 4
-    '36x48': 2700, // 2 × 4
-    '48x48': 2700, // 2 × 4
-    '30x60': 3200, // 2 × 5
-    '36x60': 3200, // 2 × 5
-    '48x60': 3200, // 2 × 5
-    '30x72': 3200, // 2 × 5
-    '36x72': 3200, // 2 × 5
-    '48x72': 3200, // 2 × 5
-    '30x84': 3200, // 2 × 5
-    '36x84': 3200, // 2 × 5
-    '48x84': 3200, // 2 × 5
-    '30x96': 3200, // 2 × 5
-    '36x96': 3200, // 2 × 5
-    '48x96': 3200, // 2 × 5
-    // L-Shaped tables
-    'l-A': 2600, // 2 × 3
-    'l-B': 2600, // 2 × 3
-    'l-C': 2600, // 2 × 3
-    'l-D': 2700, // 2 × 4
-    'l-E': 2700, // 2 × 4
-    'l-F': 2700, // 2 × 4
-    'l-G': 3200, // 2 × 5
-    'l-H': 3200, // 2 × 5
-  };
-  
-  return sizeMap[size] || 2400; // Default to lowest charge if size not found
-};
-
 export function NewOrderForm() {
   const { addOrder } = useApp();
   
@@ -85,26 +46,6 @@ export function NewOrderForm() {
   const watchTables = form.watch("tables");
   const watchDeliveryFee = form.watch("deliveryFee") || 0;
   const watchAdditionalCharges = form.watch("additionalCharges") || 0;
-  
-  // Calculate automatic delivery fee based on tables
-  const calculateAutomaticDeliveryFee = React.useMemo(() => {
-    if (!watchTables || watchTables.length === 0) return 0;
-    
-    // Get the highest delivery charge from all tables
-    const maxDeliveryCharge = Math.max(
-      ...watchTables.map(table => getDeliveryChargeForSize(table.size))
-    );
-    
-    return maxDeliveryCharge;
-  }, [watchTables]);
-
-  // Update delivery fee automatically when tables change
-  useEffect(() => {
-    const automaticDeliveryFee = calculateAutomaticDeliveryFee;
-    if (automaticDeliveryFee !== watchDeliveryFee) {
-      form.setValue("deliveryFee", automaticDeliveryFee);
-    }
-  }, [calculateAutomaticDeliveryFee, form, watchDeliveryFee]);
   
   // Calculate total price - multiply price by quantity for each table
   const tablesCost = React.useMemo(() => {
@@ -145,7 +86,7 @@ export function NewOrderForm() {
         contactNumber: "",
         tables: [createEmptyTable()],
         note: "",
-        deliveryFee: calculateAutomaticDeliveryFee,
+        deliveryFee: 0,
         additionalCharges: 0,
       });
       toast.success("Order created successfully!");
@@ -274,7 +215,7 @@ export function NewOrderForm() {
                   name="deliveryFee"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Delivery Fee (Auto-calculated)</FormLabel>
+                      <FormLabel>Delivery Fee</FormLabel>
                       <FormControl>
                         <Input 
                           type="number"
@@ -282,13 +223,8 @@ export function NewOrderForm() {
                           {...field}
                           onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                           value={field.value || ""}
-                          className="bg-gray-50"
-                          readOnly
                         />
                       </FormControl>
-                      <p className="text-sm text-muted-foreground">
-                        Automatically calculated based on largest table size
-                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
