@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus, LockKeyhole } from 'lucide-react';
+import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus, LockKeyhole, Edit } from 'lucide-react';
+import EditOrderForm from './EditOrderForm';
 import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -44,6 +45,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [creatorName, setCreatorName] = useState<string | null>(null);
   const [deletePassword, setDeletePassword] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch delivery person name directly from profiles table
   // Updated to use the correct field delivery_person_id
@@ -281,6 +283,19 @@ const OrderCard: React.FC<OrderCardProps> = ({
       </CardContent>
       
       <CardFooter className={`flex flex-wrap gap-2 ${isMobile ? 'justify-center' : 'justify-end'}`}>
+        {/* Edit button - only show for order creator and only for pending orders */}
+        {user && order.createdBy === user.id && order.status === 'pending' && (
+          <Button 
+            size={isMobile ? "sm" : "default"} 
+            variant="outline" 
+            onClick={() => setIsEditDialogOpen(true)}
+            className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}
+          >
+            <Edit size={isMobile ? 14 : 18} className="mr-1" />
+            Edit Order
+          </Button>
+        )}
+        
         {userRole === 'admin' && order.status === 'pending' && <Button size={isMobile ? "sm" : "default"} variant="outline" onClick={handleAssignOrder} className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}>
             Assign to Delivery
           </Button>}
@@ -351,8 +366,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
-          </AlertDialog>
+            </AlertDialog>
         )}
+        
+        {/* Edit Order Dialog */}
+        <EditOrderForm 
+          order={order}
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+        />
       </CardFooter>
     </Card>;
 };

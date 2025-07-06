@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface AppContextType {
   orders: Order[];
   addOrder: (order: Omit<Order, 'id' | 'status' | 'createdAt'>) => Promise<void>;
+  editOrder: (orderId: string, orderData: Omit<Order, 'id' | 'status' | 'createdAt' | 'assignedTo' | 'completedAt'>) => Promise<void>;
   assignOrder: (orderId: string, assignedTo: string) => Promise<void>;
   completeOrder: (orderId: string) => Promise<void>;
   deleteOrder: (orderId: string) => Promise<void>;
@@ -291,6 +292,81 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const editOrder = async (orderId: string, orderData: Omit<Order, 'id' | 'status' | 'createdAt' | 'assignedTo' | 'completedAt'>) => {
+    try {
+      console.log(`Editing order ${orderId}`);
+      
+      const calculatedTotalPrice = orderData.tables.reduce((sum, table) => 
+        sum + (table.price * table.quantity), 0);
+      
+      const finalTotalPrice = calculatedTotalPrice + (orderData.deliveryFee || 0) + (orderData.additionalCharges || 0);
+
+      // Update the order
+      const { error: orderError } = await supabase
+        .from('orders')
+        .update({
+          customer_name: orderData.customerName,
+          address: orderData.address,
+          contact_number: orderData.contactNumber,
+          note: orderData.note || null,
+          price: finalTotalPrice,
+          colour: orderData.tables[0].colour,
+          table_size: orderData.tables[0].size,
+          quantity: orderData.tables.reduce((sum, table) => sum + table.quantity, 0),
+          delivery_fee: orderData.deliveryFee || 0,
+          additional_charges: orderData.additionalCharges || 0,
+        })
+        .eq('id', orderId);
+
+      if (orderError) {
+        console.error('Error updating order:', orderError);
+        toast.error('Failed to update order: ' + orderError.message);
+        return;
+      }
+      
+      // Delete existing order tables
+      const { error: deleteTablesError } = await supabase
+        .from('order_tables')
+        .delete()
+        .eq('order_id', orderId);
+      
+      if (deleteTablesError) {
+        console.error('Error deleting existing order tables:', deleteTablesError);
+        toast.error('Failed to update order tables: ' + deleteTablesError.message);
+        return;
+      }
+      
+      // Insert new order tables
+      if (orderData.tables && orderData.tables.length > 0) {
+        const tablesData = orderData.tables.map(table => ({
+          order_id: orderId,
+          size: table.size,
+          colour: table.colour,
+          top_colour: table.topColour,
+          frame_colour: table.frameColour,
+          quantity: table.quantity,
+          price: table.price
+        }));
+        
+        const { error: tablesError } = await supabase
+          .from('order_tables')
+          .insert(tablesData);
+        
+        if (tablesError) {
+          console.error('Error updating order tables:', tablesError);
+          toast.error('Failed to update order tables: ' + tablesError.message);
+          return;
+        }
+      }
+
+      fetchOrders();
+      toast.success('Order updated successfully!');
+    } catch (error) {
+      console.error('Error editing order:', error);
+      toast.error('An unexpected error occurred');
+    }
+  };
+
   const deleteOrder = async (orderId: string) => {
     try {
       console.log(`Deleting order ${orderId}`);
@@ -375,6 +451,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{ 
         orders,
         addOrder,
+        editOrder,
         assignOrder,
         completeOrder,
         deleteOrder,
