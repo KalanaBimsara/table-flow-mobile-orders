@@ -223,114 +223,136 @@ const Invoice: React.FC = () => {
           </div>
 
           {/* Invoice Content */}
-          <div id="invoice-content" className="border-t pt-8">
+          <div id="invoice-content" className="bg-white p-8 print:p-0">
             {/* Invoice Header */}
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                {logoUrl && (
-                  <img src={logoUrl} alt="Business Logo" className="logo mb-4" />
-                )}
-                <h1 className="text-3xl font-bold">{businessName || 'Your Business Name'}</h1>
-                {businessAddress && (
-                  <p className="text-gray-600 mt-2 whitespace-pre-line">{businessAddress}</p>
-                )}
-                {businessPhone && (
-                  <p className="text-gray-600">Phone: {businessPhone}</p>
-                )}
-                {businessEmail && (
-                  <p className="text-gray-600">Email: {businessEmail}</p>
-                )}
+            <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-4 mb-4">
+                  {logoUrl && (
+                    <img src={logoUrl} alt="Business Logo" className="w-16 h-16 object-contain" />
+                  )}
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-800">{businessName || 'Your Business Name'}</h1>
+                    <p className="text-sm text-gray-600">CRAFTING COMPANY</p>
+                  </div>
+                </div>
               </div>
               <div className="text-right">
-                <h2 className="text-2xl font-bold text-gray-800">INVOICE</h2>
-                <p className="text-gray-600">Invoice #: {invoiceNumber}</p>
-                <p className="text-gray-600">Date: {format(new Date(invoiceDate), 'MMM d, yyyy')}</p>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">INVOICE</h2>
+                <p className="text-gray-600 text-sm"># {invoiceNumber}</p>
               </div>
             </div>
 
-            {/* Customer Information */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-3">Bill To:</h3>
-              <div className="bg-gray-50 p-4 rounded">
-                <p className="font-semibold">{order.customerName}</p>
-                <p className="text-gray-600">{order.address}</p>
-                <p className="text-gray-600">Phone: {order.contactNumber}</p>
+            {/* Date and Balance Due */}
+            <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
+              <div></div>
+              <div className="text-right space-y-1">
+                <div className="flex justify-between gap-8">
+                  <span className="text-gray-600">Date:</span>
+                  <span className="font-medium">{format(new Date(invoiceDate), 'MMM d, yyyy')}</span>
+                </div>
+                <div className="flex justify-between gap-8">
+                  <span className="text-gray-600">Balance Due:</span>
+                  <span className="font-bold">{formatPrice(order.totalPrice)}</span>
+                </div>
               </div>
             </div>
 
-            {/* Order Details */}
+            {/* Bill To and Ship To */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-600 mb-2">Bill To:</h3>
+                <div className="text-gray-800">
+                  <p className="font-semibold">{order.customerName}</p>
+                  <p className="text-sm text-gray-600 whitespace-pre-line">{order.address}</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-600 mb-2">Ship To:</h3>
+                <div className="text-gray-800">
+                  <p className="font-semibold">{order.customerName}</p>
+                  <p className="text-sm text-gray-600">{order.contactNumber}</p>
+                  <p className="text-sm text-gray-600 whitespace-pre-line">{order.address}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Items Table */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-3">Order Details:</h3>
-              <table className="items-table">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr>
-                    <th>Description</th>
-                    <th>Size</th>
-                    <th>Top Colour</th>
-                    <th>Leg Colour</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
+                  <tr className="bg-gray-800 text-white">
+                    <th className="text-left py-3 px-4 font-medium">Item</th>
+                    <th className="text-center py-3 px-4 font-medium">Quantity</th>
+                    <th className="text-right py-3 px-4 font-medium">Rate</th>
+                    <th className="text-right py-3 px-4 font-medium">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {order.tables?.map((table, index) => (
-                    <tr key={table.id || index}>
-                      <td>Table</td>
-                      <td>{getTableSizeLabel(table.size)}</td>
-                      <td>{getColourLabel(table.topColour)}</td>
-                      <td>{getColourLabel(table.frameColour)}</td>
-                      <td>{table.quantity}</td>
-                      <td>{formatPrice(table.price / table.quantity)}</td>
-                      <td>{formatPrice(table.price)}</td>
+                    <tr key={table.id || index} className="border-b border-gray-200">
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium">{getTableSizeLabel(table.size)} table</p>
+                          <p className="text-sm text-gray-600">
+                            Top: {getColourLabel(table.topColour)}, Frame: {getColourLabel(table.frameColour)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center">{table.quantity}</td>
+                      <td className="py-3 px-4 text-right">{formatPrice(table.price / table.quantity)}</td>
+                      <td className="py-3 px-4 text-right font-medium">{formatPrice(table.price)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Order Summary */}
-            <div className="total-section">
-              <div className="flex justify-end">
-                <div className="w-64">
-                  <div className="flex justify-between mb-2">
-                    <span>Subtotal:</span>
-                    <span>{formatPrice(order.totalPrice - (order.deliveryFee || 0) - (order.additionalCharges || 0))}</span>
+            {/* Summary */}
+            <div className="flex justify-end">
+              <div className="w-full md:w-80">
+                <div className="space-y-2">
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="font-medium">{formatPrice(order.totalPrice - (order.deliveryFee || 0) - (order.additionalCharges || 0))}</span>
                   </div>
                   {order.deliveryFee && order.deliveryFee > 0 && (
-                    <div className="flex justify-between mb-2">
-                      <span>Delivery Fee:</span>
-                      <span>{formatPrice(order.deliveryFee)}</span>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Shipping:</span>
+                      <span className="font-medium">{formatPrice(order.deliveryFee)}</span>
                     </div>
                   )}
                   {order.additionalCharges && order.additionalCharges !== 0 && (
-                    <div className="flex justify-between mb-2">
-                      <span>{order.additionalCharges > 0 ? 'Additional Charges:' : 'Discount:'}</span>
-                      <span>{formatPrice(Math.abs(order.additionalCharges))}</span>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">{order.additionalCharges > 0 ? 'Additional:' : 'Discount:'}</span>
+                      <span className="font-medium">{formatPrice(Math.abs(order.additionalCharges))}</span>
                     </div>
                   )}
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between total-amount">
-                      <span>Total Amount:</span>
-                      <span>{formatPrice(order.totalPrice)}</span>
+                  <div className="border-t border-gray-300 pt-2">
+                    <div className="flex justify-between py-2">
+                      <span className="font-semibold text-lg">Total:</span>
+                      <span className="font-bold text-lg">{formatPrice(order.totalPrice)}</span>
                     </div>
+                  </div>
+                  <div className="flex justify-between py-2 bg-gray-50 px-3 rounded">
+                    <span className="font-semibold">Amount Paid:</span>
+                    <span className="font-bold">{formatPrice(order.totalPrice)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Additional Information */}
-            <div className="mt-8 text-sm text-gray-600">
-              <p>Order Created: {format(new Date(order.createdAt), 'MMM d, yyyy')}</p>
-              {order.completedAt && (
-                <p>Order Completed: {format(new Date(order.completedAt), 'MMM d, yyyy')}</p>
-              )}
-              {order.note && (
-                <div className="mt-4">
-                  <p className="font-semibold">Notes:</p>
-                  <p className="text-red-600">{order.note}</p>
-                </div>
-              )}
+            {/* Notes */}
+            {order.note && (
+              <div className="mt-8 pt-4 border-t border-gray-200">
+                <h4 className="font-semibold text-gray-800 mb-2">Notes:</h4>
+                <p className="text-gray-600 text-sm">{order.note}</p>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-500">
+              <p>Thank you for your business!</p>
             </div>
           </div>
         </CardContent>
