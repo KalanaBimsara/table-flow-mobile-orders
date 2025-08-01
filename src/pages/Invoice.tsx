@@ -11,11 +11,16 @@ import { Order, colourOptions, tableSizeOptions } from '@/types/order';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import html2pdf from 'html2pdf.js';
-
 const Invoice: React.FC = () => {
-  const { orderId } = useParams<{ orderId: string }>();
+  const {
+    orderId
+  } = useParams<{
+    orderId: string;
+  }>();
   const navigate = useNavigate();
-  const { orders } = useApp();
+  const {
+    orders
+  } = useApp();
   const [order, setOrder] = useState<Order | null>(null);
   const [businessName, setBusinessName] = useState('');
   const [businessAddress, setBusinessAddress] = useState('');
@@ -24,7 +29,6 @@ const Invoice: React.FC = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-
   useEffect(() => {
     if (orderId) {
       const foundOrder = orders.find(o => o.id === orderId);
@@ -38,28 +42,24 @@ const Invoice: React.FC = () => {
       }
     }
   }, [orderId, orders, navigate]);
-
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         setLogoUrl(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
-
   const getTableSizeLabel = (value: string) => {
     const option = tableSizeOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   };
-
   const getColourLabel = (value: string) => {
     const option = colourOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   };
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -67,30 +67,30 @@ const Invoice: React.FC = () => {
       maximumFractionDigits: 0
     }).format(price);
   };
-
   const handlePrint = () => {
     window.print();
   };
-
   const handleDownload = async () => {
     const invoiceContent = document.getElementById('invoice-content');
     if (invoiceContent) {
       const opt = {
         margin: 0.5,
         filename: `Invoice-${invoiceNumber}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true,
-          allowTaint: true 
+        image: {
+          type: 'jpeg',
+          quality: 0.98
         },
-        jsPDF: { 
-          unit: 'in', 
-          format: 'a4', 
-          orientation: 'portrait' 
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true
+        },
+        jsPDF: {
+          unit: 'in',
+          format: 'a4',
+          orientation: 'portrait'
         }
       };
-
       try {
         await html2pdf().set(opt).from(invoiceContent).save();
         toast.success('Invoice downloaded successfully!');
@@ -100,17 +100,12 @@ const Invoice: React.FC = () => {
       }
     }
   };
-
   if (!order) {
-    return (
-      <div className="container mx-auto px-4 py-8">
+    return <div className="container mx-auto px-4 py-8">
         <div className="text-center">Loading...</div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
+  return <div className="container mx-auto px-4 py-8">
       <div className="mb-6 no-print">
         <Button onClick={() => navigate('/history')} variant="outline" className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -138,64 +133,29 @@ const Invoice: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 no-print">
             <div>
               <Label htmlFor="businessName">Business Name</Label>
-              <Input
-                id="businessName"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Enter your business name"
-              />
+              <Input id="businessName" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="Enter your business name" />
             </div>
             <div>
               <Label htmlFor="invoiceNumber">Invoice Number</Label>
-              <Input
-                id="invoiceNumber"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-              />
+              <Input id="invoiceNumber" value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} />
             </div>
             <div>
               <Label htmlFor="businessPhone">Business Phone</Label>
-              <Input
-                id="businessPhone"
-                value={businessPhone}
-                onChange={(e) => setBusinessPhone(e.target.value)}
-                placeholder="Enter business phone"
-              />
+              <Input id="businessPhone" value={businessPhone} onChange={e => setBusinessPhone(e.target.value)} placeholder="Enter business phone" />
             </div>
             <div>
               <Label htmlFor="invoiceDate">Invoice Date</Label>
-              <Input
-                id="invoiceDate"
-                type="date"
-                value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}
-              />
+              <Input id="invoiceDate" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
             </div>
             <div>
               <Label htmlFor="businessEmail">Business Email</Label>
-              <Input
-                id="businessEmail"
-                type="email"
-                value={businessEmail}
-                onChange={(e) => setBusinessEmail(e.target.value)}
-                placeholder="Enter business email"
-              />
+              <Input id="businessEmail" type="email" value={businessEmail} onChange={e => setBusinessEmail(e.target.value)} placeholder="Enter business email" />
             </div>
             <div>
               <Label htmlFor="logo">Business Logo</Label>
               <div className="flex items-center gap-2">
-                <Input
-                  id="logo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('logo')?.click()}
-                >
+                <Input id="logo" type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                <Button type="button" variant="outline" onClick={() => document.getElementById('logo')?.click()}>
                   <Upload className="mr-2 h-4 w-4" />
                   Upload Logo
                 </Button>
@@ -204,13 +164,7 @@ const Invoice: React.FC = () => {
             </div>
             <div className="col-span-1 md:col-span-2">
               <Label htmlFor="businessAddress">Business Address</Label>
-              <Textarea
-                id="businessAddress"
-                value={businessAddress}
-                onChange={(e) => setBusinessAddress(e.target.value)}
-                placeholder="Enter your business address"
-                rows={3}
-              />
+              <Textarea id="businessAddress" value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} placeholder="Enter your business address" rows={3} />
             </div>
           </div>
 
@@ -220,9 +174,7 @@ const Invoice: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-4 mb-4">
-                  {logoUrl && (
-                    <img src={logoUrl} alt="Business Logo" className="w-16 h-16 object-contain" />
-                  )}
+                  {logoUrl && <img src={logoUrl} alt="Business Logo" className="w-16 h-16 object-contain" />}
                   <div>
                     <h1 className="text-2xl font-bold text-gray-800">{businessName || 'Your Business Name'}</h1>
                     <p className="text-sm text-gray-600">CRAFTING COMPANY</p>
@@ -244,7 +196,7 @@ const Invoice: React.FC = () => {
                   <span className="font-medium">{format(new Date(invoiceDate), 'MMM d, yyyy')}</span>
                 </div>
                 <div className="flex justify-between gap-8">
-                  <span className="text-gray-600">Balance Due:</span>
+                  <span className="text-gray-600">Total Paid:</span>
                   <span className="font-bold">{formatPrice(order.totalPrice)}</span>
                 </div>
               </div>
@@ -281,8 +233,7 @@ const Invoice: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {order.tables?.map((table, index) => (
-                    <tr key={table.id || index} className="border-b border-gray-200">
+                  {order.tables?.map((table, index) => <tr key={table.id || index} className="border-b border-gray-200">
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium">{getTableSizeLabel(table.size)} table</p>
@@ -294,8 +245,7 @@ const Invoice: React.FC = () => {
                       <td className="py-3 px-4 text-center">{table.quantity}</td>
                       <td className="py-3 px-4 text-right">{formatPrice(table.price / table.quantity)}</td>
                       <td className="py-3 px-4 text-right font-medium">{formatPrice(table.price)}</td>
-                    </tr>
-                  ))}
+                    </tr>)}
                 </tbody>
               </table>
             </div>
@@ -308,18 +258,14 @@ const Invoice: React.FC = () => {
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="font-medium">{formatPrice(order.totalPrice - (order.deliveryFee || 0) - (order.additionalCharges || 0))}</span>
                   </div>
-                  {order.deliveryFee && order.deliveryFee > 0 && (
-                    <div className="flex justify-between py-2">
+                  {order.deliveryFee && order.deliveryFee > 0 && <div className="flex justify-between py-2">
                       <span className="text-gray-600">Shipping:</span>
                       <span className="font-medium">{formatPrice(order.deliveryFee)}</span>
-                    </div>
-                  )}
-                  {order.additionalCharges && order.additionalCharges !== 0 && (
-                    <div className="flex justify-between py-2">
+                    </div>}
+                  {order.additionalCharges && order.additionalCharges !== 0 && <div className="flex justify-between py-2">
                       <span className="text-gray-600">{order.additionalCharges > 0 ? 'Additional:' : 'Discount:'}</span>
                       <span className="font-medium">{formatPrice(Math.abs(order.additionalCharges))}</span>
-                    </div>
-                  )}
+                    </div>}
                   <div className="border-t border-gray-300 pt-2">
                     <div className="flex justify-between py-2">
                       <span className="font-semibold text-lg">Total:</span>
@@ -335,12 +281,10 @@ const Invoice: React.FC = () => {
             </div>
 
             {/* Notes */}
-            {order.note && (
-              <div className="mt-8 pt-4 border-t border-gray-200">
+            {order.note && <div className="mt-8 pt-4 border-t border-gray-200">
                 <h4 className="font-semibold text-gray-800 mb-2">Notes:</h4>
                 <p className="text-gray-600 text-sm">{order.note}</p>
-              </div>
-            )}
+              </div>}
 
             {/* Footer */}
             <div className="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-500">
@@ -349,8 +293,6 @@ const Invoice: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default Invoice;
