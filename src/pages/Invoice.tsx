@@ -61,10 +61,11 @@ const Invoice: React.FC = () => {
     return option ? option.label : value;
   };
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'LKR',
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
+      useGrouping: true
     }).format(price);
   };
   const handlePrint = () => {
