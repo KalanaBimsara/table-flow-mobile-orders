@@ -10,6 +10,7 @@ import { useApp } from '@/contexts/AppContext';
 import { Order, colourOptions, tableSizeOptions } from '@/types/order';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import html2pdf from 'html2pdf.js';
 
 const Invoice: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -71,40 +72,31 @@ const Invoice: React.FC = () => {
     window.print();
   };
 
-  const handleDownload = () => {
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      const invoiceContent = document.getElementById('invoice-content');
-      if (invoiceContent) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Invoice - ${invoiceNumber}</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .invoice-header { display: flex; justify-content: space-between; margin-bottom: 30px; }
-                .logo { max-width: 150px; max-height: 100px; }
-                .invoice-details { margin-bottom: 30px; }
-                .customer-details { margin-bottom: 30px; }
-                .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                .items-table th, .items-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                .items-table th { background-color: #f5f5f5; }
-                .total-section { text-align: right; }
-                .total-amount { font-size: 18px; font-weight: bold; }
-                @media print {
-                  body { margin: 0; }
-                  .no-print { display: none; }
-                }
-              </style>
-            </head>
-            <body>
-              ${invoiceContent.innerHTML}
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
+  const handleDownload = async () => {
+    const invoiceContent = document.getElementById('invoice-content');
+    if (invoiceContent) {
+      const opt = {
+        margin: 0.5,
+        filename: `Invoice-${invoiceNumber}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          allowTaint: true 
+        },
+        jsPDF: { 
+          unit: 'in', 
+          format: 'a4', 
+          orientation: 'portrait' 
+        }
+      };
+
+      try {
+        await html2pdf().set(opt).from(invoiceContent).save();
+        toast.success('Invoice downloaded successfully!');
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        toast.error('Failed to download invoice. Please try again.');
       }
     }
   };
