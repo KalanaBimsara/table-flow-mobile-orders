@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus, LockKeyhole, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus, LockKeyhole, Edit, FileText } from 'lucide-react';
 import EditOrderForm from './EditOrderForm';
 import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
     user
   } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [deliveryPersonName, setDeliveryPersonName] = useState<string | null>(null);
   const [creatorName, setCreatorName] = useState<string | null>(null);
   const [deletePassword, setDeletePassword] = useState('');
@@ -283,6 +285,19 @@ const OrderCard: React.FC<OrderCardProps> = ({
       </CardContent>
       
       <CardFooter className={`flex flex-wrap gap-2 ${isMobile ? 'justify-center' : 'justify-end'}`}>
+        {/* Invoice button - only show for completed orders */}
+        {order.status === 'completed' && (
+          <Button 
+            size={isMobile ? "sm" : "default"} 
+            variant="outline" 
+            onClick={() => navigate(`/invoice/${order.id}`)}
+            className={`${isMobile ? 'text-sm w-full sm:w-auto' : 'text-base'}`}
+          >
+            <FileText size={isMobile ? 14 : 18} className="mr-1" />
+            Invoice
+          </Button>
+        )}
+        
         {/* Edit button - only show for order creator and only for pending orders */}
         {user && order.createdBy === user.id && order.status === 'pending' && (
           <Button 
