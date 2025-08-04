@@ -5,12 +5,68 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Upload, Download, Printer } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Order, colourOptions, tableSizeOptions } from '@/types/order';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import html2pdf from 'html2pdf.js';
+
+const businessData = {
+  "Niayana Furniture": {
+    phone: "+94 77 123 4567",
+    email: "info@niayanafurniture.lk",
+    address: "123 Furniture Street, Colombo 03, Sri Lanka"
+  },
+  "Table LK": {
+    phone: "+94 71 234 5678",
+    email: "contact@tablelk.com",
+    address: "456 Design Avenue, Kandy, Sri Lanka"
+  },
+  "Maduwa Furniture": {
+    phone: "+94 75 345 6789",
+    email: "sales@maduwafurniture.lk",
+    address: "789 Craft Road, Galle, Sri Lanka"
+  },
+  "Smart Desk Lanka": {
+    phone: "+94 70 456 7890",
+    email: "hello@smartdesklanka.com",
+    address: "321 Modern Plaza, Negombo, Sri Lanka"
+  },
+  "Bisora Furniture": {
+    phone: "+94 72 567 8901",
+    email: "info@bisorafurniture.lk",
+    address: "654 Quality Street, Matara, Sri Lanka"
+  }
+};
+
+const defaultTermsAndConditions = `Bank Payment Details:
+Account Name: Kalana Bimsara
+Account Number: 088200282888912
+Bank: People's Bank
+Branch: Ratnapura Branch
+Note: After making the payment, kindly share the payment slip via WhatsApp or email for verification. Production will begin once payment is confirmed.
+
+Advance Payment:
+A 50% advance payment is required to confirm the order. Production will commence only after the advance is received.
+
+Order Confirmation:
+Order details including sizes, colors, and quantities must be finalized at the time of placing the order. Any changes after confirmation may affect delivery timelines.
+
+Inspection and Quality Check:
+Customers are strongly advised to inspect the tables and verify quality at the time of delivery or collection.
+
+Cancellation:
+Order cancellations after production has started will not be eligible for a refund of the advance.
+
+Warranty:
+Our tables come with a 5-year warranty for structural issues.
+This warranty does not cover:
+• Damages caused by mishandling or improper use
+• Exposure to rain, floods, or any form of heavy water contact
+• Excessive heat or direct fire exposure`;
+
 const Invoice: React.FC = () => {
   const {
     orderId
@@ -31,6 +87,17 @@ const Invoice: React.FC = () => {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isQuotation, setIsQuotation] = useState(false);
+  const [termsAndConditions, setTermsAndConditions] = useState(defaultTermsAndConditions);
+
+  const handleBusinessSelect = (businessName: string) => {
+    setBusinessName(businessName);
+    const businessInfo = businessData[businessName as keyof typeof businessData];
+    if (businessInfo) {
+      setBusinessPhone(businessInfo.phone);
+      setBusinessEmail(businessInfo.email);
+      setBusinessAddress(businessInfo.address);
+    }
+  };
   useEffect(() => {
     if (orderId) {
       const foundOrder = orders.find(o => o.id === orderId);
@@ -159,7 +226,18 @@ const Invoice: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 no-print">
             <div>
               <Label htmlFor="businessName">Business Name</Label>
-              <Input id="businessName" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="Enter your business name" />
+              <Select onValueChange={handleBusinessSelect} value={businessName}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select business name" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(businessData).map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="invoiceNumber">{isQuotation ? 'Quotation Number' : 'Invoice Number'}</Label>
@@ -191,6 +269,17 @@ const Invoice: React.FC = () => {
             <div className="col-span-1 md:col-span-2">
               <Label htmlFor="businessAddress">Business Address</Label>
               <Textarea id="businessAddress" value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} placeholder="Enter your business address" rows={3} />
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <Label htmlFor="termsAndConditions">Terms and Conditions</Label>
+              <Textarea 
+                id="termsAndConditions" 
+                value={termsAndConditions} 
+                onChange={e => setTermsAndConditions(e.target.value)} 
+                placeholder="Enter terms and conditions" 
+                rows={8}
+                className="text-sm"
+              />
             </div>
           </div>
 
@@ -327,6 +416,16 @@ const Invoice: React.FC = () => {
                 <h4 className="font-semibold text-gray-800 mb-2">Notes:</h4>
                 <p className="text-gray-600 text-sm">{order.note}</p>
               </div>}
+
+            {/* Terms and Conditions */}
+            {termsAndConditions && (
+              <div className="mt-8 pt-4 border-t border-gray-200">
+                <h4 className="font-semibold text-gray-800 mb-3">Terms and Conditions:</h4>
+                <div className="text-gray-600 text-xs leading-relaxed whitespace-pre-line">
+                  {termsAndConditions}
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-500">
