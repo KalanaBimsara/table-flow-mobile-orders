@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ const Invoice: React.FC = () => {
   } = useParams<{
     orderId: string;
   }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const {
     orders
@@ -29,19 +30,43 @@ const Invoice: React.FC = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [isQuotation, setIsQuotation] = useState(false);
   useEffect(() => {
     if (orderId) {
       const foundOrder = orders.find(o => o.id === orderId);
       if (foundOrder) {
         setOrder(foundOrder);
-        // Auto-generate invoice number
-        setInvoiceNumber(`INV-${foundOrder.id.slice(0, 8).toUpperCase()}`);
+        
+        // Check if this is a quotation
+        const quotationParam = searchParams.get('quotation');
+        const businessParam = searchParams.get('business');
+        
+        if (quotationParam === 'true') {
+          setIsQuotation(true);
+          setInvoiceNumber(`QUO-${foundOrder.id.slice(0, 8).toUpperCase()}`);
+          if (businessParam) {
+            setBusinessName(decodeURIComponent(businessParam));
+          }
+        } else {
+          setInvoiceNumber(`INV-${foundOrder.id.slice(0, 8).toUpperCase()}`);
+        }
+
+        // Also check localStorage for quotation data
+        const quotationData = localStorage.getItem(`quotation-${orderId}`);
+        if (quotationData) {
+          const data = JSON.parse(quotationData);
+          if (data.businessName) {
+            setBusinessName(data.businessName);
+            setIsQuotation(true);
+            setInvoiceNumber(`QUO-${foundOrder.id.slice(0, 8).toUpperCase()}`);
+          }
+        }
       } else {
         toast.error('Order not found');
         navigate('/history');
       }
     }
-  }, [orderId, orders, navigate]);
+  }, [orderId, orders, navigate, searchParams]);
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -76,7 +101,7 @@ const Invoice: React.FC = () => {
     if (invoiceContent) {
       const opt = {
         margin: 0.5,
-        filename: `Invoice-${invoiceNumber}.pdf`,
+        filename: `${isQuotation ? 'Quotation' : 'Invoice'}-${invoiceNumber}.pdf`,
         image: {
           type: 'jpeg',
           quality: 0.98
@@ -94,10 +119,10 @@ const Invoice: React.FC = () => {
       };
       try {
         await html2pdf().set(opt).from(invoiceContent).save();
-        toast.success('Invoice downloaded successfully!');
+        toast.success(`${isQuotation ? 'Quotation' : 'Invoice'} downloaded successfully!`);
       } catch (error) {
         console.error('Error generating PDF:', error);
-        toast.error('Failed to download invoice. Please try again.');
+        toast.error(`Failed to download ${isQuotation ? 'quotation' : 'invoice'}. Please try again.`);
       }
     }
   };
@@ -127,7 +152,7 @@ const Invoice: React.FC = () => {
 
       <Card className="max-w-4xl mx-auto">
         <CardHeader className="no-print">
-          <CardTitle>Invoice Generator</CardTitle>
+          <CardTitle>{isQuotation ? 'Quotation Generator' : 'Invoice Generator'}</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Business Information Form */}
@@ -137,7 +162,7 @@ const Invoice: React.FC = () => {
               <Input id="businessName" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="Enter your business name" />
             </div>
             <div>
-              <Label htmlFor="invoiceNumber">Invoice Number</Label>
+              <Label htmlFor="invoiceNumber">{isQuotation ? 'Quotation Number' : 'Invoice Number'}</Label>
               <Input id="invoiceNumber" value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} />
             </div>
             <div>
@@ -145,7 +170,7 @@ const Invoice: React.FC = () => {
               <Input id="businessPhone" value={businessPhone} onChange={e => setBusinessPhone(e.target.value)} placeholder="Enter business phone" />
             </div>
             <div>
-              <Label htmlFor="invoiceDate">Invoice Date</Label>
+              <Label htmlFor="invoiceDate">{isQuotation ? 'Quotation Date' : 'Invoice Date'}</Label>
               <Input id="invoiceDate" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
             </div>
             <div>
@@ -183,7 +208,7 @@ const Invoice: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">INVOICE</h2>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">{isQuotation ? 'QUOTATION' : 'INVOICE'}</h2>
                 <p className="text-gray-600 text-sm"># {invoiceNumber}</p>
               </div>
             </div>
@@ -196,10 +221,18 @@ const Invoice: React.FC = () => {
                   <span className="text-gray-600">Date:</span>
                   <span className="font-medium">{format(new Date(invoiceDate), 'MMM d, yyyy')}</span>
                 </div>
-                <div className="flex justify-between gap-8">
-                  <span className="text-gray-600">Total Paid:</span>
-                  <span className="font-bold">{formatPrice(order.totalPrice)}</span>
-                </div>
+                {!isQuotation && (
+                  <div className="flex justify-between gap-8">
+                    <span className="text-gray-600">Total Paid:</span>
+                    <span className="font-bold">{formatPrice(order.totalPrice)}</span>
+                  </div>
+                )}
+                {isQuotation && (
+                  <div className="flex justify-between gap-8">
+                    <span className="text-gray-600">Valid Until:</span>
+                    <span className="font-medium">{format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'MMM d, yyyy')}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -273,10 +306,18 @@ const Invoice: React.FC = () => {
                       <span className="font-bold text-lg">{formatPrice(order.totalPrice)}</span>
                     </div>
                   </div>
-                  <div className="flex justify-between py-2 bg-gray-50 px-3 rounded">
-                    <span className="font-semibold">Amount Paid:</span>
-                    <span className="font-bold">{formatPrice(order.totalPrice)}</span>
-                  </div>
+                  {!isQuotation && (
+                    <div className="flex justify-between py-2 bg-gray-50 px-3 rounded">
+                      <span className="font-semibold">Amount Paid:</span>
+                      <span className="font-bold">{formatPrice(order.totalPrice)}</span>
+                    </div>
+                  )}
+                  {isQuotation && (
+                    <div className="flex justify-between py-2 bg-blue-50 px-3 rounded">
+                      <span className="font-semibold">Quoted Amount:</span>
+                      <span className="font-bold">{formatPrice(order.totalPrice)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

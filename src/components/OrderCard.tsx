@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Phone, Package, Palette, Hash, Calendar, CheckCircle2, Truck, StickyNote, Table, Trash2, DollarSign, User, UserPlus, LockKeyhole, Edit, FileText } from 'lucide-react';
 import EditOrderForm from './EditOrderForm';
+import CreateQuotationDialog from './CreateQuotationDialog';
 import { Order, TableItem, tableSizeOptions, colourOptions } from '@/types/order';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -285,6 +286,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
       </CardContent>
       
       <CardFooter className={`flex flex-wrap gap-2 ${isMobile ? 'justify-center' : 'justify-end'}`}>
+        {/* Quotation button - show for pending and assigned orders */}
+        {(order.status === 'pending' || order.status === 'assigned') && (
+          <CreateQuotationDialog order={order} isMobile={isMobile} />
+        )}
+        
         {/* Invoice button - only show for completed orders */}
         {order.status === 'completed' && (
           <Button 
