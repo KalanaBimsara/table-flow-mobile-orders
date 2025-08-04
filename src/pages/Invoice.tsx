@@ -15,29 +15,29 @@ import html2pdf from 'html2pdf.js';
 
 const businessData = {
   "Niayana Furniture": {
-    phone: "+94 77 123 4567",
-    email: "info@niayanafurniture.lk",
-    address: "123 Furniture Street, Colombo 03, Sri Lanka"
+    phone: "+94 76 152 8123",
+    email: "niyanafurniture@gmail.com",
+    address: "Gammanpila, Bandaragama"
   },
   "Table LK": {
-    phone: "+94 71 234 5678",
+    phone: "+94 76 152 8123",
     email: "contact@tablelk.com",
-    address: "456 Design Avenue, Kandy, Sri Lanka"
+    address: "Gammanpila, Bandaragama"
   },
   "Maduwa Furniture": {
-    phone: "+94 75 345 6789",
+    phone: "+94 72 949 8057",
     email: "sales@maduwafurniture.lk",
-    address: "789 Craft Road, Galle, Sri Lanka"
+    address: "Gammanpila, Bandaragama"
   },
   "Smart Desk Lanka": {
-    phone: "+94 70 456 7890",
+    phone: "+94 70 747 7861",
     email: "hello@smartdesklanka.com",
-    address: "321 Modern Plaza, Negombo, Sri Lanka"
+    address: "Gammanpila, Bandaragama"
   },
   "Bisora Furniture": {
-    phone: "+94 72 567 8901",
+    phone: "+94 71 148 2882",
     email: "info@bisorafurniture.lk",
-    address: "654 Quality Street, Matara, Sri Lanka"
+    address: "Gammanpila, Bandaragama"
   }
 };
 
