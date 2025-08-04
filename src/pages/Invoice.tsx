@@ -366,8 +366,8 @@ const Invoice: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center">{table.quantity}</td>
-                      <td className="py-3 px-4 text-right">{formatPrice(table.price / table.quantity)}</td>
-                      <td className="py-3 px-4 text-right font-medium">{formatPrice(table.price)}</td>
+                      <td className="py-3 px-4 text-right">{formatPrice(table.price)}</td>
+                      <td className="py-3 px-4 text-right font-medium">{formatPrice(table.price * table.quantity)}</td>
                     </tr>)}
                 </tbody>
               </table>
