@@ -28,16 +28,11 @@ type CreateQuotationDialogProps = {
 };
 
 const businessNames = [
-  "ABC Furniture Co.",
-  "Modern Home Solutions",
-  "Elite Furniture Works",
-  "Premier Table Makers",
-  "Custom Craft Studios",
-  "Luxury Living Furniture",
-  "Artisan Wood Works",
-  "Metropolitan Furniture",
-  "Designer Tables Ltd.",
-  "Classic Furniture House"
+  "Niayana Furniture",
+  "Table LK",
+  "Maduwa Furniture",
+  "Smart Desk Lanka",
+  "Bisora Furniture"
 ];
 
 const CreateQuotationDialog: React.FC<CreateQuotationDialogProps> = ({
