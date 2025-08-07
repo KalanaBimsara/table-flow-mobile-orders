@@ -91,6 +91,7 @@ const Invoice: React.FC = () => {
   const [editableRates, setEditableRates] = useState<{[key: string]: number}>({});
   const [editableDeliveryFee, setEditableDeliveryFee] = useState(0);
   const [editableAdditionalCharges, setEditableAdditionalCharges] = useState(0);
+  const [editableTotal, setEditableTotal] = useState(0);
 
   const handleBusinessSelect = (businessName: string) => {
     setBusinessName(businessName);
@@ -131,6 +132,9 @@ const Invoice: React.FC = () => {
           initialRates[table.id || index.toString()] = table.price;
         });
         setEditableRates(initialRates);
+        
+        // Initialize editable total with calculated value
+        setEditableTotal(foundOrder.totalPrice);
 
         // Also check localStorage for quotation data
         const quotationData = localStorage.getItem(`quotation-${orderId}`);
@@ -331,6 +335,16 @@ const Invoice: React.FC = () => {
                 placeholder="Enter additional charges (negative for discount)"
               />
             </div>
+            <div>
+              <Label htmlFor="editableTotal">Total Amount</Label>
+              <Input
+                id="editableTotal"
+                type="number"
+                value={editableTotal}
+                onChange={e => setEditableTotal(Number(e.target.value))}
+                placeholder="Enter total amount"
+              />
+            </div>
             <div className="col-span-1 md:col-span-2">
               <Label htmlFor="termsAndConditions">Terms and Conditions</Label>
               <Textarea 
@@ -371,34 +385,18 @@ const Invoice: React.FC = () => {
                   <span className="text-gray-600">Date:</span>
                   <span className="font-medium">{format(new Date(invoiceDate), 'MMM d, yyyy')}</span>
                 </div>
-                {!isQuotation && (() => {
-                  const subtotal = order.tables?.reduce((sum, table, index) => {
-                    const rate = editableRates[table.id || index.toString()] || table.price;
-                    return sum + (rate * table.quantity);
-                  }, 0) || 0;
-                  const totalAmount = subtotal + editableDeliveryFee + editableAdditionalCharges;
-                  
-                  return (
-                    <div className="flex justify-between gap-8">
-                      <span className="text-gray-600">Total Paid:</span>
-                      <span className="font-bold">{formatPrice(totalAmount)}</span>
-                    </div>
-                  );
-                })()}
-                {isQuotation && (() => {
-                  const subtotal = order.tables?.reduce((sum, table, index) => {
-                    const rate = editableRates[table.id || index.toString()] || table.price;
-                    return sum + (rate * table.quantity);
-                  }, 0) || 0;
-                  const totalAmount = subtotal + editableDeliveryFee + editableAdditionalCharges;
-                  
-                  return (
-                    <div className="flex justify-between gap-8">
-                      <span className="text-gray-600">Valid Until:</span>
-                      <span className="font-medium">{format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'MMM d, yyyy')}</span>
-                    </div>
-                  );
-                })()}
+                {!isQuotation && (
+                  <div className="flex justify-between gap-8">
+                    <span className="text-gray-600">Total Paid:</span>
+                    <span className="font-bold">{formatPrice(editableTotal)}</span>
+                  </div>
+                )}
+                {isQuotation && (
+                  <div className="flex justify-between gap-8">
+                    <span className="text-gray-600">Valid Until:</span>
+                    <span className="font-medium">{format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'MMM d, yyyy')}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -482,19 +480,19 @@ const Invoice: React.FC = () => {
                         <div className="border-t border-gray-300 pt-2">
                           <div className="flex justify-between py-2">
                             <span className="font-semibold text-lg">Total:</span>
-                            <span className="font-bold text-lg">{formatPrice(totalAmount)}</span>
+                            <span className="font-bold text-lg">{formatPrice(editableTotal)}</span>
                           </div>
                         </div>
                         {!isQuotation && (
                           <div className="flex justify-between py-2 bg-gray-50 px-3 rounded">
                             <span className="font-semibold">Amount Paid:</span>
-                            <span className="font-bold">{formatPrice(totalAmount)}</span>
+                            <span className="font-bold">{formatPrice(editableTotal)}</span>
                           </div>
                         )}
                         {isQuotation && (
                           <div className="flex justify-between py-2 bg-blue-50 px-3 rounded">
                             <span className="font-semibold">Quoted Amount:</span>
-                            <span className="font-bold">{formatPrice(totalAmount)}</span>
+                            <span className="font-bold">{formatPrice(editableTotal)}</span>
                           </div>
                         )}
                       </>
