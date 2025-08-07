@@ -88,9 +88,7 @@ const Invoice: React.FC = () => {
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isQuotation, setIsQuotation] = useState(false);
   const [termsAndConditions, setTermsAndConditions] = useState(defaultTermsAndConditions);
-  const [editableRates, setEditableRates] = useState<{[key: string]: number}>({});
-  const [editableDeliveryFee, setEditableDeliveryFee] = useState(0);
-  const [editableAdditionalCharges, setEditableAdditionalCharges] = useState(0);
+  const [editableAmountPaid, setEditableAmountPaid] = useState(0);
 
   const handleBusinessSelect = (businessName: string) => {
     setBusinessName(businessName);
@@ -121,16 +119,10 @@ const Invoice: React.FC = () => {
           setInvoiceNumber(`INV-${foundOrder.id.slice(0, 8).toUpperCase()}`);
         }
 
-        // Initialize editable values
-        setEditableDeliveryFee(foundOrder.deliveryFee || 0);
-        setEditableAdditionalCharges(foundOrder.additionalCharges || 0);
-        
-        // Initialize editable rates for each table
-        const initialRates: {[key: string]: number} = {};
-        foundOrder.tables?.forEach((table, index) => {
-          initialRates[table.id || index.toString()] = table.price;
-        });
-        setEditableRates(initialRates);
+        // Calculate total amount for editable amount paid
+        const subtotal = foundOrder.tables?.reduce((sum, table) => sum + (table.price * table.quantity), 0) || 0;
+        const totalAmount = subtotal + (foundOrder.deliveryFee || 0) + (foundOrder.additionalCharges || 0);
+        setEditableAmountPaid(totalAmount);
 
         // Also check localStorage for quotation data
         const quotationData = localStorage.getItem(`quotation-${orderId}`);
@@ -284,51 +276,14 @@ const Invoice: React.FC = () => {
               <Label htmlFor="businessAddress">Business Address</Label>
               <Textarea id="businessAddress" value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} placeholder="Enter your business address" rows={3} />
             </div>
-            <div className="col-span-1 md:col-span-2">
-              <Label>Item Rates</Label>
-              <div className="space-y-3">
-                {order.tables?.map((table, index) => (
-                  <div key={table.id || index} className="flex items-center gap-4 p-3 border rounded">
-                    <div className="flex-1">
-                      <p className="font-medium">{getTableSizeLabel(table.size)} table</p>
-                      <p className="text-sm text-muted-foreground">
-                        Top: {getColourLabel(table.topColour)}, Frame: {getColourLabel(table.frameColour)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm">Rate:</Label>
-                      <Input
-                        type="number"
-                        value={editableRates[table.id || index.toString()] || 0}
-                        onChange={(e) => setEditableRates(prev => ({
-                          ...prev,
-                          [table.id || index.toString()]: Number(e.target.value)
-                        }))}
-                        className="w-32"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
             <div>
-              <Label htmlFor="deliveryFee">Delivery Fee</Label>
+              <Label htmlFor="amountPaid">Amount Paid</Label>
               <Input
-                id="deliveryFee"
+                id="amountPaid"
                 type="number"
-                value={editableDeliveryFee}
-                onChange={e => setEditableDeliveryFee(Number(e.target.value))}
-                placeholder="Enter delivery fee"
-              />
-            </div>
-            <div>
-              <Label htmlFor="additionalCharges">Additional Charges/Discount</Label>
-              <Input
-                id="additionalCharges"
-                type="number"
-                value={editableAdditionalCharges}
-                onChange={e => setEditableAdditionalCharges(Number(e.target.value))}
-                placeholder="Enter additional charges (negative for discount)"
+                value={editableAmountPaid}
+                onChange={e => setEditableAmountPaid(Number(e.target.value))}
+                placeholder="Enter amount paid"
               />
             </div>
             <div className="col-span-1 md:col-span-2">
@@ -371,26 +326,15 @@ const Invoice: React.FC = () => {
                   <span className="text-gray-600">Date:</span>
                   <span className="font-medium">{format(new Date(invoiceDate), 'MMM d, yyyy')}</span>
                 </div>
-                {!isQuotation && (() => {
-                  const subtotal = order.tables?.reduce((sum, table, index) => {
-                    const rate = editableRates[table.id || index.toString()] || table.price;
-                    return sum + (rate * table.quantity);
-                  }, 0) || 0;
-                  const totalAmount = subtotal + editableDeliveryFee + editableAdditionalCharges;
-                  
-                  return (
-                    <div className="flex justify-between gap-8">
-                      <span className="text-gray-600">Total Paid:</span>
-                      <span className="font-bold">{formatPrice(totalAmount)}</span>
-                    </div>
-                  );
-                })()}
+                {!isQuotation && (
+                  <div className="flex justify-between gap-8">
+                    <span className="text-gray-600">Total Paid:</span>
+                    <span className="font-bold">{formatPrice(editableAmountPaid)}</span>
+                  </div>
+                )}
                 {isQuotation && (() => {
-                  const subtotal = order.tables?.reduce((sum, table, index) => {
-                    const rate = editableRates[table.id || index.toString()] || table.price;
-                    return sum + (rate * table.quantity);
-                  }, 0) || 0;
-                  const totalAmount = subtotal + editableDeliveryFee + editableAdditionalCharges;
+                  const subtotal = order.tables?.reduce((sum, table) => sum + (table.price * table.quantity), 0) || 0;
+                  const totalAmount = subtotal + (order.deliveryFee || 0) + (order.additionalCharges || 0);
                   
                   return (
                     <div className="flex justify-between gap-8">
@@ -443,8 +387,8 @@ const Invoice: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center">{table.quantity}</td>
-                      <td className="py-3 px-4 text-right">{formatPrice(editableRates[table.id || index.toString()] || table.price)}</td>
-                      <td className="py-3 px-4 text-right font-medium">{formatPrice((editableRates[table.id || index.toString()] || table.price) * table.quantity)}</td>
+                      <td className="py-3 px-4 text-right">{formatPrice(table.price)}</td>
+                      <td className="py-3 px-4 text-right font-medium">{formatPrice(table.price * table.quantity)}</td>
                     </tr>)}
                 </tbody>
               </table>
@@ -455,11 +399,9 @@ const Invoice: React.FC = () => {
               <div className="w-full md:w-80">
                 <div className="space-y-2">
                   {(() => {
-                    const subtotal = order.tables?.reduce((sum, table, index) => {
-                      const rate = editableRates[table.id || index.toString()] || table.price;
-                      return sum + (rate * table.quantity);
-                    }, 0) || 0;
-                    const totalAmount = subtotal + editableDeliveryFee + editableAdditionalCharges;
+                    const subtotal = order.tables?.reduce((sum, table) => sum + (table.price * table.quantity), 0) || 0;
+                    const deliveryFee = order.deliveryFee || 0;
+                    const additionalCharges = order.additionalCharges || 0;
                     
                     return (
                       <>
@@ -467,34 +409,34 @@ const Invoice: React.FC = () => {
                           <span className="text-gray-600">Subtotal:</span>
                           <span className="font-medium">{formatPrice(subtotal)}</span>
                         </div>
-                        {editableDeliveryFee > 0 && (
+                        {deliveryFee > 0 && (
                           <div className="flex justify-between py-2">
                             <span className="text-gray-600">Shipping:</span>
-                            <span className="font-medium">{formatPrice(editableDeliveryFee)}</span>
+                            <span className="font-medium">{formatPrice(deliveryFee)}</span>
                           </div>
                         )}
-                        {editableAdditionalCharges !== 0 && (
+                        {additionalCharges !== 0 && (
                           <div className="flex justify-between py-2">
-                            <span className="text-gray-600">{editableAdditionalCharges > 0 ? 'Additional:' : 'Discount:'}</span>
-                            <span className="font-medium">{formatPrice(Math.abs(editableAdditionalCharges))}</span>
+                            <span className="text-gray-600">{additionalCharges > 0 ? 'Additional:' : 'Discount:'}</span>
+                            <span className="font-medium">{formatPrice(Math.abs(additionalCharges))}</span>
                           </div>
                         )}
                         <div className="border-t border-gray-300 pt-2">
                           <div className="flex justify-between py-2">
                             <span className="font-semibold text-lg">Total:</span>
-                            <span className="font-bold text-lg">{formatPrice(totalAmount)}</span>
+                            <span className="font-bold text-lg">{formatPrice(subtotal + deliveryFee + additionalCharges)}</span>
                           </div>
                         </div>
                         {!isQuotation && (
                           <div className="flex justify-between py-2 bg-gray-50 px-3 rounded">
                             <span className="font-semibold">Amount Paid:</span>
-                            <span className="font-bold">{formatPrice(totalAmount)}</span>
+                            <span className="font-bold">{formatPrice(editableAmountPaid)}</span>
                           </div>
                         )}
                         {isQuotation && (
                           <div className="flex justify-between py-2 bg-blue-50 px-3 rounded">
                             <span className="font-semibold">Quoted Amount:</span>
-                            <span className="font-bold">{formatPrice(totalAmount)}</span>
+                            <span className="font-bold">{formatPrice(subtotal + deliveryFee + additionalCharges)}</span>
                           </div>
                         )}
                       </>
