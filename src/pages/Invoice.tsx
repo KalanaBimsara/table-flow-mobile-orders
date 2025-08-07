@@ -371,18 +371,34 @@ const Invoice: React.FC = () => {
                   <span className="text-gray-600">Date:</span>
                   <span className="font-medium">{format(new Date(invoiceDate), 'MMM d, yyyy')}</span>
                 </div>
-                {!isQuotation && (
-                  <div className="flex justify-between gap-8">
-                    <span className="text-gray-600">Total Paid:</span>
-                    <span className="font-bold">{formatPrice(order.totalPrice)}</span>
-                  </div>
-                )}
-                {isQuotation && (
-                  <div className="flex justify-between gap-8">
-                    <span className="text-gray-600">Valid Until:</span>
-                    <span className="font-medium">{format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'MMM d, yyyy')}</span>
-                  </div>
-                )}
+                {!isQuotation && (() => {
+                  const subtotal = order.tables?.reduce((sum, table, index) => {
+                    const rate = editableRates[table.id || index.toString()] || table.price;
+                    return sum + (rate * table.quantity);
+                  }, 0) || 0;
+                  const totalAmount = subtotal + editableDeliveryFee + editableAdditionalCharges;
+                  
+                  return (
+                    <div className="flex justify-between gap-8">
+                      <span className="text-gray-600">Total Paid:</span>
+                      <span className="font-bold">{formatPrice(totalAmount)}</span>
+                    </div>
+                  );
+                })()}
+                {isQuotation && (() => {
+                  const subtotal = order.tables?.reduce((sum, table, index) => {
+                    const rate = editableRates[table.id || index.toString()] || table.price;
+                    return sum + (rate * table.quantity);
+                  }, 0) || 0;
+                  const totalAmount = subtotal + editableDeliveryFee + editableAdditionalCharges;
+                  
+                  return (
+                    <div className="flex justify-between gap-8">
+                      <span className="text-gray-600">Valid Until:</span>
+                      <span className="font-medium">{format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'MMM d, yyyy')}</span>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
