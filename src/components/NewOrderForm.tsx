@@ -101,7 +101,7 @@ const createEmptyTable = (): TableItem => ({
   id: uuidv4(),
   size: '24x32',
   topColour: 'teak',
-  frameColour: 'blackteak',
+  frameColour: 'black',
   colour: 'teak', // For compatibility, align with topColour
   quantity: 1,
   price: 11000  // Updated default price for 24x32 table
