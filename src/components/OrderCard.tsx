@@ -239,7 +239,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           
           {order.note && <div className="flex items-center gap-2 mt-3">
               <StickyNote size={isMobile ? 18 : 24} className="flex-shrink-0 text-muted-foreground" />
-              <span className="break-words text-[#ff0000] font-bold text-lg">{order.note}</span>
+              <span className="min-w-0 whitespace-normal break-all sm:break-words text-[#ff0000] font-bold text-lg">{order.note}</span>
             </div>}
           
           <div className="flex items-center gap-2 mt-3">
