@@ -309,7 +309,7 @@ function useFormProvider() {
 id: uuidv4(),
           size: '24x32',
           topColour: 'teak',
-          frameColour: 'blackteak',
+          frameColour: 'black',
           colour: 'teak', // For compatibility
           quantity: 1,
           price: 11000  // Updated default price
