@@ -116,15 +116,15 @@ export function EditOrderForm({ order, isOpen, onClose }: EditOrderFormProps) {
   }
 
   // Create a new empty table with default values
-  const createEmptyTable = (): TableItem => ({
-    id: uuidv4(),
-    size: '24x32',
-    topColour: 'white',
-    frameColour: 'white',
-    colour: 'white', // For compatibility
-    quantity: 1,
-    price: 11000  // Updated default price for 24x32 table
-  });
+const createEmptyTable = (): TableItem => ({
+  id: uuidv4(),
+  size: '24x32',
+  topColour: 'teak',
+  frameColour: 'blackteak',
+  colour: 'teak', // For compatibility, align with topColour
+  quantity: 1,
+  price: 11000  // Updated default price for 24x32 table
+});
 
   // Add a new table to the form
   const addTable = () => {

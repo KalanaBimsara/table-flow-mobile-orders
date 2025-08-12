@@ -41,6 +41,10 @@ export const tableSizeOptions = [
   { value: '24x84', label: '24x84 Table', price: 22500 },
   { value: '24x96', label: '24x96 Table', price: 22500 },
 
+  // Dining Tables
+  { value: '36x36', label: '36x36 Table', price: 9500 },
+  { value: '60x36', label: '60x36 Table', price: 11500 },
+
   // Medium Tables - increased by 500
   { value: '30x48', label: '30x48 Table', price: 22500 },
   { value: '36x48', label: '36x48 Table', price: 22500 },
