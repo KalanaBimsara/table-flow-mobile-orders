@@ -47,24 +47,32 @@ export const SuperAdminAuthProvider: React.FC<{ children: React.ReactNode }> = (
         return;
       }
 
-      const { data: sessionData, error } = await supabase
-        .from('super_admin_sessions')
-        .select(`
-          *,
-          super_admin_users (*)
-        `)
-        .eq('session_token', sessionToken)
-        .gt('expires_at', new Date().toISOString())
-        .single();
+      const { data, error } = await (supabase as any).rpc('super_admin_get_session', {
+        p_session_token: sessionToken,
+      });
 
-      if (error || !sessionData) {
+      const rowData: any = (data as any) ?? null;
+      const row = Array.isArray(rowData) ? rowData[0] : rowData;
+
+      if (error || !row) {
         localStorage.removeItem('super_admin_session');
         setLoading(false);
         return;
       }
 
-      setSession(sessionData);
-      setUser(sessionData.super_admin_users);
+      setSession({
+        id: row.session_id,
+        user_id: row.user_id,
+        session_token: row.session_token,
+        expires_at: row.expires_at,
+      });
+      setUser({
+        id: row.user_id,
+        username: row.username,
+        email: row.email,
+        last_login: row.last_login,
+        is_active: row.is_active,
+      });
     } catch (error) {
       console.error('Session check failed:', error);
       localStorage.removeItem('super_admin_session');
@@ -75,63 +83,32 @@ export const SuperAdminAuthProvider: React.FC<{ children: React.ReactNode }> = (
 
   const signIn = async (username: string, password: string) => {
     try {
-      // Validate credentials with proper password check
-      const { data: userData, error: userError } = await supabase
-        .from('super_admin_users')
-        .select('*')
-        .eq('username', username)
-        .eq('is_active', true)
-        .single();
+      const { data, error } = await (supabase as any).rpc('super_admin_sign_in', {
+        p_username: username,
+        p_password: password,
+      });
 
-      if (userError || !userData) {
+      const rowData: any = (data as any) ?? null;
+      const row = Array.isArray(rowData) ? rowData[0] : rowData;
+
+      if (error || !row) {
         throw new Error('Invalid username or password');
       }
 
-      // For security, we should check the actual password
-      // In a real application, you'd compare with a hashed password
-      // For this demo, let's use a more secure approach
-      const validCredentials = (
-        (username === 'superadmin' && password === 'admin123') ||
-        (username === 'admin' && password === 'superadmin2024')
-      );
-
-      if (!validCredentials) {
-        throw new Error('Invalid username or password');
-      }
-
-      // Verify the username matches one of our valid users
-      if (!['superadmin', 'admin'].includes(userData.username)) {
-        throw new Error('Invalid username or password');
-      }
-
-      // Create session
-      const sessionToken = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour session
-
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('super_admin_sessions')
-        .insert({
-          user_id: userData.id,
-          session_token: sessionToken,
-          expires_at: expiresAt.toISOString()
-        })
-        .select()
-        .single();
-
-      if (sessionError) {
-        throw new Error('Failed to create session');
-      }
-
-      // Update last login
-      await supabase
-        .from('super_admin_users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', userData.id);
-
-      localStorage.setItem('super_admin_session', sessionToken);
-      setSession(sessionData);
-      setUser(userData);
+      localStorage.setItem('super_admin_session', row.session_token);
+      setSession({
+        id: row.session_id,
+        user_id: row.user_id,
+        session_token: row.session_token,
+        expires_at: row.expires_at,
+      });
+      setUser({
+        id: row.user_id,
+        username: row.username,
+        email: row.email,
+        last_login: row.last_login,
+        is_active: row.is_active,
+      });
       
       toast.success('Successfully signed in');
       navigate('/super-admin/dashboard');
@@ -145,10 +122,9 @@ export const SuperAdminAuthProvider: React.FC<{ children: React.ReactNode }> = (
   const signOut = async () => {
     try {
       if (session) {
-        await supabase
-          .from('super_admin_sessions')
-          .delete()
-          .eq('session_token', session.session_token);
+        await (supabase as any).rpc('super_admin_sign_out', {
+          p_session_token: session.session_token,
+        });
       }
       
       localStorage.removeItem('super_admin_session');
