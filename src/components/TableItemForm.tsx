@@ -20,9 +20,6 @@ const frameColourOptions = [{
 }, {
   value: 'black',
   label: 'Black'
-}, {
-  value: 'blackteak',
-  label: 'Black Teak'
 }];
 
 const TableItemForm: React.FC<TableItemFormProps> = ({
