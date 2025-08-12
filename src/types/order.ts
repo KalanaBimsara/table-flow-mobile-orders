@@ -41,11 +41,7 @@ export const tableSizeOptions = [
   { value: '24x84', label: '24x84 Table', price: 22500 },
   { value: '24x96', label: '24x96 Table', price: 22500 },
 
-  // Dining Tables
-  { value: '36x36', label: '36x36 Dinning', price: 14500 },
-  { value: '60x36', label: '60x36 Dinning', price: 16500 },
-
-  // Medium Tables - increased by 500
+    // Medium Tables - increased by 500
   { value: '30x48', label: '30x48 Table', price: 22500 },
   { value: '36x48', label: '36x48 Table', price: 22500 },
   { value: '48x48', label: '48x48 Table', price: 22500 },
@@ -67,6 +63,10 @@ export const tableSizeOptions = [
   { value: '30x96', label: '30x96 Table', price: 39500 },
   { value: '36x96', label: '36x96 Table', price: 39500 },
   { value: '48x96', label: '48x96 Table', price: 39500 },
+
+  // Dining Tables
+  { value: '36x36', label: '36x36 Dinning', price: 14500 },
+  { value: '60x36', label: '60x36 Dinning', price: 16500 },
 
   // L-Shaped Tables - increased by 1000
   { value: 'l-A', label: 'L-Shaped Table (Size A)', price: 22000 },
@@ -119,6 +119,10 @@ export const factoryPriceMap: Record<string, number> = {
   '30x96': 34250,
   '36x96': 34250,
   '48x96': 34250,
+
+  //dinning table
+  '36x36': 9500,
+  '60x36': 11500,
   
   // L-Shaped tables
   'l-A': 21500,
