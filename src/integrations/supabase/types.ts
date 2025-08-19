@@ -371,6 +371,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       super_admin_get_session: {
         Args: { p_session_token: string }
         Returns: {
