@@ -21,7 +21,6 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SuperAdminProtectedRoute from "@/components/SuperAdminProtectedRoute";
 import PublicOrderForm from "./pages/PublicOrderForm";
-import ManagementDashboard from "./pages/ManagementDashboard";
 
 const queryClient = new QueryClient();
 
@@ -97,14 +96,6 @@ const App = () => {
                                 element={
                                   <ProtectedRoute allowedRoles={['admin']}>
                                     <Production />
-                                  </ProtectedRoute>
-                                } 
-                              />
-                              <Route 
-                                path="/management" 
-                                element={
-                                  <ProtectedRoute allowedRoles={['manager', 'admin']}>
-                                    <ManagementDashboard />
                                   </ProtectedRoute>
                                 } 
                               />
