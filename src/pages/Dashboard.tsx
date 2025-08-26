@@ -53,6 +53,32 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Manager Dashboard View */}
+      {userRole === 'manager' && (
+        <div className="grid grid-cols-1 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCog size={20} />
+                Manager Dashboard
+              </CardTitle>
+              <CardDescription>Access dedicated management dashboard for order processing</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center space-y-4">
+              <p className="text-center text-muted-foreground">
+                Use the dedicated Management Dashboard to view pending orders and mark them as ready for delivery.
+              </p>
+              <a 
+                href="/management" 
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              >
+                Go to Management Dashboard
+              </a>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Delivery Dashboard View */}
       {userRole === 'delivery' && (
         <div className="grid grid-cols-1 gap-6">
