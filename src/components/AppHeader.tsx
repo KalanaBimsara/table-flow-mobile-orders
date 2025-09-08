@@ -8,6 +8,7 @@ import {
   X,
   ShoppingBag,
   Factory,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -29,6 +30,11 @@ const AppHeader = () => {
   // ✅ Add Production link for admin users
   if (userRole === 'admin') {
     navItems.push({ href: '/production', label: 'Production', icon: Factory });
+  }
+
+  // ✅ Add Management link for manager users
+  if (userRole === 'manager') {
+    navItems.push({ href: '/management', label: 'Management', icon: Settings });
   }
 
   return (

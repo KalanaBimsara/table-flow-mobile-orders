@@ -14,6 +14,7 @@ import Orders from "./pages/Orders";
 import OrderHistory from "./pages/OrderHistory";
 import Invoice from "./pages/Invoice";
 import Production from "./pages/Production";
+import ManagementDashboard from "./pages/ManagementDashboard";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
@@ -88,6 +89,14 @@ const App = () => {
                                 element={
                                   <ProtectedRoute allowedRoles={['admin', 'customer', 'delivery']}>
                                     <Invoice />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/management" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['manager']}>
+                                    <ManagementDashboard />
                                   </ProtectedRoute>
                                 } 
                               />

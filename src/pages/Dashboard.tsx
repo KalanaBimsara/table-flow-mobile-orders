@@ -4,7 +4,7 @@ import { useApp } from '@/contexts/AppContext';
 import { NewOrderForm } from '@/components/NewOrderForm';
 import { OrderList } from '@/components/OrderList';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserCog, ShoppingBag, Truck } from 'lucide-react';
+import { UserCog, ShoppingBag, Truck, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
@@ -48,6 +48,26 @@ const Dashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <NewOrderForm />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Manager Dashboard View */}
+      {userRole === 'manager' && (
+        <div className="grid grid-cols-1 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings size={20} />
+                Manager Dashboard
+              </CardTitle>
+              <CardDescription>Access the management dashboard to oversee production</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Use the Management link in the header to access the full management dashboard where you can mark orders as ready for delivery.
+              </p>
             </CardContent>
           </Card>
         </div>

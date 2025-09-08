@@ -10,7 +10,9 @@ export type TableItem = {
 
 export type OrderStatus = 'pending' | 'assigned' | 'completed';
 
-export type UserRole = 'admin' | 'delivery' | 'customer';
+export type UserRole = 'admin' | 'delivery' | 'customer' | 'manager';
+
+export type DeliveryStatus = 'pending' | 'ready';
 
 export type Order = {
   id: string,
@@ -28,7 +30,8 @@ export type Order = {
   assignedTo?: string,
   delivery_person_id?: string,  // Added to match database column name
   createdBy?: string,
-  salesPersonName?: string  // Added for sales person tracking
+  salesPersonName?: string,  // Added for sales person tracking
+  deliveryStatus?: DeliveryStatus  // Added for delivery status tracking
 };
 
 export const tableSizeOptions = [
