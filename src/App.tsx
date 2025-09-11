@@ -19,7 +19,6 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
-import UserCreationPortal from "./pages/UserCreationPortal";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SuperAdminProtectedRoute from "@/components/SuperAdminProtectedRoute";
 import PublicOrderForm from "./pages/PublicOrderForm";
@@ -42,11 +41,6 @@ const App = () => {
                       <Route path="dashboard" element={
                         <SuperAdminProtectedRoute>
                           <SuperAdminDashboard />
-                        </SuperAdminProtectedRoute>
-                      } />
-                      <Route path="create-user" element={
-                        <SuperAdminProtectedRoute>
-                          <UserCreationPortal />
                         </SuperAdminProtectedRoute>
                       } />
                     </Routes>
