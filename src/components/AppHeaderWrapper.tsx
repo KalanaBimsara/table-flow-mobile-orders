@@ -41,6 +41,19 @@ const AppHeaderWrapper = () => {
         </Button>
 
         <div className="flex items-center space-x-2 sm:space-x-4"> {/* Adjusted space-x for mobile */}
+          {/* ✅ Show "Management" button for manager users */}
+          {userRole === "manager" && (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/management")}
+              size={isMobile ? "icon" : "default"}
+              aria-label={isMobile ? "Management" : undefined}
+            >
+              <Factory size={16} className={isMobile ? "" : "mr-2"} />
+              {!isMobile && "Management"}
+            </Button>
+          )}
+
           {/* ✅ Show "Production" button for admin users */}
           {userRole === "admin" && (
             <Button
