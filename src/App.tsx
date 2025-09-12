@@ -14,6 +14,7 @@ import Orders from "./pages/Orders";
 import OrderHistory from "./pages/OrderHistory";
 import Invoice from "./pages/Invoice";
 import Production from "./pages/Production";
+import ProductionQueue from "./pages/ProductionQueue";
 import ManagementDashboard from "./pages/ManagementDashboard";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -111,6 +112,14 @@ const App = () => {
                                 element={
                                   <ProtectedRoute allowedRoles={['admin']}>
                                     <Production />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/production-queue" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                                    <ProductionQueue />
                                   </ProtectedRoute>
                                 } 
                               />

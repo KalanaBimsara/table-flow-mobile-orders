@@ -67,6 +67,19 @@ const AppHeaderWrapper = () => {
             </Button>
           )}
 
+          {/* ✅ Show "Production Queue" button for admin and manager users */}
+          {(userRole === "admin" || userRole === "manager") && (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/production-queue")}
+              size={isMobile ? "icon" : "default"}
+              aria-label={isMobile ? "Production Queue" : undefined}
+            >
+              <Factory size={16} className={isMobile ? "" : "mr-2"} />
+              {!isMobile && "Production Queue"}
+            </Button>
+          )}
+
           {/* ✅ Show "Super Admin" button for admin users */}
           {userRole === "admin" && (
             <Button
