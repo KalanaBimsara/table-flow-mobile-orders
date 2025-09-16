@@ -48,7 +48,11 @@ const ProductionQueue = () => {
             frameColour: table.frame_colour || table.colour,
             colour: table.colour,
             quantity: table.quantity,
-            price: Number(table.price)
+            price: Number(table.price),
+            legSize: table.leg_size,
+            legHeight: table.leg_height,
+            wireHoles: table.wire_holes,
+            wireHolesComment: table.wire_holes_comment
           })) || [];
 
           return {
@@ -214,6 +218,39 @@ const ProductionQueue = () => {
                             </div>
                           </div>
                         </div>
+                        
+                        {/* Customization Details */}
+                        {(table.legSize || table.legHeight || table.wireHoles) && (
+                          <div className="mt-4 pt-3 border-t">
+                            <p className="text-xs text-muted-foreground mb-2 font-medium">🔧 Customization:</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                              {table.legSize && (
+                                <div>
+                                  <span className="text-muted-foreground">Leg Size:</span>
+                                  <span className="ml-1 font-medium">{table.legSize}</span>
+                                </div>
+                              )}
+                              {table.legHeight && (
+                                <div>
+                                  <span className="text-muted-foreground">Leg Height:</span>
+                                  <span className="ml-1 font-medium">{table.legHeight}</span>
+                                </div>
+                              )}
+                              {table.wireHoles && (
+                                <div>
+                                  <span className="text-muted-foreground">Wire Holes:</span>
+                                  <span className="ml-1 font-medium">{table.wireHoles}</span>
+                                </div>
+                              )}
+                            </div>
+                            {table.wireHoles === 'special' && table.wireHolesComment && (
+                              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+                                <span className="text-muted-foreground">Special wire holes:</span>
+                                <span className="ml-1 text-blue-700 dark:text-blue-300">{table.wireHolesComment}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

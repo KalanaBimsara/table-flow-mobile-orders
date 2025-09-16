@@ -77,6 +77,10 @@ export function NewOrderForm() {
           colour: table.colour, // For compatibility
           quantity: table.quantity,
           price: table.price,
+          legSize: table.legSize,
+          legHeight: table.legHeight,
+          wireHoles: table.wireHoles,
+          wireHolesComment: table.wireHolesComment,
         })),
         note: values.note || "",
         totalPrice,

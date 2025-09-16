@@ -230,14 +230,23 @@ const Dashboard: React.FC = () => {
                           <h4 className="font-medium mb-2">Items</h4>
                           <div className="space-y-2">
                             {order.tables.map((table: any, index: number) => (
-                              <div key={index} className="flex justify-between items-center p-2 bg-background rounded border text-sm">
-                                <div>
-                                  <span className="font-medium">{table.size}</span>
-                                  <span className="text-muted-foreground ml-2">
-                                    {table.topColour && `Top: ${table.topColour}`}
-                                    {table.frameColour && ` • Frame: ${table.frameColour}`}
-                                    {!table.topColour && !table.frameColour && `Color: ${table.colour}`}
-                                  </span>
+                               <div key={index} className="flex justify-between items-center p-2 bg-background rounded border text-sm">
+                                <div className="flex-1">
+                                  <div>
+                                    <span className="font-medium">{table.size}</span>
+                                    <span className="text-muted-foreground ml-2">
+                                      {table.topColour && `Top: ${table.topColour}`}
+                                      {table.frameColour && ` • Frame: ${table.frameColour}`}
+                                      {!table.topColour && !table.frameColour && `Color: ${table.colour}`}
+                                    </span>
+                                  </div>
+                                  {(table.legSize || table.legHeight || table.wireHoles) && (
+                                    <div className="text-xs text-muted-foreground mt-1 space-x-2">
+                                      {table.legSize && <span>Leg: {table.legSize}</span>}
+                                      {table.legHeight && <span>Height: {table.legHeight}</span>}
+                                      {table.wireHoles && table.wireHoles !== 'none' && <span>Wire: {table.wireHoles}</span>}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="text-right">
                                   <span className="font-medium">Qty: {table.quantity}</span>
