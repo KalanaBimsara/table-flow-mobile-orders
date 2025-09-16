@@ -100,14 +100,6 @@ const App = () => {
                                 } 
                               />
                               <Route 
-                                path="/management" 
-                                element={
-                                  <ProtectedRoute allowedRoles={['manager']}>
-                                    <ManagementDashboard />
-                                  </ProtectedRoute>
-                                } 
-                              />
-                              <Route 
                                 path="/production" 
                                 element={
                                   <ProtectedRoute allowedRoles={['admin']}>
