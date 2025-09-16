@@ -5,7 +5,12 @@ export type TableItem = {
   frameColour: string, 
   colour: string,  // Keeping for backward compatibility
   quantity: number,
-  price: number
+  price: number,
+  // Customization fields
+  legSize?: '1.5x1.5' | '3x1.5',
+  legHeight?: string,
+  wireHoles?: 'none' | 'normal' | 'special',
+  wireHolesComment?: string
 };
 
 export type OrderStatus = 'pending' | 'assigned' | 'completed';
