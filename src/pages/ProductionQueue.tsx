@@ -49,10 +49,10 @@ const ProductionQueue = () => {
             colour: table.colour,
             quantity: table.quantity,
             price: Number(table.price),
-            legSize: table.leg_size,
-            legHeight: table.leg_height,
-            wireHoles: table.wire_holes,
-            wireHolesComment: table.wire_holes_comment
+            legSize: (table as any).leg_size,
+            legHeight: (table as any).leg_height,
+            wireHoles: (table as any).wire_holes,
+            wireHolesComment: (table as any).wire_holes_comment
           })) || [];
 
           return {
