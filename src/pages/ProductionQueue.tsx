@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, User, MapPin, Phone, Palette, Ruler, Hash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Clock, Palette, Ruler, Hash, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Order, TableItem } from '@/types/order';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const ProductionQueue = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -22,6 +24,11 @@ const ProductionQueue = () => {
         .order('created_at', { ascending: true });
 
       if (ordersError) throw ordersError;
+
+      if (!ordersData) {
+        setOrders([]);
+        return;
+      }
 
       if (!ordersData) {
         setOrders([]);
@@ -85,6 +92,23 @@ const ProductionQueue = () => {
     }
   };
 
+  const markOrderComplete = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'awaiting_approval' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast.success('Order marked as complete and moved to management approval');
+      fetchProductionOrders(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      toast.error('Failed to update order status');
+    }
+  };
+
   useEffect(() => {
     fetchProductionOrders();
   }, []);
@@ -128,7 +152,7 @@ const ProductionQueue = () => {
                       <Badge variant="outline" className="text-xs">
                         #{index + 1}
                       </Badge>
-                      Order for {order.customerName}
+                      Production Order
                     </CardTitle>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
                       <div className="flex items-center gap-1">
@@ -140,35 +164,17 @@ const ProductionQueue = () => {
                       </Badge>
                     </div>
                   </div>
+                  <Button
+                    onClick={() => markOrderComplete(order.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <CheckCircle size={16} />
+                    Done
+                  </Button>
                 </div>
               </CardHeader>
               
               <CardContent className="space-y-4">
-                {/* Customer Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <User size={16} className="text-muted-foreground" />
-                    <span className="font-medium">Customer:</span>
-                    <span>{order.customerName}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone size={16} className="text-muted-foreground" />
-                    <span className="font-medium">Phone:</span>
-                    <span>{order.contactNumber}</span>
-                  </div>
-                  <div className="flex items-start gap-2 md:col-span-2">
-                    <MapPin size={16} className="text-muted-foreground mt-0.5" />
-                    <span className="font-medium">Address:</span>
-                    <span>{order.address}</span>
-                  </div>
-                  {order.salesPersonName && (
-                    <div className="flex items-center gap-2 md:col-span-2">
-                      <User size={16} className="text-muted-foreground" />
-                      <span className="font-medium">Sales Person:</span>
-                      <span>{order.salesPersonName}</span>
-                    </div>
-                  )}
-                </div>
 
                 {/* Production Requirements */}
                 <div>
@@ -266,16 +272,12 @@ const ProductionQueue = () => {
 
                 {/* Production Summary */}
                 <div className="pt-4 border-t">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Total Tables</p>
                       <p className="font-semibold text-lg">
                         {order.tables.reduce((sum, table) => sum + table.quantity, 0)}
                       </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Order Value</p>
-                      <p className="font-semibold text-lg">Rs. {order.totalPrice.toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Priority</p>
