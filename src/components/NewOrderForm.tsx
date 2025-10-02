@@ -27,7 +27,9 @@ const tableItemSchema = z.object({
   legSize: z.enum(['1.5x1.5', '3x1.5']).optional(),
   legHeight: z.string().optional(),
   wireHoles: z.enum(['none', 'normal', 'special']).optional(),
-  wireHolesComment: z.string().optional()
+  wireHolesComment: z.string().optional(),
+  frontPanelSize: z.enum(['6', '12', '16', '24']).optional(),
+  frontPanelLength: z.number().optional()
 });
 
 // Define the overall form schema
@@ -81,6 +83,8 @@ export function NewOrderForm() {
           legHeight: table.legHeight,
           wireHoles: table.wireHoles,
           wireHolesComment: table.wireHolesComment,
+          frontPanelSize: table.frontPanelSize,
+          frontPanelLength: table.frontPanelLength
         })),
         note: values.note || "",
         totalPrice,
@@ -115,9 +119,11 @@ const createEmptyTable = (): TableItem => ({
   quantity: 1,
   price: 11000,  // Updated default price for 24x32 table
   legSize: '1.5x1.5',
-  legHeight: '',
+  legHeight: '30',
   wireHoles: 'none',
-  wireHolesComment: ''
+  wireHolesComment: '',
+  frontPanelSize: undefined,
+  frontPanelLength: undefined
 });
 
   // Add a new table to the form
@@ -327,9 +333,11 @@ function useFormProvider() {
           quantity: 1,
           price: 11000,  // Updated default price
           legSize: '1.5x1.5',
-          legHeight: '',
+          legHeight: '30',
           wireHoles: 'none',
-          wireHolesComment: ''
+          wireHolesComment: '',
+          frontPanelSize: undefined,
+          frontPanelLength: undefined
         }
       ],
       note: "",

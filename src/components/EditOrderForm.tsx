@@ -22,7 +22,13 @@ const tableItemSchema = z.object({
   frameColour: z.string(),
   colour: z.string(), // Keep for backward compatibility
   quantity: z.number().int().positive().min(1, { message: "Quantity must be at least 1" }),
-  price: z.number()
+  price: z.number(),
+  legSize: z.enum(['1.5x1.5', '3x1.5']).optional(),
+  legHeight: z.string().optional(),
+  wireHoles: z.enum(['none', 'normal', 'special']).optional(),
+  wireHolesComment: z.string().optional(),
+  frontPanelSize: z.enum(['6', '12', '16', '24']).optional(),
+  frontPanelLength: z.number().optional()
 });
 
 // Define the overall form schema
@@ -61,6 +67,12 @@ export function EditOrderForm({ order, isOpen, onClose }: EditOrderFormProps) {
         colour: table.colour,
         quantity: table.quantity,
         price: table.price,
+        legSize: table.legSize,
+        legHeight: table.legHeight,
+        wireHoles: table.wireHoles,
+        wireHolesComment: table.wireHolesComment,
+        frontPanelSize: table.frontPanelSize,
+        frontPanelLength: table.frontPanelLength
       })),
       note: order.note || "",
       deliveryFee: order.deliveryFee || 0,
@@ -97,6 +109,12 @@ export function EditOrderForm({ order, isOpen, onClose }: EditOrderFormProps) {
           colour: table.colour, // For compatibility
           quantity: table.quantity,
           price: table.price,
+          legSize: table.legSize,
+          legHeight: table.legHeight,
+          wireHoles: table.wireHoles,
+          wireHolesComment: table.wireHolesComment,
+          frontPanelSize: table.frontPanelSize,
+          frontPanelLength: table.frontPanelLength
         })),
         note: values.note || "",
         totalPrice,
@@ -123,7 +141,13 @@ const createEmptyTable = (): TableItem => ({
   frameColour: 'black',
   colour: 'teak', // For compatibility, align with topColour
   quantity: 1,
-  price: 11000  // Updated default price for 24x32 table
+  price: 11000,  // Updated default price for 24x32 table
+  legSize: '1.5x1.5',
+  legHeight: '30',
+  wireHoles: 'none',
+  wireHolesComment: '',
+  frontPanelSize: undefined,
+  frontPanelLength: undefined
 });
 
   // Add a new table to the form
