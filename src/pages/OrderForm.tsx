@@ -348,6 +348,13 @@ const OrderForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          body { margin: 0; padding: 0; }
+          .container { max-width: 100% !important; padding: 0 !important; }
+        }
+      `}</style>
       {/* Control Bar */}
       <div className="no-print bg-white border-b sticky top-0 z-10 shadow-sm">
         <div className="container py-4 flex justify-between items-center">
