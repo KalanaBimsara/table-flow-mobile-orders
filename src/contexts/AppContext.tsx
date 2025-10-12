@@ -84,23 +84,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
   
-      if (!ordersData || ordersData.length === 0) {
-        console.log("No orders returned from query");
-        setOrders([]);
-        return;
-      }
-  
-      const orderIds = ordersData.map(order => order.id);
-  
-      const { data: tablesData, error: tablesError } = await supabase
+    if (!ordersData || ordersData.length === 0) {
+      console.log("No orders returned from query");
+      setOrders([]);
+      return;
+    }
+
+    // Filter out any invalid order IDs
+    const orderIds = ordersData
+      .map(order => order.id)
+      .filter(id => id != null);
+
+    // Only fetch tables if we have valid order IDs
+    let tablesData = [];
+    if (orderIds.length > 0) {
+      const { data, error: tablesError } = await supabase
         .from('order_tables')
         .select('*')
         .in('order_id', orderIds);
-  
+
       if (tablesError) {
         console.error('Error fetching order tables:', tablesError);
         toast.error(`Failed to fetch order tables: ${tablesError.message}`);
+      } else {
+        tablesData = data || [];
       }
+    }
+  
   
       const tablesByOrder = (tablesData || []).reduce((acc, table) => {
         if (!acc[table.order_id]) {
