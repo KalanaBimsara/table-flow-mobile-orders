@@ -105,7 +105,7 @@ const OrderForm: React.FC = () => {
     );
   }
 
-  const FormCopy = ({ copyNumber, colorName }: { copyNumber: number; colorName: 'cyan' | 'magenta' | 'yellow' | 'black' }) => {
+  const FormCopy = ({ copyNumber, colorName, copyLabel }: { copyNumber: number; colorName: 'cyan' | 'magenta' | 'yellow' | 'black'; copyLabel: string }) => {
     const colorStyles = {
       cyan: { bg: '#E0F7FA', border: '#00ACC1', text: '#006064' },
       magenta: { bg: '#FCE4EC', border: '#C2185B', text: '#880E4F' },
@@ -132,6 +132,7 @@ const OrderForm: React.FC = () => {
           <div className="flex justify-between items-start mb-2">
             <div>
               <div className="text-xs font-bold">{formattedOrderNumber}</div>
+              <div className="text-xs font-bold mt-1" style={{ color: colors.text }}>{copyLabel}</div>
             </div>
 
             <div className="text-center flex-1">
@@ -270,10 +271,10 @@ const OrderForm: React.FC = () => {
 
       {/* Forms Container - 4 copies in different colors, 2 per page */}
       <div className="container py-8 space-y-2">
-        <FormCopy copyNumber={1} colorName="cyan" />
-        <FormCopy copyNumber={2} colorName="magenta" />
-        <FormCopy copyNumber={3} colorName="yellow" />
-        <FormCopy copyNumber={4} colorName="black" />
+        <FormCopy copyNumber={1} colorName="cyan" copyLabel="PRODUCTION COPY" />
+        <FormCopy copyNumber={2} colorName="magenta" copyLabel="ACCOUNT COPY" />
+        <FormCopy copyNumber={3} colorName="yellow" copyLabel="GATE PASS" />
+        <FormCopy copyNumber={4} colorName="black" copyLabel="CUSTOMER COPY" />
       </div>
     </div>
   );
