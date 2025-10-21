@@ -14,6 +14,7 @@ const OrderForm: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [salesPersonContact, setSalesPersonContact] = useState<string>('');
   const [editableDetails, setEditableDetails] = useState({
     pageName: '',
     pageTel: '',
@@ -73,6 +74,19 @@ const OrderForm: React.FC = () => {
       };
 
       setOrder(formattedOrder);
+
+      // Fetch sales person's contact number
+      if (data.sales_person_name) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('contact_no')
+          .eq('name', data.sales_person_name)
+          .maybeSingle() as { data: { contact_no?: string } | null };
+        
+        if (profileData?.contact_no) {
+          setSalesPersonContact(profileData.contact_no);
+        }
+      }
     } catch (error) {
       console.error('Error fetching order:', error);
       toast.error('Failed to fetch order details');
@@ -149,7 +163,7 @@ const OrderForm: React.FC = () => {
           {/* Customer Information - Condensed */}
           <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
             <div><span className="font-medium">Page:</span> {order.salesPersonName || '______'}</div>
-            <div><span className="font-medium">Contact:</span> {editableDetails.contactPerson || '______'}</div>
+            <div><span className="font-medium">Contact:</span> {salesPersonContact || '______'}</div>
           </div>
 
           <div className="mb-2 text-xs">
