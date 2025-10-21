@@ -178,7 +178,7 @@ const OrderForm: React.FC = () => {
               <thead>
                 <tr className="border-b" style={{ borderColor: colors.border }}>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Size</th>
-                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Top Col</th>
+                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Top Color</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Holes</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Qty</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Size</th>
@@ -187,6 +187,7 @@ const OrderForm: React.FC = () => {
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>L Normal</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>L Reverse</th>
                   <th className="p-1 font-medium">Notes</th>
+                  
                 </tr>
               </thead>
               <tbody>
@@ -231,7 +232,9 @@ const OrderForm: React.FC = () => {
 
           {order.note && (
             <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: colors.border }}>
-              <span className="font-bold">Notes:</span> {order.note}
+              <span className="font-bold">Notes:</span>
+              <span className="font-bold">Drawings:</span>
+              {order.note}
             </div>
           )}
         </div>
