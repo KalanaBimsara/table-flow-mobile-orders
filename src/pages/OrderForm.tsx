@@ -212,7 +212,7 @@ const OrderForm: React.FC = () => {
           {/* Total and Footer - Condensed */}
           <div className="text-xs mb-2">
             <span className="font-bold">Total Qty: {getTotalQuantity()}</span>
-            {editableDetails.specialNotes && <span className="ml-4 font-medium">Notes: {editableDetails.specialNotes}</span>}
+            {editableDetails.specialNotes && <span className="ml-4 font-medium">Notes: {editableDetails.specialNotes} </span>}
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-xs">
@@ -229,10 +229,12 @@ const OrderForm: React.FC = () => {
               <div className="border-b mt-3" style={{ borderColor: colors.border }}>&nbsp;</div>
             </div>
           </div>
-
           {order.note && (
             <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: colors.border }}>
-              <span className="font-bold">Notes / Drawings :</span>{order.note}
+              <span className="font-bold">Notes :</span>{order.note}
+            </div>
+            <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: colors.border }}>
+              <span className="font-bold">Drawings :</span>
             </div>
           )}
         </div>
