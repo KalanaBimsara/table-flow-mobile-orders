@@ -347,7 +347,7 @@ function useFormProvider() {
           price: 11000,  // Updated default price
           legSize: '1.5x1.5',
           legHeight: '30',
-          wireHoles: 'none',
+          wireHoles: 'normal',
           wireHolesComment: '',
           frontPanelSize: undefined,
           frontPanelLength: undefined
