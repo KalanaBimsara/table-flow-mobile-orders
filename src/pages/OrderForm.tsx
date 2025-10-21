@@ -137,7 +137,7 @@ const OrderForm: React.FC = () => {
 
             <div className="text-center flex-1">
               <h1 className="text-sm font-bold">BOSS FURNITURE (PVT) LTD.</h1>
-              <p className="text-xs">No. 31/A/02, Gammanpila, Bandaragama. Tel: 075/076/077/078 8443776</p>
+              <p className="text-xs">No. 31/A/02, Gammanpila, Bandaragama. Tel: 075 166 3775 / 078 844 3776</p>
             </div>
 
             <div className="text-right text-xs">
@@ -171,8 +171,8 @@ const OrderForm: React.FC = () => {
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Size</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg H</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Col</th>
-                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>S.R N</th>
-                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>S.R R</th>
+                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>L Normal</th>
+                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>L Reverse</th>
                   <th className="p-1 font-medium">Notes</th>
                 </tr>
               </thead>
