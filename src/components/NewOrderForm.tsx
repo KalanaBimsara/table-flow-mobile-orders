@@ -26,6 +26,7 @@ const tableItemSchema = z.object({
   price: z.number(),
   // Customization fields
   legSize: z.enum(['1.5x1.5', '3x1.5']).optional(),
+  legShape: z.enum(['O Shape', 'U shape']).optional(),
   legHeight: z.string().optional(),
   wireHoles: z.enum(['none', 'normal', 'special']).optional(),
   wireHolesComment: z.string().optional(),
@@ -90,6 +91,7 @@ export function NewOrderForm() {
           quantity: table.quantity,
           price: table.price,
           legSize: table.legSize,
+          legShape: table.legShape,
           legHeight: table.legHeight,
           wireHoles: table.wireHoles,
           wireHolesComment: table.wireHolesComment,
@@ -129,6 +131,7 @@ const createEmptyTable = (): TableItem => ({
   quantity: 1,
   price: 11000,  // Updated default price for 24x32 table
   legSize: '1.5x1.5',
+  legShape: 'O Shape',
   legHeight: '30',
   wireHoles: 'normal',
   wireHolesComment: '',
@@ -346,6 +349,7 @@ function useFormProvider() {
           quantity: 1,
           price: 11000,  // Updated default price
           legSize: '1.5x1.5',
+          legShape: 'O Shape',
           legHeight: '30',
           wireHoles: 'normal',
           wireHolesComment: '',
