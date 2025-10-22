@@ -24,6 +24,7 @@ export type DeliveryStatus = 'pending' | 'ready';
 
 export type Order = {
   id: string,
+  order_form_number?: string,
   customerName: string,
   address: string,
   contactNumber: string,
