@@ -40,7 +40,8 @@ export type Order = {
   delivery_person_id?: string,  // Added to match database column name
   createdBy?: string,
   salesPersonName?: string,  // Added for sales person tracking
-  deliveryStatus?: DeliveryStatus  // Added for delivery status tracking
+  deliveryStatus?: DeliveryStatus,  // Added for delivery status tracking
+  orderFormNumber?: string  // Added for order form number
 };
 
 export const tableSizeOptions = [

@@ -47,6 +47,7 @@ const OrderForm: React.FC = () => {
         address: data.address,
         deliveryDate: (data as any).delivery_date,
         contactNumber: data.contact_number,
+        orderFormNumber: (data as any).order_form_number,
         tables: data.order_tables?.map((table: any) => ({
           id: table.id,
           size: table.size,
@@ -130,10 +131,7 @@ const OrderForm: React.FC = () => {
     };
     
     const colors = colorStyles[colorName];
-    
-    // Generate a simple numeric order number from the UUID
-    const orderNumber = parseInt(order.id.replace(/-/g, '').substring(0, 8), 16) % 100000;
-    const formattedOrderNumber = orderNumber.toString().padStart(5, '0');
+    const formattedOrderNumber = order.orderFormNumber || '000000';
     
     return (
       <div className="form-copy" style={{ height: '50vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
