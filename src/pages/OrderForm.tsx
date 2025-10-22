@@ -220,7 +220,7 @@ const OrderForm: React.FC = () => {
 
           <div className="grid grid-cols-3 gap-2 text-xs">
             <div>
-              <span className="font-medium">W/App:</span> {editableDetails.wAppNo || '______'}
+              <span className="font-medium">W/App:</span> {salesPersonContact || '______'}
               <div className="mt-1 text-xs">Approved via W/App</div>
             </div>
             <div className="text-center">
