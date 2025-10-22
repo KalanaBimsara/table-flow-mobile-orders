@@ -121,10 +121,10 @@ const OrderForm: React.FC = () => {
 
   const FormCopy = ({ copyNumber, colorName, copyLabel }: { copyNumber: number; colorName: 'cyan' | 'magenta' | 'yellow' | 'black'; copyLabel: string }) => {
     const colorStyles = {
-      cyan: { bg: '#E0F7FA', border: '#00ACC1', text: '#006064' },
-      magenta: { bg: '#FCE4EC', border: '#C2185B', text: '#880E4F' },
-      yellow: { bg: '#FFF9C4', border: '#F57F17', text: '#F57F17' },
-      black: { bg: '#F5F5F5', border: '#212121', text: '#212121' }
+      cyan: { bg: '#E0F7FA', border: '#00ACC1', text: '#00FFFF' },
+      magenta: { bg: '#FCE4EC', border: '#C2185B', text: '#FF00FF' },
+      yellow: { bg: '#FFF9C4', border: '#F57F17', text: '#FFFF00' },
+      black: { bg: '#F5F5F5', border: '#212121', text: '#000000' }
     };
     
     const colors = colorStyles[colorName];
@@ -134,10 +134,10 @@ const OrderForm: React.FC = () => {
     const formattedOrderNumber = orderNumber.toString().padStart(5, '0');
     
     return (
-      <div className="form-copy" style={{ height: '40vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
+      <div className="form-copy" style={{ height: '50vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
         <div className="border-2 p-3 h-full" style={{ 
           fontFamily: 'Arial, sans-serif', 
-          fontSize: '9px',
+          fontSize: '12px',
           backgroundColor: colors.bg,
           borderColor: colors.border,
           color: colors.text
@@ -182,6 +182,7 @@ const OrderForm: React.FC = () => {
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Holes</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Qty</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Size</th>
+                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Shape</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg height</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Color</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>L Normal</th>
@@ -195,9 +196,10 @@ const OrderForm: React.FC = () => {
                   <tr key={index} className="border-b" style={{ borderColor: colors.border }}>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.size}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.topColour || table.colour}</td>
-                    <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.wireHoles || ''}</td>
+                    <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.wireHoles || 'normal'}</td>
                     <td className="border-r p-1 text-center font-bold" style={{ borderColor: colors.border }}>{table.quantity}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.legSize || ''}</td>
+                    <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.legShape || ''}</td>                  
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.legHeight || ''}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.frameColour || ''}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}></td>
