@@ -45,6 +45,7 @@ const OrderForm: React.FC = () => {
         id: data.id,
         customerName: data.customer_name,
         address: data.address,
+        deliveryDate: data.delivery_date,
         contactNumber: data.contact_number,
         tables: data.order_tables?.map((table: any) => ({
           id: table.id,
@@ -55,6 +56,7 @@ const OrderForm: React.FC = () => {
           quantity: table.quantity,
           price: Number(table.price),
           legSize: table.leg_size,
+          legShape: table.leg_shape,
           legHeight: table.leg_height,
           wireHoles: table.wire_holes,
           wireHolesComment: table.wire_holes_comment
@@ -156,7 +158,7 @@ const OrderForm: React.FC = () => {
 
             <div className="text-right text-xs">
               <div className="font-bold">ORDER FORM</div>
-              <div>Del. Date: {editableDetails.deliveryDate || '______'}</div>
+              <div>Del. Date: {order.deliveryDate || '______'}</div>
             </div>
           </div>
 
