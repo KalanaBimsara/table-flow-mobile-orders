@@ -14,9 +14,7 @@ const OrderForm: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [salesPersonContact, setSalesPersonContact] = useState<string>('');
   const [editableDetails, setEditableDetails] = useState({
-    pageName: '',
     pageTel: '',
     contactPerson: '',
     deliveryDate: '',
@@ -74,19 +72,6 @@ const OrderForm: React.FC = () => {
       };
 
       setOrder(formattedOrder);
-
-      // Fetch sales person's contact number
-      if (data.sales_person_name) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('contact_no')
-          .eq('name', data.sales_person_name)
-          .maybeSingle() as { data: { contact_no?: string } | null };
-        
-        if (profileData?.contact_no) {
-          setSalesPersonContact(profileData.contact_no);
-        }
-      }
     } catch (error) {
       console.error('Error fetching order:', error);
       toast.error('Failed to fetch order details');
@@ -121,10 +106,10 @@ const OrderForm: React.FC = () => {
 
   const FormCopy = ({ copyNumber, colorName, copyLabel }: { copyNumber: number; colorName: 'cyan' | 'magenta' | 'yellow' | 'black'; copyLabel: string }) => {
     const colorStyles = {
-      cyan: { bg: '#E0F7FA', border: '#00ACC1', text: '#00FFFF' },
-      magenta: { bg: '#FCE4EC', border: '#C2185B', text: '#FF00FF' },
-      yellow: { bg: '#FFF9C4', border: '#F57F17', text: '#FFFF00' },
-      black: { bg: '#F5F5F5', border: '#212121', text: '#000000' }
+      cyan: { bg: '#E0F7FA', border: '#00ACC1', text: '#006064' },
+      magenta: { bg: '#FCE4EC', border: '#C2185B', text: '#880E4F' },
+      yellow: { bg: '#FFF9C4', border: '#F57F17', text: '#F57F17' },
+      black: { bg: '#F5F5F5', border: '#212121', text: '#212121' }
     };
     
     const colors = colorStyles[colorName];
@@ -134,10 +119,10 @@ const OrderForm: React.FC = () => {
     const formattedOrderNumber = orderNumber.toString().padStart(5, '0');
     
     return (
-      <div className="form-copy" style={{ height: '50vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
+      <div className="form-copy" style={{ height: '40vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
         <div className="border-2 p-3 h-full" style={{ 
           fontFamily: 'Arial, sans-serif', 
-          fontSize: '12px',
+          fontSize: '9px',
           backgroundColor: colors.bg,
           borderColor: colors.border,
           color: colors.text
@@ -156,14 +141,15 @@ const OrderForm: React.FC = () => {
 
             <div className="text-right text-xs">
               <div className="font-bold">ORDER FORM</div>
-              <div>Del. Date: {editableDetails.deliveryDate || '______'}</div>
+              <div>Del. Date: {order.delivery_date || '______'}</div>
             </div>
           </div>
 
           {/* Customer Information - Condensed */}
-          <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
-            <div><span className="font-medium">Page:</span> {order.salesPersonName || '______'}</div>
-            <div><span className="font-medium">Contact:</span> {salesPersonContact || '______'}</div>
+          <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
+            <div><span className="font-medium">Page:</span> {}</div>
+            <div><span className="font-medium">Tel:</span> {editableDetails.pageTel || '______'}</div>
+            <div><span className="font-medium">Contact:</span> {editableDetails.contactPerson || '______'}</div>
           </div>
 
           <div className="mb-2 text-xs">
@@ -178,17 +164,15 @@ const OrderForm: React.FC = () => {
               <thead>
                 <tr className="border-b" style={{ borderColor: colors.border }}>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Size</th>
-                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Top Color</th>
+                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Top Col</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Holes</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Qty</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Size</th>
-                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Shape</th>
-                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg height</th>
-                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Color</th>
+                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg H</th>
+                  <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Leg Col</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>L Normal</th>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>L Reverse</th>
                   <th className="p-1 font-medium">Notes</th>
-                  
                 </tr>
               </thead>
               <tbody>
@@ -196,10 +180,9 @@ const OrderForm: React.FC = () => {
                   <tr key={index} className="border-b" style={{ borderColor: colors.border }}>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.size}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.topColour || table.colour}</td>
-                    <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.wireHoles || 'normal'}</td>
+                    <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.wireHoles || ''}</td>
                     <td className="border-r p-1 text-center font-bold" style={{ borderColor: colors.border }}>{table.quantity}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.legSize || ''}</td>
-                    <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.legShape || ''}</td>                  
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.legHeight || ''}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.frameColour || ''}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}></td>
@@ -214,7 +197,7 @@ const OrderForm: React.FC = () => {
           {/* Total and Footer - Condensed */}
           <div className="text-xs mb-2">
             <span className="font-bold">Total Qty: {getTotalQuantity()}</span>
-            {editableDetails.specialNotes && <span className="ml-4 font-medium">Notes: {editableDetails.specialNotes} </span>}
+            {editableDetails.specialNotes && <span className="ml-4 font-medium">Notes: {editableDetails.specialNotes}</span>}
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-xs">
@@ -231,10 +214,10 @@ const OrderForm: React.FC = () => {
               <div className="border-b mt-3" style={{ borderColor: colors.border }}>&nbsp;</div>
             </div>
           </div>
+
           {order.note && (
             <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: colors.border }}>
-              <span className="font-bold">Notes / </span>
-              <span className="font-bold">Drawing :</span>{order.note}
+              <span className="font-bold">Notes:</span> {order.note}
             </div>
           )}
         </div>
