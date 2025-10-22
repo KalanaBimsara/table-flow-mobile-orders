@@ -216,7 +216,7 @@ const ManagementDashboard: React.FC = () => {
                     </CardTitle>
                     <CardDescription>
                       Customer: {order.customerName} • Created: {order.createdAt.toLocaleDateString()}
-                       <span className="font-medium"> • Sales Person: </span> {order.salesPersonName || 'N/A'}
+                      <span className="font-medium"> • Sales Person: </span> {order.salesPersonName || 'N/A'}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -332,6 +332,7 @@ const ManagementDashboard: React.FC = () => {
                     </CardTitle>
                     <CardDescription>
                       Customer: {order.customerName} • Created: {order.createdAt.toLocaleDateString()}
+                      <span className="font-medium"> • Sales Person: </span> {order.salesPersonName || 'N/A'}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
