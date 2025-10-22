@@ -45,7 +45,7 @@ const OrderForm: React.FC = () => {
         id: data.id,
         customerName: data.customer_name,
         address: data.address,
-        deliveryDate: data.delivery_date,
+        deliveryDate: (data as any).delivery_date,
         contactNumber: data.contact_number,
         tables: data.order_tables?.map((table: any) => ({
           id: table.id,

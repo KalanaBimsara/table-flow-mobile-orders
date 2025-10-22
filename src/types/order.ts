@@ -8,6 +8,7 @@ export type TableItem = {
   price: number,
   // Customization fields
   legSize?: '1.5x1.5' | '3x1.5',
+  legShape?: 'O Shape' | 'U shape',
   legHeight?: string,
   wireHoles?: 'none' | 'normal' | 'special',
   wireHolesComment?: string,
@@ -34,6 +35,7 @@ export type Order = {
   totalPrice: number,
   deliveryFee?: number,
   additionalCharges?: number,
+  deliveryDate?: string,
   assignedTo?: string,
   delivery_person_id?: string,  // Added to match database column name
   createdBy?: string,
