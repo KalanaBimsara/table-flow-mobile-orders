@@ -152,7 +152,7 @@ export function OrderList() {
       // Fetch orders that are ready for delivery but not yet assigned
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('*')
+        .select('*, order_form_number')
         .eq('status', 'pending')
         .eq('delivery_status', 'ready')
         .order('created_at', { ascending: false });
@@ -169,7 +169,7 @@ export function OrderList() {
       }
 
       // Extract order IDs to fetch related table data
-      const orderIds = ordersData.map(order => order.id);
+      const orderIds = (ordersData as any[]).map(order => order.id);
 
       // Fetch the order_tables data for these orders
       const { data: tablesData, error: tablesError } = await supabase
@@ -201,7 +201,7 @@ export function OrderList() {
       }, {} as Record<string, any[]>);
 
       // Transform the data to match the Order type structure
-      const formattedOrders = (ordersData as OrderResponse[]).map(order => ({
+      const formattedOrders = (ordersData as unknown as OrderResponse[]).map(order => ({
         id: order.id,
         customerName: order.customer_name,
         address: order.address,
@@ -237,7 +237,7 @@ export function OrderList() {
       // First, fetch the pending orders that are NOT ready for delivery, ordered by creation date (latest first)
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('*')
+        .select('*, order_form_number')
         .eq('status', 'pending')
         .neq('delivery_status', 'ready')
         .order('created_at', { ascending: false });
@@ -254,7 +254,7 @@ export function OrderList() {
       }
 
       // Extract order IDs to fetch related table data
-      const orderIds = ordersData.map(order => order.id);
+      const orderIds = (ordersData as any[]).map(order => order.id);
 
       // Fetch the order_tables data for these orders
       const { data: tablesData, error: tablesError } = await supabase
@@ -286,7 +286,7 @@ export function OrderList() {
       }, {} as Record<string, any[]>);
 
       // Transform the data to match the Order type structure with the correct color properties
-      const formattedOrders = (ordersData as OrderResponse[]).map(order => ({
+      const formattedOrders = (ordersData as unknown as OrderResponse[]).map(order => ({
         id: order.id,
         customerName: order.customer_name,
         address: order.address,
@@ -331,7 +331,7 @@ export function OrderList() {
       // Fetch completed orders for this delivery person ordered by completed_at (latest first)
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('*')
+        .select('*, order_form_number')
         .eq('status', 'completed')
         .eq('delivery_person_id', user.id)
         .order('completed_at', { ascending: false });
@@ -351,7 +351,7 @@ export function OrderList() {
       console.log('Found completed orders:', ordersData.length);
 
       // Extract order IDs to fetch related table data
-      const orderIds = ordersData.map(order => order.id);
+      const orderIds = (ordersData as any[]).map(order => order.id);
 
       // Fetch the order_tables data for these orders
       const { data: tablesData, error: tablesError } = await supabase
@@ -383,7 +383,7 @@ export function OrderList() {
       }, {} as Record<string, any[]>);
 
       // Transform the data to match the Order type structure
-      const formattedOrders = (ordersData as OrderResponse[]).map(order => ({
+      const formattedOrders = (ordersData as unknown as OrderResponse[]).map(order => ({
         id: order.id,
         customerName: order.customer_name,
         address: order.address,

@@ -137,7 +137,7 @@ const OrderForm: React.FC = () => {
       <div className="form-copy" style={{ height: '50vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
         <div className="p-3 h-full" style={{ 
           fontFamily: 'Arial, sans-serif', 
-          fontSize: '9px',
+          fontSize: '11px',
           backgroundColor: colors.bg,
           color: colors.text
         }}>
@@ -159,12 +159,12 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Customer Information - Condensed */}
-          <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 mb-2" style={{ fontSize: '12px' }}>
             <div><span className="font-medium">Page:</span> {order.salesPersonName || '______'}</div>
             <div><span className="font-medium">Page Contact:</span> {salesPersonContact || '______'}</div>
           </div>
 
-          <div className="mb-2 text-xs">
+          <div className="mb-2" style={{ fontSize: '12px' }}>
             <div><span className="font-medium">Customer:</span> {order.customerName} | <span className="font-medium">Tel:</span> {order.contactNumber}</div>
             <div><span className="font-medium">Address:</span> {order.address}</div>
             <div><span className="font-medium">Assembly:</span> {editableDetails.assemblingType || '______'}</div>
@@ -172,7 +172,7 @@ const OrderForm: React.FC = () => {
 
           {/* Order Table - Condensed Single Row */}
           <div className="border mb-2" style={{ borderColor: colors.border }}>
-            <table className="w-full text-xs">
+            <table className="w-full" style={{ fontSize: '11px' }}>
               <thead>
                 <tr className="border-b" style={{ borderColor: colors.border }}>
                   <th className="border-r p-1 font-medium" style={{ borderColor: colors.border }}>Size</th>
@@ -245,6 +245,7 @@ const OrderForm: React.FC = () => {
       <style>{`
         @media print {
           .no-print { display: none !important; }
+          header { display: none !important; }
           body { margin: 0; padding: 0; }
           .container { max-width: 100% !important; padding: 0 !important; }
           @page { size: A4; margin: 0; }
