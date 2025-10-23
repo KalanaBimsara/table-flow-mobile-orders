@@ -52,15 +52,29 @@ export function OrderList() {
   const { userRole, user } = useAuth();
   const isMobile = useIsMobile();
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
+  const [globalSearch, setGlobalSearch] = useState('');
   
   // Date search states
   const [searchFromDate, setSearchFromDate] = useState<Date | undefined>();
   const [searchToDate, setSearchToDate] = useState<Date | undefined>();
   const [customerNameSearch, setCustomerNameSearch] = useState('');
 
-  const pendingOrders = getFilteredOrders('pending', selectedSalesPerson);
-  const assignedOrders = getFilteredOrders('assigned', selectedSalesPerson);
-  const completedOrders = getFilteredOrders('completed', selectedSalesPerson);
+  // Filter orders based on global search
+  const filterOrdersBySearch = (orderList: Order[]) => {
+    if (!globalSearch.trim()) return orderList;
+    
+    const searchLower = globalSearch.toLowerCase().trim();
+    return orderList.filter(order => 
+      order.customerName.toLowerCase().includes(searchLower) ||
+      order.address.toLowerCase().includes(searchLower) ||
+      order.contactNumber.toLowerCase().includes(searchLower) ||
+      (order.orderFormNumber && order.orderFormNumber.includes(searchLower))
+    );
+  };
+
+  const pendingOrders = filterOrdersBySearch(getFilteredOrders('pending', selectedSalesPerson));
+  const assignedOrders = filterOrdersBySearch(getFilteredOrders('assigned', selectedSalesPerson));
+  const completedOrders = filterOrdersBySearch(getFilteredOrders('completed', selectedSalesPerson));
   
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
   const [readyOrders, setReadyOrders] = useState<Order[]>([]);
@@ -434,6 +448,10 @@ export function OrderList() {
 
   // For delivery users, show assigned orders and available orders
   if (userRole === 'delivery') {
+    const filteredAvailableOrders = filterOrdersBySearch(availableOrders);
+    const filteredReadyOrders = filterOrdersBySearch(readyOrders);
+    const filteredDeliveryCompletedOrders = filterOrdersBySearch(deliveryCompletedOrders);
+
     return (
       <Card className="w-full">
         <CardHeader className="text-center md:text-left">
@@ -446,6 +464,20 @@ export function OrderList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">
+            <Label htmlFor="search" className="text-sm font-medium mb-2 block">Search Orders</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+              <Input
+                id="search"
+                type="text"
+                placeholder="Search by customer, address, contact, or order number..."
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
           <Tabs defaultValue="myDeliveries">
             <TabsList className="grid w-full grid-cols-4 mobile-tabs-container">
               <TabsTrigger value="myDeliveries" className="mobile-tab-item">
@@ -493,8 +525,8 @@ export function OrderList() {
                 Orders ready for delivery pickup - marked by management
               </div>
               <div className="space-y-6">
-                {readyOrders.length > 0 ? (
-                  readyOrders.map(order => (
+                {filteredReadyOrders.length > 0 ? (
+                  filteredReadyOrders.map(order => (
                     <div key={order.id} className="relative border-2 border-green-200 rounded-lg bg-green-50/50 dark:bg-green-950/20 dark:border-green-800">
                       <div className="absolute top-2 right-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -526,8 +558,8 @@ export function OrderList() {
             
             <TabsContent value="available" className="mt-4">
               <div className="space-y-6">
-                {availableOrders.length > 0 ? (
-                  availableOrders.map(order => (
+                {filteredAvailableOrders.length > 0 ? (
+                  filteredAvailableOrders.map(order => (
                     <div key={order.id} className="relative">
                       <OrderCard 
                         key={order.id} 
@@ -554,8 +586,8 @@ export function OrderList() {
             
             <TabsContent value="completed" className="mt-4">
               <div className="space-y-6">
-                {deliveryCompletedOrders.length > 0 ? (
-                  deliveryCompletedOrders.map(order => (
+                {filteredDeliveryCompletedOrders.length > 0 ? (
+                  filteredDeliveryCompletedOrders.map(order => (
                     <OrderCard key={order.id} order={order} />
                   ))
                 ) : (
@@ -585,6 +617,20 @@ export function OrderList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">
+            <Label htmlFor="search" className="text-sm font-medium mb-2 block">Search Orders</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+              <Input
+                id="search"
+                type="text"
+                placeholder="Search by customer, address, contact, or order number..."
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
           <Tabs defaultValue="all">
             <TabsList className="grid w-full grid-cols-3 mobile-tabs-container">
               <TabsTrigger value="all" className="mobile-tab-item">
@@ -658,6 +704,20 @@ export function OrderList() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <Label htmlFor="search" className="text-sm font-medium mb-2 block">Search Orders</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+            <Input
+              id="search"
+              type="text"
+              placeholder="Search by customer, address, contact, or order number..."
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
         {/* Sales Person Filter */}
         {salesPersons.length > 0 && (
           <div className="mb-6">
