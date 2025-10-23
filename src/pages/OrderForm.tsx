@@ -137,7 +137,7 @@ const OrderForm: React.FC = () => {
       <div className="form-copy" style={{ height: '50vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
         <div className="p-3 h-full" style={{ 
           fontFamily: 'Arial, sans-serif', 
-          fontSize: '50px',
+          fontSize: '9px',
           backgroundColor: colors.bg,
           color: colors.text
         }}>
