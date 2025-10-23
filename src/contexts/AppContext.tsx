@@ -202,11 +202,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           delivery_fee: orderData.deliveryFee || 0,
           additional_charges: orderData.additionalCharges || 0,
           sales_person_name: profileData?.name || null,
-          delivery_date: (orderData as any).deliveryDate || null,
-          order_form_number: orderFormNumber
+          delivery_date: (orderData as any).deliveryDate || null
+          // order_form_number is automatically set in DB, no need to include it
         })
-        .select('id')
+        .select('id, order_form_number')
         .single();
+
 
       if (orderError) {
         console.error('Error creating order:', orderError);
