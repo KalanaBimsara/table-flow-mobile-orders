@@ -286,10 +286,10 @@ const OrderForm: React.FC = () => {
 
       {/* Forms Container - 4 copies in different colors, 2 per page */}
       <div className="container py-8 space-y-2">
-        <FormCopy copyNumber={1} colorName="cyan" copyLabel="PRODUCTION COPY" />
+        <FormCopy copyNumber={1} colorName="cyan" copyLabel="TRANSPORT COPY" />
         <FormCopy copyNumber={2} colorName="magenta" copyLabel="ACCOUNT COPY" />
         <FormCopy copyNumber={3} colorName="yellow" copyLabel="GATE PASS" />
-        <FormCopy copyNumber={4} colorName="black" copyLabel="CUSTOMER COPY" />
+        <FormCopy copyNumber={4} colorName="black" copyLabel="PRODUCTION COPY" />
       </div>
     </div>
   );
