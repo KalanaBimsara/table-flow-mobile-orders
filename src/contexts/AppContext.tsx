@@ -186,9 +186,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .eq('id', user?.id)
         .single();
 
-      // Generate 6-digit order form number
-      const orderFormNumber = Math.floor(100000 + Math.random() * 900000).toString();
-
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
