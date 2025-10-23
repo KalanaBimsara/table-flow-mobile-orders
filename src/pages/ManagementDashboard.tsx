@@ -4,23 +4,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from "@/components/ui/input";
 import { Settings, Package, CheckCircle2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order } from '@/types/order';
+import { format } from 'date-fns';
 
 const ManagementDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]); // production / pending list
   const [awaitingApprovalOrders, setAwaitingApprovalOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
+    // load both lists
     fetchPendingOrders();
     fetchAwaitingApprovalOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAwaitingApprovalOrders = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('orders')
         .select('*, order_tables(*)')
@@ -29,7 +35,7 @@ const ManagementDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      const formattedOrders = data?.map(order => ({
+      const formattedOrders = data?.map((order: any) => ({
         id: order.id,
         orderFormNumber: order.order_form_number || 'N/A',
         customerName: order.customer_name,
@@ -62,6 +68,8 @@ const ManagementDashboard: React.FC = () => {
     } catch (error) {
       console.error('Error fetching awaiting approval orders:', error);
       toast.error('Failed to fetch awaiting approval orders');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,6 +84,7 @@ const ManagementDashboard: React.FC = () => {
 
       toast.success('Order marked as ready for delivery');
       await fetchAwaitingApprovalOrders();
+      await fetchPendingOrders(); // refresh pending/production list too
     } catch (error) {
       console.error('Error updating order:', error);
       toast.error('Failed to update order');
@@ -84,15 +93,20 @@ const ManagementDashboard: React.FC = () => {
 
   const fetchPendingOrders = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('orders')
-        .select('*, order_tables(*)')
-        .eq('status', 'pending')
+        .select('*')
+        .eq('status', 'pending') // Only fetch pending orders
+        .or(
+          `customer_name.ilike.%${searchTerm}%,order_form_number.ilike.%${searchTerm}%,sales_person_name.ilike.%${searchTerm}%`
+        )
         .order('created_at', { ascending: false });
+
 
       if (error) throw error;
 
-      const formattedOrders = data?.map(order => ({
+      const formattedOrders = data?.map((order: any) => ({
         id: order.id,
         orderFormNumber: order.order_form_number || 'N/A',
         customerName: order.customer_name,
@@ -121,7 +135,26 @@ const ManagementDashboard: React.FC = () => {
         deliveryStatus: (order.delivery_status || 'pending') as 'pending' | 'ready'
       })) || [];
 
-      setOrders(formattedOrders);
+      // If your scheme uses deliveryStatus to move between lists, split them:
+      const awaitingApproval = formattedOrders.filter((o) => o.deliveryStatus === 'pending');
+      const productionOrders = formattedOrders.filter((o) => o.deliveryStatus === 'ready');
+
+      // For backward compatibility, we'll show both: append to state
+      // (you already fetch awaiting approval separately too; this keeps behavior consistent)
+      setAwaitingApprovalOrders((prev) => {
+        // merge but avoid duplicates by id
+        const map = new Map(prev.map(p => [p.id, p]));
+        awaitingApproval.forEach(a => map.set(a.id, a));
+        return Array.from(map.values());
+      });
+
+      setOrders((prev) => {
+        // merge but avoid duplicates by id
+        const map = new Map(prev.map(p => [p.id, p]));
+        productionOrders.forEach(p => map.set(p.id, p));
+        // if there were previously items with deliveryStatus 'pending' in orders state, they may remain; replace whole state with the merged list
+        return Array.from(map.values());
+      });
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Failed to fetch orders');
@@ -141,11 +174,31 @@ const ManagementDashboard: React.FC = () => {
 
       toast.success('Order marked as ready for delivery');
       await fetchPendingOrders();
+      await fetchAwaitingApprovalOrders();
     } catch (error) {
       console.error('Error updating order:', error);
       toast.error('Failed to update order');
     }
   };
+
+  // ---- Filtering (computed values) ----
+  const lowerSearch = searchTerm.trim().toLowerCase();
+
+  const filteredAwaitingApproval = awaitingApprovalOrders.filter((order) => {
+    if (!lowerSearch) return true;
+    const matchesCustomer = order.customerName?.toLowerCase().includes(lowerSearch);
+    const matchesForm = order.orderFormNumber?.toLowerCase().includes(lowerSearch);
+    const matchesSales = order.salesPersonName?.toLowerCase().includes(lowerSearch);
+    return Boolean(matchesCustomer || matchesForm || matchesSales);
+  });
+
+  const filteredPendingOrders = orders.filter((order) => {
+    if (!lowerSearch) return true;
+    const matchesCustomer = order.customerName?.toLowerCase().includes(lowerSearch);
+    const matchesForm = order.orderFormNumber?.toLowerCase().includes(lowerSearch);
+    const matchesSales = order.salesPersonName?.toLowerCase().includes(lowerSearch);
+    return Boolean(matchesCustomer || matchesForm || matchesSales);
+  });
 
   if (loading) {
     return (
@@ -157,6 +210,25 @@ const ManagementDashboard: React.FC = () => {
 
   return (
     <div className="container py-6 space-y-6">
+      {/* Search Card */}
+      <Card className="p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">Search Orders</h2>
+            <p className="text-sm text-muted-foreground">
+              Search by customer name, order form number, or salesperson
+            </p>
+          </div>
+          <Input
+            placeholder="Search orders..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+      </Card>
+
+      {/* Summary Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -174,7 +246,7 @@ const ManagementDashboard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Production Status Section */}
+      {/* Production Status */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -185,13 +257,39 @@ const ManagementDashboard: React.FC = () => {
             Orders completed by production and ready to be assembled
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground mb-4">
-            Orders awaiting assembly approval: {awaitingApprovalOrders.length}
-          </div>
+        <CardContent className="space-y-4">
+          {filteredAwaitingApproval.length === 0 && lowerSearch ? (
+            <p className="text-muted-foreground text-center py-4">
+              No results found for “{searchTerm}”
+            </p>
+          ) : filteredAwaitingApproval.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">
+              No orders awaiting approval
+            </p>
+          ) : (
+            filteredAwaitingApproval.map((order) => (
+              <Card key={order.id} className="p-4 border border-dashed">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-semibold">
+                      {order.customerName} ({order.salesPersonName})
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Order Form: {order.orderFormNumber}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {order.createdAt ? format(order.createdAt, "PPP") : ''}
+                    </p>
+                  </div>
+                  <Badge variant="secondary">Pending</Badge>
+                </div>
+              </Card>
+            ))
+          )}
         </CardContent>
       </Card>
 
+      {/* Awaiting approval list (detailed cards) */}
       <div className="grid gap-4">
         {awaitingApprovalOrders.length === 0 ? (
           <Card>
@@ -201,8 +299,8 @@ const ManagementDashboard: React.FC = () => {
           </Card>
         ) : (
           awaitingApprovalOrders.map((order) => (
-            <Card 
-              key={order.id} 
+            <Card
+              key={order.id}
               className="transition-all duration-300 bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800"
             >
               <CardHeader>
@@ -217,7 +315,7 @@ const ManagementDashboard: React.FC = () => {
                       </Badge>
                     </CardTitle>
                     <CardDescription>
-                      Customer: {order.customerName} • Created: {order.createdAt.toLocaleDateString()}
+                      Customer: {order.customerName} • Created: {order.createdAt?.toLocaleDateString()}
                       <span className="font-medium"> • Sales Person: </span> {order.salesPersonName || 'N/A'}
                     </CardDescription>
                   </div>
@@ -255,14 +353,14 @@ const ManagementDashboard: React.FC = () => {
                     <h4 className="font-medium mb-2">Order Summary</h4>
                     <div className="text-sm text-muted-foreground space-y-1">
                       <p><span className="font-medium">Total Items:</span> {order.tables.length}</p>
-                      <p><span className="font-medium">Total Price:</span> LKR {order.totalPrice.toLocaleString()}</p>
+                      <p><span className="font-medium">Total Price:</span> LKR {order.totalPrice?.toLocaleString()}</p>
                       {order.deliveryFee && (
                         <p><span className="font-medium">Delivery Fee:</span> LKR {order.deliveryFee.toLocaleString()}</p>
                       )}
                     </div>
                   </div>
                 </div>
-                
+
                 {order.tables.length > 0 && (
                   <div className="mt-4">
                     <h4 className="font-medium mb-2">Items</h4>
@@ -292,7 +390,7 @@ const ManagementDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Pending Orders Section */}
+      {/* Pending Orders Section (production / pending) */}
       <Card>
         <CardHeader>
           <CardTitle>Pending Orders in Production</CardTitle>
@@ -310,12 +408,12 @@ const ManagementDashboard: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          orders.map((order) => (
-            <Card 
-              key={order.id} 
+          filteredPendingOrders.map((order) => (
+            <Card
+              key={order.id}
               className={`transition-all duration-300 ${
-                order.deliveryStatus === 'ready' 
-                  ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
+                order.deliveryStatus === 'ready'
+                  ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800'
                   : 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800'
               }`}
             >
@@ -333,7 +431,7 @@ const ManagementDashboard: React.FC = () => {
                       )}
                     </CardTitle>
                     <CardDescription>
-                      Customer: {order.customerName} • Created: {order.createdAt.toLocaleDateString()}
+                      Customer: {order.customerName} • Created: {order.createdAt?.toLocaleDateString()}
                       <span className="font-medium"> • Sales Person: </span> {order.salesPersonName || 'N/A'}
                     </CardDescription>
                   </div>
@@ -373,14 +471,14 @@ const ManagementDashboard: React.FC = () => {
                     <h4 className="font-medium mb-2">Order Summary</h4>
                     <div className="text-sm text-muted-foreground space-y-1">
                       <p><span className="font-medium">Total Items:</span> {order.tables.length}</p>
-                      <p><span className="font-medium">Total Price:</span> LKR {order.totalPrice.toLocaleString()}</p>
+                      <p><span className="font-medium">Total Price:</span> LKR {order.totalPrice?.toLocaleString()}</p>
                       {order.deliveryFee && (
                         <p><span className="font-medium">Delivery Fee:</span> LKR {order.deliveryFee.toLocaleString()}</p>
                       )}
                     </div>
                   </div>
                 </div>
-                
+
                 {order.tables.length > 0 && (
                   <div className="mt-4">
                     <h4 className="font-medium mb-2">Items</h4>
