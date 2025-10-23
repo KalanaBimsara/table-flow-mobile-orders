@@ -151,7 +151,7 @@ const ProductionQueue = () => {
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Badge variant="outline" className="text-xs">
-                        #{index + 1}
+                        #{order.orderFormNumber}
                       </Badge>
                       Production Order
                     </CardTitle>
