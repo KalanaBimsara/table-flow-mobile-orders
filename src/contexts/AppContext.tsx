@@ -203,7 +203,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           additional_charges: orderData.additionalCharges || 0,
           sales_person_name: profileData?.name || null,
           delivery_date: (orderData as any).deliveryDate || null
-          // order_form_number is automatically set in DB, no need to include it
+          // rder_form_number is automatically set in DB, no need to include it
         })
         .select('id, order_form_number')
         .single();
@@ -246,10 +246,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       fetchOrders();
       toast.success('Order created successfully!');
-    } catch (error) {
-      console.error('Error adding order:', error);
-      toast.error('An unexpected error occurred');
-    }
+      } catch (error: any) {
+    console.error('Error adding order:', error?.message || error);
+    toast.error(`Unexpected error: ${error?.message || 'Check console for details'}`);
+      }
+
   };
 
   const assignOrder = async (orderId: string, assignedTo: string) => {
