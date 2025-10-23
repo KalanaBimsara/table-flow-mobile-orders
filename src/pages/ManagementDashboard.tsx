@@ -96,9 +96,13 @@ const ManagementDashboard: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('orders')
-        .select('*, order_tables(*)')
-        .eq('status', 'pending')
+        .select('*')
+        .eq('status', 'pending') // Only fetch pending orders
+        .or(
+          `customer_name.ilike.%${searchTerm}%,order_form_number.ilike.%${searchTerm}%,sales_person_name.ilike.%${searchTerm}%`
+        )
         .order('created_at', { ascending: false });
+
 
       if (error) throw error;
 
