@@ -67,7 +67,6 @@ const ProductionQueue = () => {
             customerName: order.customer_name,
             address: order.address,
             contactNumber: order.contact_number,
-            orderFormNumber: (data as any).order_form_number,
             tables: tableItems,
             note: order.note,
             status: order.status as 'pending' | 'assigned' | 'completed',
@@ -180,7 +179,7 @@ const ProductionQueue = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                   <div>
                     <p className="text-xs text-muted-foreground">Order Number</p>
-                    <p className="font-medium"># {orderFormNumber}}</p>
+                    <p className="font-medium">#{order.id.slice(-8).toUpperCase()}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Customer Name</p>
