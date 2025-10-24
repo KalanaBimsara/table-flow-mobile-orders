@@ -122,7 +122,7 @@ const OrderForm: React.FC = () => {
     );
   }
 
-  const FormCopy = ({ copyNumber, colorName, copyLabel }: { copyNumber: number; colorName: 'cyan' | 'magenta' | 'yellow' | 'black'; copyLabel: string }) => {
+  const FormCopy = ({copyNumber,colorName,copyLabel,tables = order.tables}: {copyNumber: number;colorName: 'cyan' | 'magenta' | 'yellow' | 'black';copyLabel: string;tables?: typeof order.tables;}) => {
     const colorStyles = {
       cyan: { bg: '#E0F7FA', border: '#00ACC1', text: '#00ACC1' },
       magenta: { bg: '#FCE4EC', border: '#C2185B', text: '#C2185B' },
@@ -191,7 +191,7 @@ const OrderForm: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {order.tables.map((table, index) => (
+                {tables.map((table, index) => (
                   <tr key={index} className="border-b" style={{ borderColor: colors.border }}>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.size}</td>
                     <td className="border-r p-1" style={{ borderColor: colors.border }}>{table.topColour || table.colour}</td>
@@ -287,10 +287,37 @@ const OrderForm: React.FC = () => {
 
       {/* Forms Container - 4 copies in different colors, 2 per page */}
       <div className="container py-8 space-y-2">
-        <FormCopy copyNumber={1} colorName="cyan" copyLabel="TRANSPORT COPY" />
-        <FormCopy copyNumber={2} colorName="magenta" copyLabel="ACCOUNT COPY" />
-        <FormCopy copyNumber={3} colorName="yellow" copyLabel="GATE PASS" />
-        <FormCopy copyNumber={4} colorName="black" copyLabel="PRODUCTION COPY" />
+        {Object.entries(
+          order.tables.reduce((groups: any, table) => {
+            const key = table.size; // Group by table size — can change to `${table.size}-${table.topColour}` if needed
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(table);
+            return groups;
+          }, {})
+        ).map(([size, tables], index) => (
+          <div key={index} className="mb-8">
+            <FormCopy
+              copyNumber={1}
+              colorName="cyan"
+              copyLabel={`TRANSPORT COPY - ${size}`}
+            />
+            <FormCopy
+              copyNumber={2}
+              colorName="magenta"
+              copyLabel={`ACCOUNT COPY - ${size}`}
+            />
+            <FormCopy
+              copyNumber={3}
+              colorName="yellow"
+              copyLabel={`GATE PASS - ${size}`}
+            />
+            <FormCopy
+              copyNumber={4}
+              colorName="black"
+              copyLabel={`PRODUCTION COPY - ${size}`}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
