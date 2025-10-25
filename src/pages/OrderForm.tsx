@@ -244,7 +244,7 @@ const OrderForm: React.FC = () => {
               <span className="font-bold">Drawing :</span>{order.note}
             </div>
             <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: colors.border }}>
-              <span className="font-bold">Wire hole:  </span> {order.wireHolesComment}
+              <span className="font-bold">Wire hole:  </span> {singleTable.wireHolesComment || ''}
             </div>
           )}
         </div>
