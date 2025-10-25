@@ -144,7 +144,7 @@ const OrderForm: React.FC = () => {
     const formattedOrderNumber = order.orderFormNumber || '000000';
     
     return (
-      <div className="form-copy" style={{ height: '45vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
+      <div className="form-copy" style={{ height: '50vh', pageBreakAfter: copyNumber % 2 === 0 ? 'always' : 'auto', pageBreakInside: 'avoid' }}>
         <div className="p-3 h-full" style={{ 
           fontFamily: 'Arial, sans-serif', 
           fontSize: '11px',
@@ -242,6 +242,9 @@ const OrderForm: React.FC = () => {
             <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: colors.border }}>
               <span className="font-bold">Notes / </span>
               <span className="font-bold">Drawing :</span>{order.note}
+            </div>
+            <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: colors.border }}>
+              <span className="font-bold">Wire hole:  </span> {order.wireHolesComment}
             </div>
           )}
         </div>
