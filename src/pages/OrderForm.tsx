@@ -245,6 +245,7 @@ const OrderForm: React.FC = () => {
             </div>
             <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: colors.border }}>
               <span className="font-bold">Wire hole:  </span> {singleTable.wireHolesComment || ''}
+>>>>>>> 662778ef0b29f2ad7c18655543f58ff0fe39e8d6
             </div>
           )}
         </div>
