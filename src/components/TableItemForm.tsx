@@ -325,7 +325,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
                     className="flex flex-col space-y-2"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="none" id={`wire-holes-none-${index}`} />
+                      <RadioGroupItem value="no wire holes" id={`wire-holes-none-${index}`} />
                       <label htmlFor={`wire-holes-none-${index}`} className="text-sm font-normal cursor-pointer">
                         No wire holes
                       </label>
