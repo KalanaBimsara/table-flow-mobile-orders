@@ -20,7 +20,6 @@ import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-f
 // Define the types for the Supabase responses
 type OrderResponse = {
   id: string;
-  order_form_number: string;
   customer_name: string;
   address: string;
   contact_number: string;
@@ -33,7 +32,7 @@ type OrderResponse = {
   created_at: string;
   completed_at: string | null;
   delivery_person_id: string | null;
-  sales_person_name: string | null;  // Added this field
+  sales_person_name: string | null;
 };
 
 type OrderTableResponse = {
