@@ -185,7 +185,11 @@ export function OrderList() {
       ]);
       if (tablesError) throw tablesError;
 
-      const tablesByOrder = Object.groupBy(tablesData || [], t => t.order_id);
+      const tablesByOrder = (tablesData || []).reduce((acc: any, t: any) => {
+        if (!acc[t.order_id]) acc[t.order_id] = [];
+        acc[t.order_id].push(t);
+        return acc;
+      }, {});
 
       const formatted = ordersData.map(order => ({
         id: order.id,
