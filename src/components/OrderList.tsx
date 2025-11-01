@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Order, OrderStatus } from '@/types/order';
+import { Order, OrderStatus, DeliveryStatus } from '@/types/order';
 import { DatePicker } from '@/components/DatePicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,7 +167,7 @@ export function OrderList() {
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select(`
-          id, order_form_number, customer_name, address, contact_number,
+          id, customer_name, address, contact_number,
           table_size, colour, quantity, price, note, status, created_at,
           completed_at, delivery_person_id, sales_person_name
         `)
@@ -220,7 +220,7 @@ export function OrderList() {
         totalPrice: order.price,
         assignedTo: order.delivery_person_id,
         salesPersonName: order.sales_person_name,
-        deliveryStatus: 'ready',
+        deliveryStatus: 'ready' as DeliveryStatus,
       }));
 
       setReadyOrders(formatted);
@@ -236,7 +236,7 @@ export function OrderList() {
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select(`
-          id, order_form_number, customer_name, address, contact_number,
+          id, customer_name, address, contact_number,
           table_size, colour, quantity, price, note, status, created_at,
           completed_at, delivery_person_id, sales_person_name
         `)
@@ -255,7 +255,11 @@ export function OrderList() {
       ]);
       if (tablesError) throw tablesError;
 
-      const tablesByOrder = Object.groupBy(tablesData || [], t => t.order_id);
+      const tablesByOrder = (tablesData || []).reduce((acc: any, t: any) => {
+        if (!acc[t.order_id]) acc[t.order_id] = [];
+        acc[t.order_id].push(t);
+        return acc;
+      }, {});
 
       const formatted = ordersData.map(order => ({
         id: order.id,
@@ -302,7 +306,7 @@ export function OrderList() {
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select(`
-          id, order_form_number, customer_name, address, contact_number,
+          id, customer_name, address, contact_number,
           table_size, colour, quantity, price, note, status, created_at,
           completed_at, delivery_person_id, sales_person_name
         `)
@@ -320,7 +324,11 @@ export function OrderList() {
       ]);
       if (tablesError) throw tablesError;
 
-      const tablesByOrder = Object.groupBy(tablesData || [], t => t.order_id);
+      const tablesByOrder = (tablesData || []).reduce((acc: any, t: any) => {
+        if (!acc[t.order_id]) acc[t.order_id] = [];
+        acc[t.order_id].push(t);
+        return acc;
+      }, {});
 
       const formatted = ordersData.map(order => ({
         id: order.id,
