@@ -85,9 +85,11 @@ export function NewOrderForm() {
       // Prepare order data with the tables - ensure all fields are non-optional
       const orderData = {
         customerName: values.customerName,
+        customerDistrict: values.customerDistrict,
         address: values.address,
         contactNumber: values.contactNumber,
         deliveryDate: values.deliveryDate,
+        deliveryType: values.deliveryType,
         tables: values.tables.map((table): TableItem => ({
           id: table.id,
           size: table.size,
