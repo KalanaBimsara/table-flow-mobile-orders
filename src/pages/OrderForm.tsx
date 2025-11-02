@@ -48,6 +48,8 @@ const OrderForm: React.FC = () => {
         deliveryDate: (data as any).delivery_date,
         contactNumber: data.contact_number,
         orderFormNumber: (data as any).order_form_number,
+        customerDistrict: data.customer_district,
+        deliveryType: data.delivery_type as 'courier' | 'non-courier' | undefined,
         tables: data.order_tables?.map((table: any) => ({
           id: table.id,
           size: table.size,
@@ -145,14 +147,39 @@ const OrderForm: React.FC = () => {
     const colors = colorStyles[colorName];
     const formattedOrderNumber = order.orderFormNumber || '000000';
     
+    // Check if order has customizations
+    const hasCustomizations = order.tables.some(table => 
+      table.size?.toLowerCase().includes('custom')
+    );
+    
     return (
       <div className="form-copy" style={{ height: '50vh', pageBreakAfter:!(tableIndex === order.tables.length - 1 && copyNumber === 4)? 'always': 'auto', pageBreakInside: 'avoid' }}>
-        <div className="p-3 h-full" style={{ 
+        <div className="p-3 h-full relative" style={{ 
           fontFamily: 'Arial, sans-serif', 
           fontSize: '11px',
           backgroundColor: colors.bg,
           color: colors.text
         }}>
+          {/* Custom Order Seal */}
+          {hasCustomizations && (
+            <div style={{
+              position: 'absolute',
+              bottom: '20px',
+              right: '20px',
+              backgroundColor: '#dc2626',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              border: '3px solid #991b1b',
+              transform: 'rotate(-5deg)',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              zIndex: 10
+            }}>
+              CUSTOM ORDER
+            </div>
+          )}
           {/* Header - Condensed */}
           <div className="flex justify-between items-start mb-2">
             <div>
@@ -180,7 +207,19 @@ const OrderForm: React.FC = () => {
           <div className="mb-2" style={{ fontSize: '12px' }}>
             <div style={{ fontSize: '14px' }}><span className="font-medium">Customer:</span> {order.customerName} | <span className="font-medium">Tel:</span> {order.contactNumber}</div>
             <div><span className="font-medium">Address:</span> {order.address}</div>
-            <div><span className="font-medium">Assembly:</span> {editableDetails.assemblingType || '______'}</div>
+            <div>
+              <span className="font-medium">Assembly:</span> {editableDetails.assemblingType || '______'}
+              {order.customerDistrict && (
+                <span style={{ color: '#2563eb', fontWeight: '600', marginLeft: '16px' }}>
+                  | District: {order.customerDistrict}
+                </span>
+              )}
+              {order.deliveryType && (
+                <span style={{ color: '#16a34a', fontWeight: '600', marginLeft: '16px' }}>
+                  | Delivery: {order.deliveryType}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Order Table - Condensed Single Row */}
