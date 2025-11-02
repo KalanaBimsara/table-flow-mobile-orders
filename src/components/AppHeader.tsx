@@ -46,11 +46,6 @@ const AppHeader = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container flex h-14 items-center">
-        <div className="flex items-center mr-4 font-semibold">
-          <Table className="h-6 w-6 mr-2" />
-          <span className="hidden sm:inline">TableFlow</span>
-        </div>
-
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="relative overflow-hidden">
@@ -90,6 +85,11 @@ const AppHeader = () => {
               </nav>
             </SheetContent>
           </Sheet>
+
+        <div className="flex items-center mr-4 font-semibold ml-2">
+          <Table className="h-6 w-6 mr-2" />
+          <span className="hidden sm:inline">TableFlow</span>
+        </div>
 
         <div className="ml-auto flex items-center gap-2">
           <Link to="/order">
