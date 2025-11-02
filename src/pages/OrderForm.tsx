@@ -243,6 +243,7 @@ const OrderForm: React.FC = () => {
 
             <div className="flex-1"></div>
 
+<<<<<<< HEAD
             <div className="text-right text-xs" style={{ lineHeight: '1.8' }}>
               <div style={{ marginBottom: '2px' }}>Ordered Date:{' '}{order.createdAt? new Date(order.createdAt).toLocaleDateString('en-GB'): '______'}</div>
               <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5px' }}>Delivery Date: {order.deliveryDate || '______'}</div>
@@ -253,6 +254,37 @@ const OrderForm: React.FC = () => {
               )}
               <div style={{ fontSize: '14px', color: '#FF0000',fontWeight: '600', marginBottom: '0.5px'}}>Courier Fee: {order.deliveryFee || '______'} /=</div>
               <div style={{ fontSize: '14px', color: '#FF0000',fontWeight: '600'}}>Total Price: {order.totalPrice || '______'} /=</div>
+=======
+            <div className="text-right text-xs">
+              <div className="font-bold">ORDER NO: {formattedOrderNumber}</div>
+              <div>Ordered Date:{' '}{order.createdAt? new Date(order.createdAt).toLocaleDateString('en-GB'): '______'}</div>
+              <div>Delivery Date: {order.deliveryDate || '______'}</div>
+              {order.customerDistrict && (
+                <div style={{ color: '#2563eb', fontWeight: '600' }}>
+                  District: {order.customerDistrict}
+                </div>
+              )}
+              {order.deliveryType && (
+                <div style={{ fontSize: '15px',color: '#16a34a', fontWeight: '600' }}>
+                  Delivery: {order.deliveryType}
+                </div>
+              )}
+              <div style={{ fontSize: '15px', color: '#FF0000',fontWeight: '600'}}>Price: {order.totalPrice || '______'}</div>
+            </div>
+          </div>
+
+          {/* Customer Information - Condensed */}
+          <div className="grid grid-cols-2 gap-2 mb-2" style={{ fontSize: '12px' }}>
+            <div><span className="font-medium">Page:</span> {order.salesPersonName || '______'}</div>
+            <div><span className="font-medium">Page Contact:</span> {salesPersonContact || '______'}</div>
+          </div>
+
+          <div className="mb-2" style={{ fontSize: '12px' }}>
+            <div style={{ fontSize: '14px' }}><span className="font-medium">Customer:</span> {order.customerName}  |  <span className="font-medium">Tel:</span> {order.contactNumber}</div>
+            <div style={{ fontSize: '14px' }}><span className="font-medium">Address:</span> {order.address}</div>
+            <div>
+              <span className="font-medium">Assembly:</span> {editableDetails.assemblingType || '______'}
+>>>>>>> 82d753fbfd3fd8637b139e68e7f5fbe4c3d05b32
             </div>
           </div>
 
