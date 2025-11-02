@@ -21,14 +21,12 @@ const AppHeader = () => {
   const location = useLocation();
   const [open, setOpen] = React.useState(false);
 
-  const navItems = [
+  // All menu items in hamburger
+  const menuItems = [
     { href: '/', label: 'Dashboard', icon: Home },
     { href: '/orders', label: 'Orders', icon: Package },
     { href: '/history', label: 'Order History', icon: History },
   ];
-
-  // Role-specific menu items for hamburger
-  const menuItems = [];
   
   if (userRole === 'admin') {
     menuItems.push(
@@ -50,29 +48,11 @@ const AppHeader = () => {
       <div className="container flex h-14 items-center">
         <div className="flex items-center mr-4 font-semibold">
           <Table className="h-6 w-6 mr-2" />
-          <span className="hidden md:inline">TableFlow</span>
+          <span className="hidden sm:inline">TableFlow</span>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mx-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={`text-sm font-medium transition-colors flex items-center gap-2 ${
-                location.pathname === item.href
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <item.icon size={16} />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        {menuItems.length > 0 && (
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="relative overflow-hidden">
                 <div className={`transition-all duration-300 ${open ? 'rotate-90 opacity-0' : 'rotate-0 opacity-100'}`}>
                   <Menu className="h-5 w-5" />
@@ -110,7 +90,6 @@ const AppHeader = () => {
               </nav>
             </SheetContent>
           </Sheet>
-        )}
 
         <div className="ml-auto flex items-center gap-2">
           <Link to="/order">
