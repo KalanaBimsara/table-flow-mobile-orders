@@ -205,7 +205,7 @@ const OrderForm: React.FC = () => {
           </div>
 
           <div className="mb-2" style={{ fontSize: '12px' }}>
-            <div style={{ fontSize: '14px' }}><span className="font-medium">Customer:</span> {order.customerName} | <span className="font-medium">Tel:</span> {order.contactNumber}</div>
+            <div style={{ fontSize: '14px' }}><span className="font-medium">Customer:</span> {order.customerName}  |  <span className="font-medium">Tel:</span> {order.contactNumber}</div>
             <div style={{ fontSize: '14px' }}><span className="font-medium">Address:</span> {order.address}</div>
             <div>
               <span className="font-medium">Assembly:</span> {editableDetails.assemblingType || '______'}
