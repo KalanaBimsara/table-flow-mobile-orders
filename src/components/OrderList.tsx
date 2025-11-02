@@ -52,17 +52,25 @@ export function OrderList() {
   const isMobile = useIsMobile();
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
   const [globalSearch, setGlobalSearch] = useState('');
+  const [searchFilter, setSearchFilter] = useState<'all' | 'orderNumber'>('all');
   
   // Date search states
   const [searchFromDate, setSearchFromDate] = useState<Date | undefined>();
   const [searchToDate, setSearchToDate] = useState<Date | undefined>();
   const [customerNameSearch, setCustomerNameSearch] = useState('');
 
-  // Filter orders based on global search
+  // Filter orders based on global search and filter type
   const filterOrdersBySearch = (orderList: Order[]) => {
     if (!globalSearch.trim()) return orderList;
     
     const searchLower = globalSearch.toLowerCase().trim();
+    
+    if (searchFilter === 'orderNumber') {
+      return orderList.filter(order => 
+        order.orderFormNumber && order.orderFormNumber.includes(searchLower)
+      );
+    }
+    
     return orderList.filter(order => 
       order.customerName.toLowerCase().includes(searchLower) ||
       order.address.toLowerCase().includes(searchLower) ||
@@ -402,18 +410,29 @@ export function OrderList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <Label htmlFor="search" className="text-sm font-medium mb-2 block">Search Orders</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-              <Input
-                id="search"
-                type="text"
-                placeholder="Search by customer, address, contact, or order number..."
-                value={globalSearch}
-                onChange={(e) => setGlobalSearch(e.target.value)}
-                className="pl-10"
-              />
+          <div className="mb-4 space-y-2">
+            <Label htmlFor="search" className="text-sm font-medium">Search Orders</Label>
+            <div className="flex gap-2 flex-col sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                <Input
+                  id="search"
+                  type="text"
+                  placeholder={searchFilter === 'orderNumber' ? "Search by order number..." : "Search by customer, address, contact, or order number..."}
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={searchFilter} onValueChange={(value: 'all' | 'orderNumber') => setSearchFilter(value)}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Fields</SelectItem>
+                  <SelectItem value="orderNumber">Order Number</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <Tabs defaultValue="myDeliveries">
@@ -555,18 +574,29 @@ export function OrderList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <Label htmlFor="search" className="text-sm font-medium mb-2 block">Search Orders</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-              <Input
-                id="search"
-                type="text"
-                placeholder="Search by customer, address, contact, or order number..."
-                value={globalSearch}
-                onChange={(e) => setGlobalSearch(e.target.value)}
-                className="pl-10"
-              />
+          <div className="mb-4 space-y-2">
+            <Label htmlFor="search" className="text-sm font-medium">Search Orders</Label>
+            <div className="flex gap-2 flex-col sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                <Input
+                  id="search"
+                  type="text"
+                  placeholder={searchFilter === 'orderNumber' ? "Search by order number..." : "Search by customer, address, contact, or order number..."}
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={searchFilter} onValueChange={(value: 'all' | 'orderNumber') => setSearchFilter(value)}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Fields</SelectItem>
+                  <SelectItem value="orderNumber">Order Number</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <Tabs defaultValue="all">
