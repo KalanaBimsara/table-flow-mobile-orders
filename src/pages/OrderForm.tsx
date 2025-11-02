@@ -200,7 +200,7 @@ const OrderForm: React.FC = () => {
           <div style={{
             position: 'absolute',
             top: '12px',
-            left: '0',
+            left: '12px',
             zIndex: 5
           }}>
             <div className="text-xs font-bold" style={{ color: colors.text }}>{copyLabel}</div>
@@ -210,12 +210,12 @@ const OrderForm: React.FC = () => {
           <div style={{
             position: 'absolute',
             top: '12px',
-            right: '0',
+            right: '12px',
             textAlign: 'right',
             zIndex: 5
           }}>
-            <div className="text-xs font-bold" style={{ lineHeight: '1.8' }}>
-              <div className="font-bold" style={{ marginBottom: '0.5px' }}>
+            <div className="text-xs font-bold" style={{ lineHeight: '1' }}>
+              <div className="font-bold">
                 <span style={{ fontSize: '12px', fontWeight: '600', color: colors.text }}>ORDER NO: </span>
                 <span style={{ fontSize: '30px', fontWeight: '600', color: colors.text }}>{formattedOrderNumber}</span>
               </div>
@@ -243,48 +243,16 @@ const OrderForm: React.FC = () => {
 
             <div className="flex-1"></div>
 
-<<<<<<< HEAD
-            <div className="text-right text-xs" style={{ lineHeight: '1.8' }}>
-              <div style={{ marginBottom: '2px' }}>Ordered Date:{' '}{order.createdAt? new Date(order.createdAt).toLocaleDateString('en-GB'): '______'}</div>
-              <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '0.5px' }}>Delivery Date: {order.deliveryDate || '______'}</div>
+            <div className="text-right text-xs" style={{ lineHeight: '1.3' }}>
+              <div style={{ marginBottom: '1px' }}>Ordered Date:{' '}{order.createdAt? new Date(order.createdAt).toLocaleDateString('en-GB'): '______'}</div>
+              <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '1px' }}>Delivery Date: {order.deliveryDate || '______'}</div>
               {order.deliveryType && (
-                <div style={{ fontSize: '15px',color: '#16a34a', fontWeight: '600', marginBottom: '0.5px' }}>
+                <div style={{ fontSize: '14px',color: '#16a34a', fontWeight: '600', marginBottom: '1px' }}>
                   Delivery Type: {order.deliveryType}
                 </div>
               )}
-              <div style={{ fontSize: '14px', color: '#FF0000',fontWeight: '600', marginBottom: '0.5px'}}>Courier Fee: {order.deliveryFee || '______'} /=</div>
-              <div style={{ fontSize: '14px', color: '#FF0000',fontWeight: '600'}}>Total Price: {order.totalPrice || '______'} /=</div>
-=======
-            <div className="text-right text-xs">
-              <div className="font-bold">ORDER NO: {formattedOrderNumber}</div>
-              <div>Ordered Date:{' '}{order.createdAt? new Date(order.createdAt).toLocaleDateString('en-GB'): '______'}</div>
-              <div>Delivery Date: {order.deliveryDate || '______'}</div>
-              {order.customerDistrict && (
-                <div style={{ color: '#2563eb', fontWeight: '600' }}>
-                  District: {order.customerDistrict}
-                </div>
-              )}
-              {order.deliveryType && (
-                <div style={{ fontSize: '15px',color: '#16a34a', fontWeight: '600' }}>
-                  Delivery: {order.deliveryType}
-                </div>
-              )}
-              <div style={{ fontSize: '15px', color: '#FF0000',fontWeight: '600'}}>Price: {order.totalPrice || '______'}</div>
-            </div>
-          </div>
-
-          {/* Customer Information - Condensed */}
-          <div className="grid grid-cols-2 gap-2 mb-2" style={{ fontSize: '12px' }}>
-            <div><span className="font-medium">Page:</span> {order.salesPersonName || '______'}</div>
-            <div><span className="font-medium">Page Contact:</span> {salesPersonContact || '______'}</div>
-          </div>
-
-          <div className="mb-2" style={{ fontSize: '12px' }}>
-            <div style={{ fontSize: '14px' }}><span className="font-medium">Customer:</span> {order.customerName}  |  <span className="font-medium">Tel:</span> {order.contactNumber}</div>
-            <div style={{ fontSize: '14px' }}><span className="font-medium">Address:</span> {order.address}</div>
-            <div>
-              <span className="font-medium">Assembly:</span> {editableDetails.assemblingType || '______'}
->>>>>>> 82d753fbfd3fd8637b139e68e7f5fbe4c3d05b32
+              <div style={{ fontSize: '14px', color: '#FF0000',fontWeight: '600', marginBottom: '1px'}}>Courier Fee: {order.deliveryFee || '______'} /=</div>
+              <div style={{ fontSize: '16px', color: '#FF0000',fontWeight: '600'}}>Total Price: {order.totalPrice || '______'} /=</div>
             </div>
           </div>
 
@@ -337,13 +305,13 @@ const OrderForm: React.FC = () => {
               <div className="mt-1 text-xs">Approved via W/App</div>
             </div>
             <div className="text-center">
-              <div className="font-medium">Authorized Signature</div>
               <div className="border-b mt-3" style={{ borderColor: colors.border }}>&nbsp;</div>
+              <div className="font-medium">Authorized Signature</div>
             </div>
             
             <div className="text-center">
-              <div className="font-medium">Authorized Signature</div>
               <div className="border-b mt-3" style={{ borderColor: colors.border }}>&nbsp;</div>
+              <div className="font-medium">Authorized Signature</div>
             </div>
           </div>
           <div className="mt-2 pt-2 border-t text-xs space-y-1" style={{ borderColor: colors.border }}>
