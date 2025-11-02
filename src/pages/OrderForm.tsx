@@ -193,8 +193,19 @@ const OrderForm: React.FC = () => {
 
             <div className="text-right text-xs">
               <div className="font-bold">ORDER NO: {formattedOrderNumber}</div>
-              <div>Delivery Date: {order.deliveryDate || '______'}</div>
               <div>Ordered Date:{' '}{order.createdAt? new Date(order.createdAt).toLocaleDateString('en-GB'): '______'}</div>
+              <div>Delivery Date: {order.deliveryDate || '______'}</div>
+              {order.customerDistrict && (
+                <div style={{ color: '#2563eb', fontWeight: '600' }}>
+                  District: {order.customerDistrict}
+                </div>
+              )}
+              {order.deliveryType && (
+                <div style={{ fontSize: '15px',color: '#16a34a', fontWeight: '600' }}>
+                  Delivery: {order.deliveryType}
+                </div>
+              )}
+              <div style={{ fontSize: '15px', color: '#FF0000',fontWeight: '600'}}>Price: {order.totalPrice || '______'}</div>
             </div>
           </div>
 
@@ -209,16 +220,6 @@ const OrderForm: React.FC = () => {
             <div style={{ fontSize: '14px' }}><span className="font-medium">Address:</span> {order.address}</div>
             <div>
               <span className="font-medium">Assembly:</span> {editableDetails.assemblingType || '______'}
-              {order.customerDistrict && (
-                <span style={{ color: '#2563eb', fontWeight: '600', marginLeft: '16px' }}>
-                  | District: {order.customerDistrict}
-                </span>
-              )}
-              {order.deliveryType && (
-                <span style={{ color: '#16a34a', fontWeight: '600', marginLeft: '16px' }}>
-                  | Delivery: {order.deliveryType}
-                </span>
-              )}
             </div>
           </div>
 
