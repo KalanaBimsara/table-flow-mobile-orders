@@ -210,7 +210,7 @@ const ManagementDashboard: React.FC = () => {
                   <div>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Package size={18} />
-                      Order #{order.id.slice(-8)}
+                      Order #{order.orderFormNumber}
                       <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 flex items-center gap-1">
                         <Package size={12} />
                         Ready to be Assembled
