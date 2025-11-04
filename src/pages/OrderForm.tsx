@@ -124,6 +124,19 @@ const OrderForm: React.FC = () => {
     );
   }
 
+<<<<<<< HEAD
+  const FormCopy = ({
+      copyNumber,
+      colorName,
+      copyLabel,
+      singleTable,
+    }: {
+      copyNumber: number;
+      colorName: 'cyan' | 'magenta' | 'yellow' | 'black';
+      copyLabel: string;
+      singleTable: any;
+    }) => {
+=======
   const FormCopy = ({
       copyNumber,
       colorName,
@@ -137,6 +150,7 @@ const OrderForm: React.FC = () => {
       singleTable: any;
       tableIndex: number;
     }) => {
+>>>>>>> e9baa613494bc0fa4826a81f8f41d78c2ff02667
     const colorStyles = {
       cyan: { bg: '#E0F7FA', border: '#00ACC1', text: '#00ACC1' },
       magenta: { bg: '#FCE4EC', border: '#C2185B', text: '#C2185B' },
@@ -276,6 +290,21 @@ const OrderForm: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
+<<<<<<< HEAD
+                <tr className="border-b" style={{ borderColor: colors.border }}>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}>{singleTable.size}</td>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}>{singleTable.topColour || singleTable.colour}</td>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}>{singleTable.wireHoles || 'normal'}</td>
+                  <td className="border-r p-1 text-center font-bold" style={{ borderColor: colors.border }}>{singleTable.quantity}</td>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}>{singleTable.legSize || ''}</td>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}>{singleTable.legShape || ''}</td>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}>{singleTable.legHeight || ''}</td>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}>{singleTable.frameColour || ''}</td>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}></td>
+                  <td className="border-r p-1" style={{ borderColor: colors.border }}></td>
+                  <td className="p-1">{singleTable.wireHolesComment || ''}</td>
+                </tr>
+=======
                 <tr className="border-b" style={{ borderColor: colors.border }}>
                   <td className="border-r p-1 text-center" style={{ borderColor: colors.border }}>{singleTable.size}</td>
                   <td className="border-r p-1 text-center" style={{ borderColor: colors.border }}>{singleTable.topColour || singleTable.colour}</td>
@@ -289,13 +318,14 @@ const OrderForm: React.FC = () => {
                   <td className="border-r p-1 text-center" style={{ borderColor: colors.border }}></td>
                   <td className="p-1 text-center">{singleTable.wireHolesComment || ''}</td>
                 </tr>
+>>>>>>> e9baa613494bc0fa4826a81f8f41d78c2ff02667
               </tbody>
             </table>
           </div>
 
           {/* Total and Footer - Condensed */}
           <div className="text-xs mb-2">
-            <span className="font-bold">Total Qty: {getTotalQuantity()}</span>
+            <span className="font-bold" style={{ fontSize: '14px', fontWeight: '600' }}>Total Qty: {getTotalQuantity()}</span>
             {editableDetails.specialNotes && <span className="ml-4 font-medium">Notes: {editableDetails.specialNotes} </span>}
           </div>
 
@@ -388,6 +418,38 @@ const OrderForm: React.FC = () => {
         </div>
       </div>
 
+<<<<<<< HEAD
+      {/* Forms Container - one set of 4 copies per table */}
+      <div className="container py-8 space-y-8">
+        {order.tables.map((table, tableIndex) => (
+          <React.Fragment key={tableIndex}>
+            <FormCopy
+              copyNumber={1}
+              colorName="cyan"
+              copyLabel={`TRANSPORT COPY`}
+              singleTable={table}
+            />
+            <FormCopy
+              copyNumber={2}
+              colorName="magenta"
+              copyLabel={`ACCOUNT COPY`}
+              singleTable={table}
+            />
+            <FormCopy
+              copyNumber={3}
+              colorName="yellow"
+              copyLabel={`GATE PASS`}
+              singleTable={table}
+            />
+            <FormCopy
+              copyNumber={4}
+              colorName="black"
+              copyLabel={`PRODUCTION COPY`}
+              singleTable={table}
+            />
+          </React.Fragment>
+        ))}
+=======
       {/* Forms Container - one set of 4 copies per table */}
       <div className="container py-8 space-y-8">
         {order.tables.map((table, tableIndex) => (
@@ -398,6 +460,7 @@ const OrderForm: React.FC = () => {
             <FormCopy copyNumber={4} colorName="black" copyLabel="PRODUCTION COPY" singleTable={table} tableIndex={tableIndex} />
           </React.Fragment>
         ))}
+>>>>>>> e9baa613494bc0fa4826a81f8f41d78c2ff02667
       </div>
     </div>
   );
