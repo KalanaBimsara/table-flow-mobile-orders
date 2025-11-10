@@ -307,8 +307,14 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
                       </label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="3x1.5" id={`leg-size-2-${index}`} />
+                      <RadioGroupItem value="2x2" id={`leg-size-2-${index}`} />
                       <label htmlFor={`leg-size-2-${index}`} className="text-sm font-normal cursor-pointer">
+                        2" x 2"
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="3x1.5" id={`leg-size-3-${index}`} />
+                      <label htmlFor={`leg-size-3-${index}`} className="text-sm font-normal cursor-pointer">
                         3" x 1.5"
                       </label>
                     </div>
