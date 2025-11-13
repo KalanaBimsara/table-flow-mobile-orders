@@ -32,6 +32,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
 }) => {
   const form = useFormContext();
   const [showCustomSize, setShowCustomSize] = useState(false);
+  const [isCustomSizeSet, setIsCustomSizeSet] = useState(false);
   const [customSize, setCustomSize] = useState('');
   const [customPrice, setCustomPrice] = useState('');
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
@@ -43,10 +44,12 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
   const handleSizeChange = (value: string) => {
     if (value === 'custom') {
       setShowCustomSize(true);
+      setIsCustomSizeSet(false);
       form.setValue(`tables.${index}.size`, '');
       form.setValue(`tables.${index}.price`, 0);
     } else {
       setShowCustomSize(false);
+      setIsCustomSizeSet(false);
       const selectedSize = tableSizeOptions.find(option => option.value === value);
       if (selectedSize) {
         form.setValue(`tables.${index}.price`, selectedSize.price);
@@ -84,6 +87,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
     form.setValue(`tables.${index}.price`, price);
     form.clearErrors(`tables.${index}.size`);
     form.clearErrors(`tables.${index}.price`);
+    setIsCustomSizeSet(true);
     setShowCustomSize(false);
   };
 
@@ -102,7 +106,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
                   handleSizeChange(value);
                 }} 
                 defaultValue={field.value} 
-                value={showCustomSize ? 'custom' : field.value}
+                value={showCustomSize || isCustomSizeSet ? 'custom' : field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -249,7 +253,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
         />
 
         {/* L-Shape Orientation - Only show for L-shaped tables */}
-        {watchSize && watchSize.toLowerCase().includes('l') && (
+        {watchSize && watchSize.toUpperCase().startsWith('L-') && (
           <FormField
             control={form.control}
             name={`tables.${index}.lShapeOrientation`}
