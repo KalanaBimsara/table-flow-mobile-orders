@@ -4,17 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
-import { Shield, Users, Package, TrendingUp, DollarSign, LogOut, RefreshCw, Calendar, CalendarDays, Clock, UserCog, UserPlus, Truck } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, DollarSign, LogOut, RefreshCw, Calendar, CalendarDays, Clock, UserCog, UserPlus, Filter } from 'lucide-react';
 import { useSuperAdminAuth } from '@/contexts/SuperAdminAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate, useNavigate } from 'react-router-dom';
 import OrderDetailsTable from '@/components/OrderDetailsTable';
 import UserManagement from '@/components/UserManagement';
 import SystemUserManagement from '@/components/SystemUserManagement';
-import PendingOrdersPanel from '@/components/PendingOrdersPanel';
+import UnitsFilterPanel from '@/components/UnitsFilterPanel';
 import { getFactoryPrice, calculateOrderProfit } from '@/types/order';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 type DailyAnalyticsData = {
   total_orders: number;
   completed_orders: number;
@@ -344,25 +343,21 @@ const SuperAdminDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Main Tabs */}
-        <Tabs defaultValue="orders" className="mb-8">
+        <Tabs defaultValue="analytics" className="mb-8">
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3">
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <Truck className="h-4 w-4" />
-              Orders & Loading
-            </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Analytics Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="units-filter" className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Units Filter
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <UserCog className="h-4 w-4" />
               User Management
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="orders" className="space-y-6 mt-6">
-            <PendingOrdersPanel />
-          </TabsContent>
 
           <TabsContent value="analytics" className="space-y-8 mt-6">
             {/* Overview Cards */}
@@ -686,6 +681,10 @@ const SuperAdminDashboard = () => {
                 loading={loading}
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="units-filter" className="space-y-6 mt-6">
+            <UnitsFilterPanel />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6 mt-6">
