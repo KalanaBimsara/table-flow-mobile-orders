@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, ShoppingBag, Mail, ArrowLeft } from 'lucide-react';
+import { Loader2, ShoppingBag, Mail, ArrowLeft, Package } from 'lucide-react';
 import { Navigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -251,14 +251,22 @@ const Auth: React.FC = () => {
                       </Button>
                     </div>
 
-                    <div className="text-center mt-4">
-                      <p className="text-sm text-muted-foreground mb-2">Want to place an order without an account?</p>
-                      <Link to="/order">
-                        <Button variant="outline" className="w-full">
-                          <ShoppingBag size={16} className="mr-2" />
-                          Order as Guest
-                        </Button>
-                      </Link>
+                    <div className="text-center mt-4 space-y-3">
+                      <p className="text-sm text-muted-foreground">Quick Actions</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link to="/order">
+                          <Button variant="outline" className="w-full">
+                            <ShoppingBag size={16} className="mr-2" />
+                            Order as Guest
+                          </Button>
+                        </Link>
+                        <Link to="/track">
+                          <Button variant="outline" className="w-full">
+                            <Package size={16} className="mr-2" />
+                            Track Order
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </form>
                 </Form>
@@ -365,14 +373,22 @@ const Auth: React.FC = () => {
                     )}
                   </Button>
 
-                  <div className="text-center mt-4">
-                    <p className="text-sm text-muted-foreground mb-2">Want to place an order without an account?</p>
-                    <Link to="/order">
-                      <Button variant="outline" className="w-full">
-                        <ShoppingBag size={16} className="mr-2" />
-                        Order as Guest
-                      </Button>
-                    </Link>
+                  <div className="text-center mt-4 space-y-3">
+                    <p className="text-sm text-muted-foreground">Quick Actions</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link to="/order">
+                        <Button variant="outline" className="w-full">
+                          <ShoppingBag size={16} className="mr-2" />
+                          Order as Guest
+                        </Button>
+                      </Link>
+                      <Link to="/track">
+                        <Button variant="outline" className="w-full">
+                          <Package size={16} className="mr-2" />
+                          Track Order
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </form>
               </Form>
