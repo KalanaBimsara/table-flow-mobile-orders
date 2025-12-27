@@ -26,6 +26,7 @@ interface OrderDetails {
     price: number;
   }[];
   estimatedDeliveryDate?: Date;
+  queuePosition?: number;
 }
 const OrderTracking: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -60,8 +61,10 @@ const OrderTracking: React.FC = () => {
         data: tablesData
       } = await supabase.from('order_tables').select('size, colour, quantity, price').eq('order_id', orderData.id);
 
-      // Calculate estimated delivery date based on pending orders before this order
+      // Calculate estimated delivery date and queue position based on pending orders before this order
       let estimatedDeliveryDate: Date | undefined;
+      let queuePosition: number | undefined;
+      
       if (orderData.status === 'pending') {
         const { count } = await supabase
           .from('orders')
@@ -70,14 +73,16 @@ const OrderTracking: React.FC = () => {
           .lt('created_at', orderData.created_at);
         
         const pendingOrdersBefore = count || 0;
-        const daysToAdd = Math.ceil((pendingOrdersBefore + 1) / 30);
+        queuePosition = pendingOrdersBefore + 1;
+        const daysToAdd = Math.ceil(queuePosition / 30);
         estimatedDeliveryDate = addDays(new Date(), daysToAdd);
       }
 
       setOrder({
         ...orderData,
         tables: tablesData || [],
-        estimatedDeliveryDate
+        estimatedDeliveryDate,
+        queuePosition
       });
       setSearchParams({
         order: searchValue.trim()
@@ -184,46 +189,99 @@ const OrderTracking: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              {/* Countdown Timer */}
-              {order.delivery_date && countdown && <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-6 text-center">
-                  <div className="flex items-center justify-center gap-2 text-muted-foreground mb-3">
-                    <Clock className="w-5 h-5" />
-                    <span className="font-medium">Exact Delivery Date</span>
+              {/* Queue Position */}
+              {order.status === 'pending' && order.queuePosition && (
+                <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-lg p-4 text-center border border-blue-500/20">
+                  <div className="flex items-center justify-center gap-2 text-blue-600 mb-2">
+                    <Package className="w-5 h-5" />
+                    <span className="font-medium">Queue Position</span>
                   </div>
-                  {countdown.days === 0 && countdown.hours === 0 && countdown.minutes === 0 ? <p className="text-xl font-semibold text-green-600">Ready for Delivery!</p> : <div className="flex justify-center gap-4">
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-primary">{countdown.days}</div>
-                        <div className="text-sm text-muted-foreground">Days</div>
-                      </div>
-                      <div className="text-4xl font-light text-muted-foreground">:</div>
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-primary">{countdown.hours}</div>
-                        <div className="text-sm text-muted-foreground">Hours</div>
-                      </div>
-                      <div className="text-4xl font-light text-muted-foreground">:</div>
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-primary">{countdown.minutes}</div>
-                        <div className="text-sm text-muted-foreground">Minutes</div>
-                      </div>
-                    </div>}
-                  <p className="text-sm text-muted-foreground mt-3">
-                    <Calendar className="w-4 h-4 inline mr-1" />
-                    {format(new Date(order.delivery_date), 'PPPP')}
+                  <p className="text-3xl font-bold text-blue-600">
+                    #{order.queuePosition}
                   </p>
-                </div>}
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {order.queuePosition === 1 ? 'Your order is next in line!' : `${order.queuePosition - 1} orders ahead of yours`}
+                  </p>
+                </div>
+              )}
 
-              {/* Estimated Delivery Date (when no exact date is set) */}
-              {!order.delivery_date && order.estimatedDeliveryDate && order.status === 'pending' && (
-                <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-6 text-center border border-amber-500/20">
-                  <div className="flex items-center justify-center gap-2 text-amber-600 mb-3">
-                    <Clock className="w-5 h-5" />
-                    <span className="font-medium">Estimated Delivery Date</span>
+              {/* Delivery Dates Section */}
+              {order.status === 'pending' && (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Exact Delivery Date */}
+                  {order.delivery_date ? (
+                    <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg p-5 text-center border border-green-500/20">
+                      <div className="flex items-center justify-center gap-2 text-green-600 mb-3">
+                        <Calendar className="w-5 h-5" />
+                        <span className="font-medium">Exact Delivery Date</span>
+                      </div>
+                      <p className="text-xl font-bold text-green-600">
+                        {format(new Date(order.delivery_date), 'PPP')}
+                      </p>
+                      {countdown && (
+                        <div className="mt-3">
+                          {countdown.days === 0 && countdown.hours === 0 && countdown.minutes === 0 ? (
+                            <p className="text-sm font-semibold text-green-600">Ready for Delivery!</p>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              {countdown.days}d {countdown.hours}h {countdown.minutes}m remaining
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-muted/50 rounded-lg p-5 text-center border border-border">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground mb-3">
+                        <Calendar className="w-5 h-5" />
+                        <span className="font-medium">Exact Delivery Date</span>
+                      </div>
+                      <p className="text-lg font-medium text-muted-foreground">
+                        Not set yet
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Will be confirmed soon
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Estimated Delivery Date */}
+                  {order.estimatedDeliveryDate && (
+                    <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-5 text-center border border-amber-500/20">
+                      <div className="flex items-center justify-center gap-2 text-amber-600 mb-3">
+                        <Clock className="w-5 h-5" />
+                        <span className="font-medium">Estimated Delivery</span>
+                      </div>
+                      <p className="text-xl font-bold text-amber-600">
+                        {format(order.estimatedDeliveryDate, 'PPP')}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Based on production speed
+                      </p>
+                      {/* Show comparison hint if both dates exist */}
+                      {order.delivery_date && (
+                        <p className="text-xs text-amber-600/80 mt-2">
+                          {new Date(order.delivery_date) < order.estimatedDeliveryDate 
+                            ? '✓ Exact date is earlier than estimate'
+                            : new Date(order.delivery_date) > order.estimatedDeliveryDate 
+                              ? '⚡ Production may finish sooner'
+                              : '✓ Matches exact date'}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Completed Order - Show delivery date if exists */}
+              {order.status === 'completed' && order.delivery_date && (
+                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg p-6 text-center border border-green-500/20">
+                  <div className="flex items-center justify-center gap-2 text-green-600 mb-3">
+                    <Check className="w-5 h-5" />
+                    <span className="font-medium">Delivered</span>
                   </div>
-                  <p className="text-2xl font-bold text-amber-600">
-                    {format(order.estimatedDeliveryDate, 'PPPP')}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-3">
-                    Based on current order queue
+                  <p className="text-xl font-bold text-green-600">
+                    {format(new Date(order.delivery_date), 'PPPP')}
                   </p>
                 </div>
               )}
