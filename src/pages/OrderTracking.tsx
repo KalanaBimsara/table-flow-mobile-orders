@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Package, Clock, Copy, Check, Calendar, MapPin, Phone, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
+import { format, differenceInDays, differenceInHours, differenceInMinutes, addDays } from 'date-fns';
 interface OrderDetails {
   id: string;
   order_form_number: string;
@@ -25,6 +25,7 @@ interface OrderDetails {
     quantity: number;
     price: number;
   }[];
+  estimatedDeliveryDate?: Date;
 }
 const OrderTracking: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,9 +59,25 @@ const OrderTracking: React.FC = () => {
       const {
         data: tablesData
       } = await supabase.from('order_tables').select('size, colour, quantity, price').eq('order_id', orderData.id);
+
+      // Calculate estimated delivery date based on pending orders before this order
+      let estimatedDeliveryDate: Date | undefined;
+      if (orderData.status === 'pending') {
+        const { count } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending')
+          .lt('created_at', orderData.created_at);
+        
+        const pendingOrdersBefore = count || 0;
+        const daysToAdd = Math.ceil((pendingOrdersBefore + 1) / 30);
+        estimatedDeliveryDate = addDays(new Date(), daysToAdd);
+      }
+
       setOrder({
         ...orderData,
-        tables: tablesData || []
+        tables: tablesData || [],
+        estimatedDeliveryDate
       });
       setSearchParams({
         order: searchValue.trim()
@@ -171,7 +188,7 @@ const OrderTracking: React.FC = () => {
               {order.delivery_date && countdown && <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-6 text-center">
                   <div className="flex items-center justify-center gap-2 text-muted-foreground mb-3">
                     <Clock className="w-5 h-5" />
-                    <span className="font-medium">Estimated Delivery</span>
+                    <span className="font-medium">Exact Delivery Date</span>
                   </div>
                   {countdown.days === 0 && countdown.hours === 0 && countdown.minutes === 0 ? <p className="text-xl font-semibold text-green-600">Ready for Delivery!</p> : <div className="flex justify-center gap-4">
                       <div className="text-center">
@@ -194,6 +211,22 @@ const OrderTracking: React.FC = () => {
                     {format(new Date(order.delivery_date), 'PPPP')}
                   </p>
                 </div>}
+
+              {/* Estimated Delivery Date (when no exact date is set) */}
+              {!order.delivery_date && order.estimatedDeliveryDate && order.status === 'pending' && (
+                <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-6 text-center border border-amber-500/20">
+                  <div className="flex items-center justify-center gap-2 text-amber-600 mb-3">
+                    <Clock className="w-5 h-5" />
+                    <span className="font-medium">Estimated Delivery Date</span>
+                  </div>
+                  <p className="text-2xl font-bold text-amber-600">
+                    {format(order.estimatedDeliveryDate, 'PPPP')}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-3">
+                    Based on current order queue
+                  </p>
+                </div>
+              )}
 
               {/* Customer Info */}
               <div className="grid gap-3">
