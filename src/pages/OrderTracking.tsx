@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Package, Clock, Copy, Check, Calendar, MapPin, Phone, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format, differenceInDays, differenceInHours, differenceInMinutes, addDays } from 'date-fns';
+import { format, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
+
 interface OrderDetails {
   id: string;
   order_form_number: string;
@@ -25,68 +26,50 @@ interface OrderDetails {
     quantity: number;
     price: number;
   }[];
-  estimatedDeliveryDate?: Date;
-  queuePosition?: number;
 }
+
 const OrderTracking: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [orderNumber, setOrderNumber] = useState(searchParams.get('order') || '');
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [countdown, setCountdown] = useState<{
-    days: number;
-    hours: number;
-    minutes: number;
-  } | null>(null);
+  const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number } | null>(null);
+
   const searchOrder = async (orderNum?: string) => {
     const searchValue = orderNum || orderNumber;
     if (!searchValue.trim()) {
       toast.error('Please enter an order number');
       return;
     }
+
     setLoading(true);
     try {
-      const {
-        data: orderData,
-        error: orderError
-      } = await supabase.from('orders').select('*').eq('order_form_number', searchValue.trim()).maybeSingle();
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_form_number', searchValue.trim())
+        .maybeSingle();
+
       if (orderError) throw orderError;
+
       if (!orderData) {
         toast.error('Order not found');
         setOrder(null);
         return;
       }
-      const {
-        data: tablesData
-      } = await supabase.from('order_tables').select('size, colour, quantity, price').eq('order_id', orderData.id);
 
-      // Calculate estimated delivery date and queue position based on pending orders before this order
-      let estimatedDeliveryDate: Date | undefined;
-      let queuePosition: number | undefined;
-      
-      if (orderData.status === 'pending') {
-        const { count } = await supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending')
-          .lt('created_at', orderData.created_at);
-        
-        const pendingOrdersBefore = count || 0;
-        queuePosition = pendingOrdersBefore + 1;
-        const daysToAdd = Math.ceil(queuePosition / 30);
-        estimatedDeliveryDate = addDays(new Date(), daysToAdd);
-      }
+      const { data: tablesData } = await supabase
+        .from('order_tables')
+        .select('size, colour, quantity, price')
+        .eq('order_id', orderData.id);
 
       setOrder({
         ...orderData,
-        tables: tablesData || [],
-        estimatedDeliveryDate,
-        queuePosition
+        tables: tablesData || []
       });
-      setSearchParams({
-        order: searchValue.trim()
-      });
+
+      setSearchParams({ order: searchValue.trim() });
     } catch (error) {
       console.error('Error fetching order:', error);
       toast.error('Failed to fetch order details');
@@ -94,6 +77,7 @@ const OrderTracking: React.FC = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     const orderParam = searchParams.get('order');
     if (orderParam) {
@@ -101,35 +85,34 @@ const OrderTracking: React.FC = () => {
       searchOrder(orderParam);
     }
   }, []);
+
   useEffect(() => {
     if (!order?.delivery_date) {
       setCountdown(null);
       return;
     }
+
     const updateCountdown = () => {
       const now = new Date();
       const deliveryDate = new Date(order.delivery_date!);
+      
       if (deliveryDate <= now) {
-        setCountdown({
-          days: 0,
-          hours: 0,
-          minutes: 0
-        });
+        setCountdown({ days: 0, hours: 0, minutes: 0 });
         return;
       }
+
       const days = differenceInDays(deliveryDate, now);
       const hours = differenceInHours(deliveryDate, now) % 24;
       const minutes = differenceInMinutes(deliveryDate, now) % 60;
-      setCountdown({
-        days,
-        hours,
-        minutes
-      });
+
+      setCountdown({ days, hours, minutes });
     };
+
     updateCountdown();
     const interval = setInterval(updateCountdown, 60000);
     return () => clearInterval(interval);
   }, [order?.delivery_date]);
+
   const copyLink = () => {
     const url = `${window.location.origin}/track?order=${order?.order_form_number}`;
     navigator.clipboard.writeText(url);
@@ -137,20 +120,20 @@ const OrderTracking: React.FC = () => {
     toast.success('Link copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
   };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-500';
-      case 'assigned':
-        return 'bg-blue-500';
-      case 'completed':
-        return 'bg-green-500';
-      default:
-        return 'bg-gray-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'assigned': return 'bg-blue-500';
+      case 'completed': return 'bg-green-500';
+      default: return 'bg-gray-500';
     }
   };
+
   const totalAmount = order ? order.price : 0;
-  return <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8 px-4">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8 px-4">
       <div className="container max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -165,16 +148,27 @@ const OrderTracking: React.FC = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex gap-2">
-              <Input placeholder="Enter order number (e.g., 123)" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchOrder()} className="text-lg" />
+              <Input
+                placeholder="Enter order number (e.g., 123)"
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && searchOrder()}
+                className="text-lg"
+              />
               <Button onClick={() => searchOrder()} disabled={loading}>
-                {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Search className="w-4 h-4" />}
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Search className="w-4 h-4" />
+                )}
               </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Order Details */}
-        {order && <Card className="overflow-hidden">
+        {order && (
+          <Card className="overflow-hidden">
             <CardHeader className="bg-primary/5 border-b">
               <div className="flex items-center justify-between">
                 <div>
@@ -189,98 +183,35 @@ const OrderTracking: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              {/* Queue Position */}
-              {order.status === 'pending' && order.queuePosition && (
-                <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-lg p-4 text-center border border-blue-500/20">
-                  <div className="flex items-center justify-center gap-2 text-blue-600 mb-2">
-                    <Package className="w-5 h-5" />
-                    <span className="font-medium">Queue Position</span>
+              {/* Countdown Timer */}
+              {order.delivery_date && countdown && (
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-6 text-center">
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground mb-3">
+                    <Clock className="w-5 h-5" />
+                    <span className="font-medium">Estimated Delivery</span>
                   </div>
-                  <p className="text-3xl font-bold text-blue-600">
-                    #{order.queuePosition}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {order.queuePosition === 1 ? 'Your order is next in line!' : `${order.queuePosition - 1} orders ahead of yours`}
-                  </p>
-                </div>
-              )}
-
-              {/* Delivery Dates Section */}
-              {order.status === 'pending' && (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {/* Exact Delivery Date */}
-                  {order.delivery_date ? (
-                    <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg p-5 text-center border border-green-500/20">
-                      <div className="flex items-center justify-center gap-2 text-green-600 mb-3">
-                        <Calendar className="w-5 h-5" />
-                        <span className="font-medium">Exact Delivery Date</span>
-                      </div>
-                      <p className="text-xl font-bold text-green-600">
-                        {format(new Date(order.delivery_date), 'PPP')}
-                      </p>
-                      {countdown && (
-                        <div className="mt-3">
-                          {countdown.days === 0 && countdown.hours === 0 && countdown.minutes === 0 ? (
-                            <p className="text-sm font-semibold text-green-600">Ready for Delivery!</p>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">
-                              {countdown.days}d {countdown.hours}h {countdown.minutes}m remaining
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                  {countdown.days === 0 && countdown.hours === 0 && countdown.minutes === 0 ? (
+                    <p className="text-xl font-semibold text-green-600">Ready for Delivery!</p>
                   ) : (
-                    <div className="bg-muted/50 rounded-lg p-5 text-center border border-border">
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground mb-3">
-                        <Calendar className="w-5 h-5" />
-                        <span className="font-medium">Exact Delivery Date</span>
+                    <div className="flex justify-center gap-4">
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-primary">{countdown.days}</div>
+                        <div className="text-sm text-muted-foreground">Days</div>
                       </div>
-                      <p className="text-lg font-medium text-muted-foreground">
-                        Not set yet
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Will be confirmed soon
-                      </p>
+                      <div className="text-4xl font-light text-muted-foreground">:</div>
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-primary">{countdown.hours}</div>
+                        <div className="text-sm text-muted-foreground">Hours</div>
+                      </div>
+                      <div className="text-4xl font-light text-muted-foreground">:</div>
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-primary">{countdown.minutes}</div>
+                        <div className="text-sm text-muted-foreground">Minutes</div>
+                      </div>
                     </div>
                   )}
-
-                  {/* Estimated Delivery Date */}
-                  {order.estimatedDeliveryDate && (
-                    <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-5 text-center border border-amber-500/20">
-                      <div className="flex items-center justify-center gap-2 text-amber-600 mb-3">
-                        <Clock className="w-5 h-5" />
-                        <span className="font-medium">Estimated Delivery</span>
-                      </div>
-                      <p className="text-xl font-bold text-amber-600">
-                        {format(order.estimatedDeliveryDate, 'PPP')}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Based on production speed
-                      </p>
-                      {/* Show comparison hint if both dates exist */}
-                      {order.delivery_date && (
-                        <p className="text-xs text-amber-600/80 mt-2">
-                          {new Date(order.delivery_date) < order.estimatedDeliveryDate 
-                            ? '✓ Exact date is earlier than estimate'
-                            : new Date(order.delivery_date) > order.estimatedDeliveryDate 
-                              ? '⚡ Production may finish sooner'
-                              : '✓ Matches exact date'}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Completed Order - Show delivery date if exists */}
-              {order.status === 'completed' && order.delivery_date && (
-                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg p-6 text-center border border-green-500/20">
-                  <div className="flex items-center justify-center gap-2 text-green-600 mb-3">
-                    <Check className="w-5 h-5" />
-                    <span className="font-medium">Delivered</span>
-                  </div>
-                  <p className="text-xl font-bold text-green-600">
+                  <p className="text-sm text-muted-foreground mt-3">
+                    <Calendar className="w-4 h-4 inline mr-1" />
                     {format(new Date(order.delivery_date), 'PPPP')}
                   </p>
                 </div>
@@ -306,7 +237,8 @@ const OrderTracking: React.FC = () => {
               <div>
                 <h3 className="font-semibold mb-3">Order Items</h3>
                 <div className="space-y-2">
-                  {order.tables.map((table, index) => <div key={index} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                  {order.tables.map((table, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
                       <div>
                         <p className="font-medium">{table.size}</p>
                         <p className="text-sm text-muted-foreground">Color: {table.colour}</p>
@@ -315,7 +247,8 @@ const OrderTracking: React.FC = () => {
                         <p className="font-medium">x{table.quantity}</p>
                         <p className="text-sm text-muted-foreground">Rs. {table.price.toLocaleString()}</p>
                       </div>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -325,23 +258,33 @@ const OrderTracking: React.FC = () => {
                   <span>Total Amount</span>
                   <span className="text-primary">Rs. {totalAmount.toLocaleString()}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-            </p>
+                <p className="text-xs text-muted-foreground mt-1">*Delivery charges not included</p>
               </div>
 
               {/* Copy Link Button */}
-              <Button variant="outline" className="w-full" onClick={copyLink}>
-                {copied ? <>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={copyLink}
+              >
+                {copied ? (
+                  <>
                     <Check className="w-4 h-4 mr-2" />
                     Copied!
-                  </> : <>
+                  </>
+                ) : (
+                  <>
                     <Copy className="w-4 h-4 mr-2" />
                     Copy Tracking Link
-                  </>}
+                  </>
+                )}
               </Button>
             </CardContent>
-          </Card>}
+          </Card>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default OrderTracking;
