@@ -35,6 +35,8 @@ const OrderTracking: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number } | null>(null);
+  const [estimatedDeliveryDate, setEstimatedDeliveryDate] = useState<Date | null>(null);
+  const [estimatedCountdown, setEstimatedCountdown] = useState<{ days: number; hours: number; minutes: number } | null>(null);
 
   const searchOrder = async (orderNum?: string) => {
     const searchValue = orderNum || orderNumber;
@@ -56,6 +58,7 @@ const OrderTracking: React.FC = () => {
       if (!orderData) {
         toast.error('Order not found');
         setOrder(null);
+        setEstimatedDeliveryDate(null);
         return;
       }
 
@@ -69,12 +72,62 @@ const OrderTracking: React.FC = () => {
         tables: tablesData || []
       });
 
+      // Calculate estimated delivery date based on queue position
+      if (orderData.status === 'pending') {
+        await calculateEstimatedDelivery(orderData.created_at);
+      } else {
+        setEstimatedDeliveryDate(null);
+      }
+
       setSearchParams({ order: searchValue.trim() });
     } catch (error) {
       console.error('Error fetching order:', error);
       toast.error('Failed to fetch order details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const calculateEstimatedDelivery = async (orderCreatedAt: string) => {
+    try {
+      // Fetch all pending orders created before or at the same time as this order
+      const { data: pendingOrders, error } = await supabase
+        .from('orders')
+        .select('id, quantity, created_at')
+        .eq('status', 'pending')
+        .lte('created_at', orderCreatedAt);
+
+      if (error) throw error;
+
+      // Calculate total units from all orders ahead in the queue (including this order)
+      let totalUnits = 0;
+      if (pendingOrders) {
+        for (const pendingOrder of pendingOrders) {
+          // Get the tables for each order to sum up quantities
+          const { data: orderTables } = await supabase
+            .from('order_tables')
+            .select('quantity')
+            .eq('order_id', pendingOrder.id);
+
+          if (orderTables) {
+            totalUnits += orderTables.reduce((sum, table) => sum + table.quantity, 0);
+          }
+        }
+      }
+
+      // Calculate days: divide by 30 and round up
+      const daysToAdd = Math.ceil(totalUnits / 30);
+      
+      // Add days to today's date
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const estimatedDate = new Date(today);
+      estimatedDate.setDate(estimatedDate.getDate() + daysToAdd);
+      
+      setEstimatedDeliveryDate(estimatedDate);
+    } catch (error) {
+      console.error('Error calculating estimated delivery:', error);
+      setEstimatedDeliveryDate(null);
     }
   };
 
@@ -112,6 +165,33 @@ const OrderTracking: React.FC = () => {
     const interval = setInterval(updateCountdown, 60000);
     return () => clearInterval(interval);
   }, [order?.delivery_date]);
+
+  // Countdown for estimated delivery date (for pending orders)
+  useEffect(() => {
+    if (!estimatedDeliveryDate) {
+      setEstimatedCountdown(null);
+      return;
+    }
+
+    const updateEstimatedCountdown = () => {
+      const now = new Date();
+      
+      if (estimatedDeliveryDate <= now) {
+        setEstimatedCountdown({ days: 0, hours: 0, minutes: 0 });
+        return;
+      }
+
+      const days = differenceInDays(estimatedDeliveryDate, now);
+      const hours = differenceInHours(estimatedDeliveryDate, now) % 24;
+      const minutes = differenceInMinutes(estimatedDeliveryDate, now) % 60;
+
+      setEstimatedCountdown({ days, hours, minutes });
+    };
+
+    updateEstimatedCountdown();
+    const interval = setInterval(updateEstimatedCountdown, 60000);
+    return () => clearInterval(interval);
+  }, [estimatedDeliveryDate]);
 
   const copyLink = () => {
     const url = `${window.location.origin}/track?order=${order?.order_form_number}`;
@@ -183,36 +263,73 @@ const OrderTracking: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              {/* Countdown Timer */}
+              {/* Exact Delivery Date (if set) */}
               {order.delivery_date && countdown && (
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-6 text-center">
-                  <div className="flex items-center justify-center gap-2 text-muted-foreground mb-3">
-                    <Clock className="w-5 h-5" />
-                    <span className="font-medium">Estimated Delivery</span>
+                <div className="bg-gradient-to-r from-green-500/10 to-green-500/5 rounded-lg p-6 text-center border border-green-500/20">
+                  <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400 mb-3">
+                    <Calendar className="w-5 h-5" />
+                    <span className="font-medium">Confirmed Delivery Date</span>
                   </div>
                   {countdown.days === 0 && countdown.hours === 0 && countdown.minutes === 0 ? (
                     <p className="text-xl font-semibold text-green-600">Ready for Delivery!</p>
                   ) : (
                     <div className="flex justify-center gap-4">
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-primary">{countdown.days}</div>
+                        <div className="text-4xl font-bold text-green-600">{countdown.days}</div>
                         <div className="text-sm text-muted-foreground">Days</div>
                       </div>
                       <div className="text-4xl font-light text-muted-foreground">:</div>
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-primary">{countdown.hours}</div>
+                        <div className="text-4xl font-bold text-green-600">{countdown.hours}</div>
                         <div className="text-sm text-muted-foreground">Hours</div>
                       </div>
                       <div className="text-4xl font-light text-muted-foreground">:</div>
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-primary">{countdown.minutes}</div>
+                        <div className="text-4xl font-bold text-green-600">{countdown.minutes}</div>
+                        <div className="text-sm text-muted-foreground">Minutes</div>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-sm text-green-700 dark:text-green-400 mt-3 font-medium">
+                    <Calendar className="w-4 h-4 inline mr-1" />
+                    {format(new Date(order.delivery_date), 'PPPP')}
+                  </p>
+                </div>
+              )}
+
+              {/* Estimated Delivery Date (calculated from queue) */}
+              {estimatedDeliveryDate && estimatedCountdown && order.status === 'pending' && (
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-6 text-center border border-primary/20">
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground mb-3">
+                    <Clock className="w-5 h-5" />
+                    <span className="font-medium">Estimated Delivery (Based on Queue)</span>
+                  </div>
+                  {estimatedCountdown.days === 0 && estimatedCountdown.hours === 0 && estimatedCountdown.minutes === 0 ? (
+                    <p className="text-xl font-semibold text-primary">Processing Soon!</p>
+                  ) : (
+                    <div className="flex justify-center gap-4">
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-primary">{estimatedCountdown.days}</div>
+                        <div className="text-sm text-muted-foreground">Days</div>
+                      </div>
+                      <div className="text-4xl font-light text-muted-foreground">:</div>
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-primary">{estimatedCountdown.hours}</div>
+                        <div className="text-sm text-muted-foreground">Hours</div>
+                      </div>
+                      <div className="text-4xl font-light text-muted-foreground">:</div>
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-primary">{estimatedCountdown.minutes}</div>
                         <div className="text-sm text-muted-foreground">Minutes</div>
                       </div>
                     </div>
                   )}
                   <p className="text-sm text-muted-foreground mt-3">
                     <Calendar className="w-4 h-4 inline mr-1" />
-                    {format(new Date(order.delivery_date), 'PPPP')}
+                    {format(estimatedDeliveryDate, 'PPPP')}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2 italic">
+                    *Estimated based on current production queue
                   </p>
                 </div>
               )}
