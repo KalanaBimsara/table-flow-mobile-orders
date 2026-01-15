@@ -177,19 +177,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       maximumFractionDigits: 0
     }).format(price);
   };
-<<<<<<< Updated upstream
   return <Card className={`order-card ${order.status === 'pending' ? 'order-pending' : order.status === 'assigned' ? 'order-assigned' : 'order-completed'} ${isMobile ? 'text-base' : 'text-lg'}`}>
-=======
-  return <Card className={`order-card ${order.status === 'pending' ? 'order-pending' : order.status === 'assigned' ? 'order-assigned' : 'order-completed'} ${isMobile ? 'text-base' : 'text-lg'} relative overflow-visible`}>
-      {/* Order form number - absolute top-right corner */}
-      {(order.order_form_number || order.orderFormNumber) && (
-        <div className="absolute -top-2 -right-2 z-10">
-          <span className="text-sm font-bold text-primary-foreground bg-primary px-3 py-1.5 rounded-full shadow-lg border-2 border-background">
-            #{order.order_form_number || order.orderFormNumber}
-          </span>
-        </div>
-      )}
->>>>>>> Stashed changes
       <CardContent className="pt-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4 relative">
           <h3 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>
