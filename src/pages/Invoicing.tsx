@@ -24,14 +24,14 @@ const TRANSPORT_MODES = [
 
 // Predefined dealer list for "Bill To"
 const BILL_TO_OPTIONS = [
-  { value: 'dealer_1', label: 'Dealer 1' },
-  { value: 'dealer_2', label: 'Dealer 2' },
-  { value: 'dealer_3', label: 'Dealer 3' },
-  { value: 'dealer_4', label: 'Dealer 4' },
-  { value: 'dealer_5', label: 'Dealer 5' },
-  { value: 'showroom_colombo', label: 'Showroom Colombo' },
-  { value: 'showroom_kandy', label: 'Showroom Kandy' },
-  { value: 'warehouse', label: 'Main Warehouse' },
+  { value: 'Kalana-Methupa', label: 'Kalana-Methupa' },
+  { value: 'Kalana-Geeth', label: 'Kalana-Geeth' },
+  { value: 'Kalana-Hasindu', label: 'Kalana-Hasindu' },
+  { value: 'Bisora', label: 'Bisora' },
+  { value: 'Lakmal Sale', label: 'Lakmal Sale' },
+  { value: 'Factory Sale', label: 'Factory Sale' },
+  { value: 'Hiran Sale', label: 'Hiran Sale' },
+  { value: ' ', label: 'Other' },
 ];
 
 const MAX_ROWS_PER_BILL = 10;

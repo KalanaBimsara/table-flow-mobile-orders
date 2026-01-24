@@ -109,14 +109,14 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
             </div>
             {/* Driver Name replaces Address */}
             <div className="flex gap-2 mb-2">
-              <span className="text-gray-600">Driver :</span>
+              <span className="text-gray-600">Driver Name:</span>
               <span className="border-b border-dotted border-gray-400 flex-1">
                 {driverName || '-'}
               </span>
             </div>
             {/* Vehicle Number replaces Contact */}
             <div className="flex gap-2 mb-2">
-              <span className="text-gray-600">Vehicle :</span>
+              <span className="text-gray-600">Vehicle No. :</span>
               <span className="border-b border-dotted border-gray-400 flex-1">
                 {vehicleNumber || '-'}
               </span>
