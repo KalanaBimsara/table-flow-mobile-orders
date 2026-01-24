@@ -55,17 +55,12 @@ interface InvoiceBillTemplateProps {
   rows: BillRow[];
   pageNumber?: number;
   totalPages?: number;
+  billTo: string;
   driverName?: string;
   vehicleNumber?: string;
   totalAmount: number;
   totalQuantity: number;
   invoiceDate: string;
-  customerInfo: {
-    name: string;
-    address: string;
-    contact: string;
-    district: string;
-  };
 }
 
 const formatPrice = (price: number) => {
@@ -78,20 +73,20 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
   rows,
   pageNumber,
   totalPages,
+  billTo,
   driverName,
   vehicleNumber,
   totalAmount,
   totalQuantity,
-  invoiceDate,
-  customerInfo
+  invoiceDate
 }) => {
   const MAX_ROWS = 10;
   const emptyRowsCount = Math.max(0, MAX_ROWS - rows.length);
 
   return (
     <div className="bg-white print:shadow-none mb-8 page-break-after-always">
-      {/* Green Header */}
-      <div className="bg-[#2d5a27] text-white p-4 flex justify-between items-start">
+      {/* Header - Transparent background with dark green text for ink saving */}
+      <div className="bg-transparent border-b-2 border-[#2d5a27] text-[#2d5a27] p-4 flex justify-between items-start">
         <div className="flex items-center gap-3">
           <div className="text-2xl font-bold tracking-wide">BOSS FURNITURE Pvt Ltd.</div>
         </div>
@@ -101,45 +96,31 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
         </div>
       </div>
 
-      {/* Customer Info Section */}
+      {/* Bill Info Section */}
       <div className="border border-gray-300 p-4">
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
+            {/* Bill To replaces Customer Name */}
             <div className="flex gap-2 mb-2">
-              <span className="text-gray-600">Customer Name :</span>
+              <span className="text-gray-600">Bill To :</span>
               <span className="border-b border-dotted border-gray-400 flex-1 font-medium">
-                {customerInfo.name}
+                {billTo}
               </span>
             </div>
+            {/* Driver Name replaces Address */}
             <div className="flex gap-2 mb-2">
-              <span className="text-gray-600">Address :</span>
+              <span className="text-gray-600">Driver :</span>
               <span className="border-b border-dotted border-gray-400 flex-1">
-                {customerInfo.address}
+                {driverName || '-'}
               </span>
             </div>
+            {/* Vehicle Number replaces Contact */}
             <div className="flex gap-2 mb-2">
-              <span className="text-gray-600">Contact :</span>
+              <span className="text-gray-600">Vehicle :</span>
               <span className="border-b border-dotted border-gray-400 flex-1">
-                {customerInfo.contact}
+                {vehicleNumber || '-'}
               </span>
             </div>
-            {/* Driver and Vehicle Info */}
-            {(driverName || vehicleNumber) && (
-              <div className="flex gap-4 mt-2 text-sm">
-                {driverName && (
-                  <div className="flex gap-2">
-                    <span className="text-gray-600">Driver :</span>
-                    <span className="font-medium">{driverName}</span>
-                  </div>
-                )}
-                {vehicleNumber && (
-                  <div className="flex gap-2">
-                    <span className="text-gray-600">Vehicle :</span>
-                    <span className="font-medium">{vehicleNumber}</span>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
           <div className="text-right">
             <div className="flex gap-2 justify-end mb-2">
@@ -148,7 +129,7 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
             </div>
             <div className="flex gap-2 justify-end mb-2">
               <span className="text-gray-600">Bill No :</span>
-              <span className="font-bold text-lg text-blue-800">{billNumber}</span>
+              <span className="font-bold text-lg text-[#2d5a27]">{billNumber}</span>
             </div>
             <div className="flex gap-2 justify-end text-xs text-gray-600">
               <span>Order(s) :</span>

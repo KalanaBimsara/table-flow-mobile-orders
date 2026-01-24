@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Search, Download, Printer, FileText, Plus, X, Truck } from 'lucide-react';
+import { Search, Download, Printer, FileText, Plus, X, Truck, Save } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { Order, TableItem, tableSizeOptions } from '@/types/order';
+import { Order, TableItem, tableSizeOptions, getFactoryPrice } from '@/types/order';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import html2pdf from 'html2pdf.js';
@@ -20,6 +20,18 @@ const TRANSPORT_MODES = [
   { value: 'vehicle_4', label: 'Vehicle Number 4' },
   { value: 'pick_me', label: 'Pick Me' },
   { value: 'factory_pickup', label: 'Factory Pick Up' },
+];
+
+// Predefined dealer list for "Bill To"
+const BILL_TO_OPTIONS = [
+  { value: 'dealer_1', label: 'Dealer 1' },
+  { value: 'dealer_2', label: 'Dealer 2' },
+  { value: 'dealer_3', label: 'Dealer 3' },
+  { value: 'dealer_4', label: 'Dealer 4' },
+  { value: 'dealer_5', label: 'Dealer 5' },
+  { value: 'showroom_colombo', label: 'Showroom Colombo' },
+  { value: 'showroom_kandy', label: 'Showroom Kandy' },
+  { value: 'warehouse', label: 'Main Warehouse' },
 ];
 
 const MAX_ROWS_PER_BILL = 10;
@@ -38,10 +50,12 @@ const Invoicing: React.FC = () => {
   const [orderNumber, setOrderNumber] = useState('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [invoiceDate] = useState(format(new Date(), 'dd/MM/yyyy'));
   const [billNumber, setBillNumber] = useState('');
   const [selectedDriver, setSelectedDriver] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [selectedBillTo, setSelectedBillTo] = useState('');
   const [drivers, setDrivers] = useState<{ id: string; name: string }[]>([]);
 
   // Fetch delivery drivers on mount
@@ -143,22 +157,25 @@ const Invoicing: React.FC = () => {
     setOrders(prev => prev.filter(o => o.id !== orderId));
   };
 
-  // Generate all bill rows from orders
+  // Generate all bill rows from orders - using FACTORY PRICES
   const generateBillRows = (): BillRow[] => {
     const rows: BillRow[] = [];
 
     orders.forEach(order => {
       order.tables.forEach(table => {
         const { extraFee, feeDetails } = calculateExtraFees(table);
-        const itemAmount = table.price * table.quantity;
+        
+        // Get factory price instead of sales price
+        const factoryPrice = getFactoryPrice(table.size);
+        const itemAmount = factoryPrice * table.quantity;
 
-        // Main item row
+        // Main item row with factory price
         rows.push({
           quantity: table.quantity,
           item: table.size,
           orderNumber: order.order_form_number || '',
           deliveryCity: order.customerDistrict || '',
-          rate: table.price,
+          rate: factoryPrice,
           amount: itemAmount
         });
 
@@ -192,7 +209,7 @@ const Invoicing: React.FC = () => {
     return pages.length > 0 ? pages : [[]];
   };
 
-  // Calculate totals
+  // Calculate totals using factory prices
   const calculateTotals = () => {
     const rows = generateBillRows();
     let totalAmount = 0;
@@ -205,20 +222,84 @@ const Invoicing: React.FC = () => {
       }
     });
 
-    // Add delivery fees and additional charges from all orders
-    orders.forEach(order => {
-      totalAmount += (order.deliveryFee || 0) + (order.additionalCharges || 0);
-    });
-
     return { totalAmount, totalQuantity };
   };
 
-  const handlePrint = () => {
+  // Save bill to database
+  const saveBillToDatabase = async () => {
+    if (!billNumber.trim()) {
+      toast.error('Please enter a bill number');
+      return false;
+    }
+    if (!selectedBillTo) {
+      toast.error('Please select "Bill To" option');
+      return false;
+    }
+    if (orders.length === 0) {
+      toast.error('Please add at least one order');
+      return false;
+    }
+
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please login to save bills');
+        return false;
+      }
+
+      const totals = calculateTotals();
+      const billToLabel = BILL_TO_OPTIONS.find(o => o.value === selectedBillTo)?.label || selectedBillTo;
+      const driverName = drivers.find(d => d.id === selectedDriver)?.name || '';
+      const vehicleLabel = TRANSPORT_MODES.find(m => m.value === selectedVehicle)?.label || '';
+
+      const { error } = await supabase.from('bills').insert({
+        bill_number: billNumber.trim(),
+        bill_to: billToLabel,
+        driver_name: driverName,
+        vehicle_number: vehicleLabel,
+        order_numbers: orders.map(o => o.order_form_number || '').filter(Boolean),
+        total_amount: totals.totalAmount,
+        total_quantity: totals.totalQuantity,
+        bill_date: new Date().toISOString().split('T')[0],
+        created_by: user.id
+      });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.error('Bill number already exists. Please use a different number.');
+        } else {
+          throw error;
+        }
+        return false;
+      }
+
+      toast.success('Bill saved successfully!');
+      return true;
+    } catch (error) {
+      console.error('Error saving bill:', error);
+      toast.error('Failed to save bill');
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePrint = async () => {
     if (!billNumber.trim()) {
       toast.error('Please enter a bill number');
       return;
     }
-    window.print();
+    if (!selectedBillTo) {
+      toast.error('Please select "Bill To" option');
+      return;
+    }
+    
+    // Save bill before printing
+    const saved = await saveBillToDatabase();
+    if (saved) {
+      window.print();
+    }
   };
 
   const handleDownload = async () => {
@@ -226,6 +307,14 @@ const Invoicing: React.FC = () => {
       toast.error('Please enter a bill number');
       return;
     }
+    if (!selectedBillTo) {
+      toast.error('Please select "Bill To" option');
+      return;
+    }
+
+    // Save bill before downloading
+    const saved = await saveBillToDatabase();
+    if (!saved) return;
 
     const invoiceContent = document.getElementById('invoice-content');
     if (invoiceContent) {
@@ -251,19 +340,7 @@ const Invoicing: React.FC = () => {
   const orderNumbers = orders.map(o => o.order_form_number || '').filter(Boolean);
   const driverName = drivers.find(d => d.id === selectedDriver)?.name;
   const vehicleLabel = TRANSPORT_MODES.find(m => m.value === selectedVehicle)?.label;
-
-  // Get customer info from first order
-  const customerInfo = orders.length > 0 ? {
-    name: orders.map(o => o.customerName).join(' / '),
-    address: orders[0].address,
-    contact: orders[0].contactNumber,
-    district: orders[0].customerDistrict || ''
-  } : {
-    name: '',
-    address: '',
-    contact: '',
-    district: ''
-  };
+  const billToLabel = BILL_TO_OPTIONS.find(o => o.value === selectedBillTo)?.label || '';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -271,12 +348,27 @@ const Invoicing: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-6 w-6" />
-            Invoice / Bill Generator
+            Invoice / Bill Generator (Factory Prices)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Bill Number */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Bill To and Bill Number */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Bill To *</Label>
+              <Select value={selectedBillTo} onValueChange={setSelectedBillTo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select dealer/location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BILL_TO_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label htmlFor="billNumber">Bill Number *</Label>
               <Input
@@ -286,6 +378,10 @@ const Invoicing: React.FC = () => {
                 placeholder="Enter bill number"
               />
             </div>
+          </div>
+
+          {/* Driver and Vehicle */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Driver Name</Label>
               <Select value={selectedDriver} onValueChange={setSelectedDriver}>
@@ -354,7 +450,7 @@ const Invoicing: React.FC = () => {
                 ))}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Total items: {totals.totalQuantity} | Total amount: LKR {totals.totalAmount.toLocaleString()}
+                Total items: {totals.totalQuantity} | Total (Factory): LKR {totals.totalAmount.toLocaleString()}
                 {billPages.length > 1 && ` | Will generate ${billPages.length} bill pages`}
               </p>
             </div>
@@ -363,13 +459,13 @@ const Invoicing: React.FC = () => {
           {/* Action Buttons */}
           {orders.length > 0 && (
             <div className="flex gap-4">
-              <Button onClick={handlePrint} variant="outline">
+              <Button onClick={handlePrint} variant="outline" disabled={saving}>
                 <Printer className="mr-2 h-4 w-4" />
-                Print
+                {saving ? 'Saving...' : 'Save & Print'}
               </Button>
-              <Button onClick={handleDownload} variant="outline">
+              <Button onClick={handleDownload} variant="outline" disabled={saving}>
                 <Download className="mr-2 h-4 w-4" />
-                Download PDF
+                {saving ? 'Saving...' : 'Save & Download PDF'}
               </Button>
             </div>
           )}
@@ -377,7 +473,7 @@ const Invoicing: React.FC = () => {
       </Card>
 
       {/* Bill Preview */}
-      {orders.length > 0 && billNumber && (
+      {orders.length > 0 && billNumber && selectedBillTo && (
         <div id="invoice-content" className="max-w-4xl mx-auto">
           {billPages.map((pageRows, pageIndex) => (
             <InvoiceBillTemplate
@@ -387,12 +483,12 @@ const Invoicing: React.FC = () => {
               rows={pageRows}
               pageNumber={pageIndex + 1}
               totalPages={billPages.length}
+              billTo={billToLabel}
               driverName={driverName}
               vehicleNumber={vehicleLabel}
               totalAmount={totals.totalAmount}
               totalQuantity={totals.totalQuantity}
               invoiceDate={invoiceDate}
-              customerInfo={customerInfo}
             />
           ))}
         </div>
