@@ -76,8 +76,12 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
       <div className="text-white p-4 flex justify-between items-start bg-transparent">
         <div className="flex items-center gap-3">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <div className="text-2xl font-bold tracking-wide bg-transparent text-green-950">FURNITURE</div>
           <div className="text-xs opacity-80">PRIVATE LIMITED</div>
+=======
+          <div className="text-2xl font-bold tracking-wide">BOSS FURNITURE PVT LTD</div>
+>>>>>>> Stashed changes
 =======
           <div className="text-2xl font-bold tracking-wide">BOSS FURNITURE PVT LTD</div>
 >>>>>>> Stashed changes
