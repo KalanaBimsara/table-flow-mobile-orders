@@ -93,8 +93,7 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
       {/* Green Header */}
       <div className="bg-[#2d5a27] text-white p-4 flex justify-between items-start">
         <div className="flex items-center gap-3">
-          <div className="text-2xl font-bold tracking-wide">FURNITURE</div>
-          <div className="text-xs opacity-80">PRIVATE LIMITED</div>
+          <div className="text-2xl font-bold tracking-wide">BOSS FURNITURE Pvt Ltd.</div>
         </div>
         <div className="text-right text-xs">
           <p>No.31/A/02, Gammanpila, Bandaragama.</p>
