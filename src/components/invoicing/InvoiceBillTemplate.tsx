@@ -3,42 +3,29 @@ import { Order, TableItem, tableSizeOptions } from '@/types/order';
 import { format } from 'date-fns';
 
 // Standard sizes that don't incur extra fee
-const standardSizes = [
-  '24x32', '24x36', '24x48', '24x60', '24x72', '24x84', '24x96',
-  '30x48', '36x48', '48x48',
-  '30x60', '36x60', '48x60',
-  '30x72', '36x72', '48x72',
-  '30x84', '36x84', '48x84',
-  '30x96', '36x96', '48x96',
-  'DS (36x36)', 'DL (60x36)',
-  'L-A', 'L-B', 'L-C', 'L-D', 'L-E', 'L-F', 'L-G', 'L-H'
-];
-
+const standardSizes = ['24x32', '24x36', '24x48', '24x60', '24x72', '24x84', '24x96', '30x48', '36x48', '48x48', '30x60', '36x60', '48x60', '30x72', '36x72', '48x72', '30x84', '36x84', '48x84', '30x96', '36x96', '48x96', 'DS (36x36)', 'DL (60x36)', 'L-A', 'L-B', 'L-C', 'L-D', 'L-E', 'L-F', 'L-G', 'L-H'];
 export const isNonStandardSize = (size: string): boolean => {
   return !standardSizes.includes(size);
 };
-
 export const hasFrontPanel = (table: TableItem): boolean => {
   return !!table.frontPanelSize && !!table.frontPanelLength && table.frontPanelLength > 0;
 };
-
 export const calculateExtraFees = (table: TableItem) => {
   let extraFee = 0;
   let feeDetails: string[] = [];
-
   if (isNonStandardSize(table.size)) {
     extraFee += 1000;
     feeDetails.push('C/W');
   }
-
   if (hasFrontPanel(table)) {
     extraFee += 1000;
     feeDetails.push('Panel');
   }
-
-  return { extraFee, feeDetails };
+  return {
+    extraFee,
+    feeDetails
+  };
 };
-
 interface BillRow {
   quantity: number;
   item: string;
@@ -48,7 +35,6 @@ interface BillRow {
   amount: number;
   isExtraFee?: boolean;
 }
-
 interface InvoiceBillTemplateProps {
   billNumber: string;
   orderNumbers: string[];
@@ -67,11 +53,9 @@ interface InvoiceBillTemplateProps {
     district: string;
   };
 }
-
 const formatPrice = (price: number) => {
   return price.toLocaleString('en-US');
 };
-
 const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
   billNumber,
   orderNumbers,
@@ -87,13 +71,11 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
 }) => {
   const MAX_ROWS = 10;
   const emptyRowsCount = Math.max(0, MAX_ROWS - rows.length);
-
-  return (
-    <div className="bg-white print:shadow-none mb-8 page-break-after-always">
+  return <div className="bg-white print:shadow-none mb-8 page-break-after-always">
       {/* Green Header */}
-      <div className="bg-[#2d5a27] text-white p-4 flex justify-between items-start">
+      <div className="text-white p-4 flex justify-between items-start bg-transparent">
         <div className="flex items-center gap-3">
-          <div className="text-2xl font-bold tracking-wide">FURNITURE</div>
+          <div className="text-2xl font-bold tracking-wide bg-transparent text-green-950">FURNITURE</div>
           <div className="text-xs opacity-80">PRIVATE LIMITED</div>
         </div>
         <div className="text-right text-xs">
@@ -125,22 +107,16 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
               </span>
             </div>
             {/* Driver and Vehicle Info */}
-            {(driverName || vehicleNumber) && (
-              <div className="flex gap-4 mt-2 text-sm">
-                {driverName && (
-                  <div className="flex gap-2">
+            {(driverName || vehicleNumber) && <div className="flex gap-4 mt-2 text-sm">
+                {driverName && <div className="flex gap-2">
                     <span className="text-gray-600">Driver :</span>
                     <span className="font-medium">{driverName}</span>
-                  </div>
-                )}
-                {vehicleNumber && (
-                  <div className="flex gap-2">
+                  </div>}
+                {vehicleNumber && <div className="flex gap-2">
                     <span className="text-gray-600">Vehicle :</span>
                     <span className="font-medium">{vehicleNumber}</span>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
           </div>
           <div className="text-right">
             <div className="flex gap-2 justify-end mb-2">
@@ -155,11 +131,9 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
               <span>Order(s) :</span>
               <span className="font-medium">{orderNumbers.join(', ')}</span>
             </div>
-            {totalPages && totalPages > 1 && (
-              <div className="flex gap-2 justify-end mt-1 text-xs text-gray-500">
+            {totalPages && totalPages > 1 && <div className="flex gap-2 justify-end mt-1 text-xs text-gray-500">
                 <span>Page {pageNumber} of {totalPages}</span>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
 
@@ -176,8 +150,7 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
-              <tr key={index}>
+            {rows.map((row, index) => <tr key={index}>
                 <td className="border border-gray-300 p-2 text-center">
                   {row.isExtraFee ? '' : String(row.quantity).padStart(2, '0')}
                 </td>
@@ -196,20 +169,19 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
                 <td className="border border-gray-300 p-2 text-right font-medium">
                   {formatPrice(row.amount)}
                 </td>
-              </tr>
-            ))}
+              </tr>)}
             
             {/* Empty rows for visual consistency */}
-            {Array.from({ length: emptyRowsCount }).map((_, i) => (
-              <tr key={`empty-${i}`}>
+            {Array.from({
+            length: emptyRowsCount
+          }).map((_, i) => <tr key={`empty-${i}`}>
                 <td className="border border-gray-300 p-2">&nbsp;</td>
                 <td className="border border-gray-300 p-2"></td>
                 <td className="border border-gray-300 p-2"></td>
                 <td className="border border-gray-300 p-2"></td>
                 <td className="border border-gray-300 p-2"></td>
                 <td className="border border-gray-300 p-2"></td>
-              </tr>
-            ))}
+              </tr>)}
 
             {/* Total row */}
             <tr className="border-t-2 border-gray-400">
@@ -258,8 +230,6 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default InvoiceBillTemplate;
