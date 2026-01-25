@@ -206,6 +206,7 @@ export type Database = {
           status: string | null
           table_size: string
           updated_at: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           additional_charges?: number | null
@@ -231,6 +232,7 @@ export type Database = {
           status?: string | null
           table_size: string
           updated_at?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           additional_charges?: number | null
@@ -256,6 +258,7 @@ export type Database = {
           status?: string | null
           table_size?: string
           updated_at?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }

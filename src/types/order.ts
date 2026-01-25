@@ -30,6 +30,7 @@ export type Order = {
   customerDistrict?: string,  // Added for district selection
   address: string,
   contactNumber: string,
+  whatsappNumber?: string,  // Added for WhatsApp contact
   tables: TableItem[],
   note?: string,
   status: OrderStatus,
