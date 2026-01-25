@@ -51,6 +51,10 @@ const AppHeaderWrapper = () => {
     href: '/invoicing',
     label: 'Invoicing',
     icon: FileText
+  }, {
+    href: '/bill-history',
+    label: 'Bill History',
+    icon: FileText
   }];
   if (userRole === 'admin') {
     menuItems.push({

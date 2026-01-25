@@ -29,6 +29,7 @@ const AppHeader = () => {
     { href: '/orders', label: 'Orders', icon: Package },
     { href: '/history', label: 'Order History', icon: History },
     { href: '/invoicing', label: 'Invoicing', icon: FileText },
+    { href: '/bill-history', label: 'Bill History', icon: FileText },
     { href: '/track', label: 'Track Order', icon: MapPin },
   ];
   
