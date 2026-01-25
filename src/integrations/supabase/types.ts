@@ -19,6 +19,7 @@ export type Database = {
           bill_date: string
           bill_number: string
           bill_to: string
+          bill_rows: any | null
           created_at: string
           created_by: string | null
           driver_name: string | null
@@ -32,6 +33,7 @@ export type Database = {
           bill_date?: string
           bill_number: string
           bill_to: string
+          bill_rows?: any | null
           created_at?: string
           created_by?: string | null
           driver_name?: string | null
@@ -45,6 +47,7 @@ export type Database = {
           bill_date?: string
           bill_number?: string
           bill_to?: string
+          bill_rows?: any | null
           created_at?: string
           created_by?: string | null
           driver_name?: string | null

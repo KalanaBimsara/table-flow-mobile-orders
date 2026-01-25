@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Printer, Edit, X, Save } from 'lucide-react';
+import { Printer, Edit, X, Save, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order } from '@/types/order';
+import html2pdf from 'html2pdf.js';
 
 const OrderForm: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -113,6 +114,40 @@ const OrderForm: React.FC = () => {
       }
     }
     window.print();
+  };
+
+  const handleDownload = async () => {
+    const orderFormContent = document.getElementById('order-form-content');
+    if (orderFormContent && order?.orderFormNumber) {
+      const orderFormNumber = order.orderFormNumber;
+      const opt = {
+        margin: 0.5,
+        filename: `${orderFormNumber}.pdf`,
+        image: {
+          type: 'jpeg',
+          quality: 0.98
+        },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true
+        },
+        jsPDF: {
+          unit: 'in',
+          format: 'a4',
+          orientation: 'portrait'
+        }
+      };
+      try {
+        await html2pdf().set(opt).from(orderFormContent).save();
+        toast.success(`Order form ${orderFormNumber} downloaded successfully!`);
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        toast.error('Failed to download order form. Please try again.');
+      }
+    } else if (!order?.orderFormNumber) {
+      toast.error('Order form number not found');
+    }
   };
 
   const getTotalQuantity = () => {
@@ -445,6 +480,10 @@ const OrderForm: React.FC = () => {
                 </>
               )}
             </Button>
+            <Button onClick={handleDownload} variant="outline">
+              <Download size={16} className="mr-2" />
+              Download PDF
+            </Button>
             <Button onClick={handlePrint} className="bg-primary">
               <Printer size={16} className="mr-2" />
               Print Form (4 Copies)
@@ -454,7 +493,7 @@ const OrderForm: React.FC = () => {
       </div>
 
       {/* Forms Container - one set of 4 copies per table */}
-      <div className="container py-8 space-y-8">
+      <div id="order-form-content" className="container py-8 space-y-8">
         {order.tables.map((table, tableIndex) => (
           <React.Fragment key={tableIndex}>
             <FormCopy copyNumber={2} colorName="magenta" copyLabel="ACCOUNT COPY" singleTable={table} tableIndex={tableIndex} />

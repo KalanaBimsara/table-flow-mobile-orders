@@ -2,17 +2,29 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Calendar, Eye, Printer, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Calendar, Eye, Printer, Download, ChevronLeft, ChevronRight, Trash2, Edit, Lock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import InvoiceBillTemplate from '@/components/invoicing/InvoiceBillTemplate';
 import { useToast } from '@/hooks/use-toast';
+
+interface BillRow {
+  quantity: number;
+  item: string;
+  orderNumber: string;
+  deliveryCity: string;
+  rate: number;
+  amount: number;
+  isExtraFee?: boolean;
+}
 
 interface Bill {
   id: string;
@@ -25,6 +37,7 @@ interface Bill {
   total_quantity: number;
   bill_date: string;
   created_at: string;
+  bill_rows?: BillRow[] | null;
 }
 
 const ITEMS_PER_PAGE = 15;
@@ -38,7 +51,20 @@ const BillHistory = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [showBillDialog, setShowBillDialog] = useState(false);
+  const [billToDelete, setBillToDelete] = useState<Bill | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [editingBill, setEditingBill] = useState<Bill | null>(null);
+  const [editedBillRows, setEditedBillRows] = useState<BillRow[]>([]);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+
+  // Password for editing bills (you can change this)
+  const EDIT_PASSWORD = 'kalana123@'; // TODO: Move to environment variable or secure storage
 
   useEffect(() => {
     fetchBills();
@@ -108,6 +134,136 @@ const BillHistory = () => {
   const clearDateFilter = () => {
     setDateFilter(undefined);
     setCurrentPage(1);
+  };
+
+  const handleDeleteClick = (bill: Bill) => {
+    setBillToDelete(bill);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!billToDelete) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('bills')
+        .delete()
+        .eq('id', billToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: `Bill ${billToDelete.bill_number} has been deleted successfully`,
+      });
+
+      // Refresh the bills list
+      await fetchBills();
+      setShowDeleteDialog(false);
+      setBillToDelete(null);
+    } catch (error) {
+      console.error('Error deleting bill:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete bill. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleEditClick = (bill: Bill) => {
+    setEditingBill(bill);
+    setShowPasswordDialog(true);
+    setPassword('');
+    setPasswordError('');
+  };
+
+  const handlePasswordSubmit = () => {
+    if (password === EDIT_PASSWORD) {
+      setPasswordError('');
+      setShowPasswordDialog(false);
+      // Load bill rows for editing
+      const billRows = editingBill?.bill_rows || [];
+      setEditedBillRows(JSON.parse(JSON.stringify(billRows))); // Deep copy
+      setShowEditDialog(true);
+    } else {
+      setPasswordError('Incorrect password. Please try again.');
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingBill) return;
+
+    setSaving(true);
+    try {
+      // Calculate new totals
+      let totalAmount = 0;
+      let totalQuantity = 0;
+
+      editedBillRows.forEach(row => {
+        totalAmount += row.amount;
+        if (!row.isExtraFee) {
+          totalQuantity += row.quantity;
+        }
+      });
+
+      const { error } = await supabase
+        .from('bills')
+        .update({
+          bill_rows: editedBillRows,
+          total_amount: totalAmount,
+          total_quantity: totalQuantity
+        })
+        .eq('id', editingBill.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: `Bill ${editingBill.bill_number} has been updated successfully`,
+      });
+
+      // Refresh the bills list
+      await fetchBills();
+      setShowEditDialog(false);
+      setEditingBill(null);
+      setEditedBillRows([]);
+    } catch (error) {
+      console.error('Error updating bill:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update bill. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRowChange = (index: number, field: keyof BillRow, value: string | number) => {
+    const updatedRows = [...editedBillRows];
+    const row = { ...updatedRows[index] };
+    
+    if (field === 'item') {
+      row.item = value as string;
+    } else if (field === 'rate') {
+      row.rate = Number(value);
+      row.amount = row.rate * row.quantity;
+    } else if (field === 'quantity') {
+      row.quantity = Number(value);
+      row.amount = row.rate * row.quantity;
+    } else if (field === 'amount') {
+      row.amount = Number(value);
+      if (row.quantity > 0) {
+        row.rate = row.amount / row.quantity;
+      }
+    }
+
+    updatedRows[index] = row;
+    setEditedBillRows(updatedRows);
   };
 
   return (
@@ -215,7 +371,7 @@ const BillHistory = () => {
                         </TableCell>
                         <TableCell>{bill.driver_name || '-'}</TableCell>
                         <TableCell>
-                          <div className="flex justify-center">
+                          <div className="flex justify-center gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -224,6 +380,24 @@ const BillHistory = () => {
                             >
                               <Eye className="h-4 w-4" />
                               View
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditClick(bill)}
+                              className="gap-1"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick(bill)}
+                              className="gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
                             </Button>
                           </div>
                         </TableCell>
@@ -290,16 +464,201 @@ const BillHistory = () => {
                   driverName={selectedBill.driver_name || ''}
                   vehicleNumber={selectedBill.vehicle_number || ''}
                   invoiceDate={format(parseISO(selectedBill.bill_date), 'dd/MM/yyyy')}
-                  rows={[]}
+                  rows={selectedBill.bill_rows || []}
                   totalAmount={selectedBill.total_amount}
                   totalQuantity={selectedBill.total_quantity}
                 />
                 <p className="text-center text-muted-foreground mt-4 print:hidden text-sm">
-                  Note: This is a summary view. Original order details may not be available.
+                  {selectedBill.bill_rows && selectedBill.bill_rows.length > 0 
+                    ? 'Bill details loaded from database.'
+                    : 'Note: This is a summary view. Original order details may not be available.'}
                 </p>
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete bill <strong>{billToDelete?.bill_number}</strong>.
+              This action cannot be undone. All associated data will be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deleting...' : 'Delete Bill'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Password Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Enter Password to Edit Bill
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError('');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handlePasswordSubmit();
+                  }
+                }}
+                placeholder="Enter password"
+                className={passwordError ? 'border-destructive' : ''}
+              />
+              {passwordError && (
+                <p className="text-sm text-destructive mt-1">{passwordError}</p>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowPasswordDialog(false);
+                  setPassword('');
+                  setPasswordError('');
+                  setEditingBill(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handlePasswordSubmit}>
+                Submit
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Bill Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Bill #{editingBill?.bill_number}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              You can edit the size (item) and prices (rate) for each row. Changes will automatically update the amount and totals.
+            </div>
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-20">Qty</TableHead>
+                    <TableHead>Item/Size</TableHead>
+                    <TableHead className="w-24">Order No</TableHead>
+                    <TableHead className="w-32">Delivery City</TableHead>
+                    <TableHead className="w-32 text-right">Rate</TableHead>
+                    <TableHead className="w-32 text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {editedBillRows.map((row, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        {row.isExtraFee ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : (
+                          <Input
+                            type="number"
+                            min="1"
+                            value={row.quantity}
+                            onChange={(e) => handleRowChange(index, 'quantity', e.target.value)}
+                            className="w-16"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {row.isExtraFee ? (
+                          <span className="text-muted-foreground pl-4">{row.item}</span>
+                        ) : (
+                          <Input
+                            value={row.item}
+                            onChange={(e) => handleRowChange(index, 'item', e.target.value)}
+                            placeholder="Table size"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {row.isExtraFee ? '-' : row.orderNumber}
+                      </TableCell>
+                      <TableCell>
+                        {row.isExtraFee ? '-' : row.deliveryCity}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={row.rate}
+                          onChange={(e) => handleRowChange(index, 'rate', e.target.value)}
+                          className="text-right"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={row.amount}
+                          onChange={(e) => handleRowChange(index, 'amount', e.target.value)}
+                          className="text-right font-medium"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex justify-between items-center pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Total Quantity: {editedBillRows.filter(r => !r.isExtraFee).reduce((sum, r) => sum + r.quantity, 0)}
+              </div>
+              <div className="text-lg font-bold">
+                Total Amount: LKR {editedBillRows.reduce((sum, r) => sum + r.amount, 0).toLocaleString()}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEditDialog(false);
+                  setEditingBill(null);
+                  setEditedBillRows([]);
+                }}
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={saving}>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
