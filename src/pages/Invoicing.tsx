@@ -252,56 +252,33 @@ const Invoicing: React.FC = () => {
       const billToLabel = BILL_TO_OPTIONS.find(o => o.value === selectedBillTo)?.label || selectedBillTo;
       const driverName = drivers.find(d => d.id === selectedDriver)?.name || '';
       const vehicleLabel = TRANSPORT_MODES.find(m => m.value === selectedVehicle)?.label || '';
-      const allBillRows = generateBillRows();
 
-      // Prepare the insert data
-      const insertData: any = {
+      const { error } = await supabase.from('bills').insert({
         bill_number: billNumber.trim(),
         bill_to: billToLabel,
-        driver_name: driverName || null,
-        vehicle_number: vehicleLabel || null,
+        driver_name: driverName,
+        vehicle_number: vehicleLabel,
         order_numbers: orders.map(o => o.order_form_number || '').filter(Boolean),
         total_amount: totals.totalAmount,
         total_quantity: totals.totalQuantity,
         bill_date: new Date().toISOString().split('T')[0],
-        created_by: user.id,
-        bill_rows: allBillRows
-      };
-
-      const { error, data } = await supabase.from('bills').insert(insertData).select();
+        created_by: user.id
+      });
 
       if (error) {
-        // If error is about bill_rows column not existing, try without it
-        if (error.message?.includes('bill_rows') || error.code === '42703' || error.message?.includes('column "bill_rows"')) {
-          console.warn('bill_rows column not found, saving without bill rows data. Please run the migration.');
-          delete insertData.bill_rows;
-          const { error: retryError } = await supabase.from('bills').insert(insertData);
-          if (retryError) {
-            if (retryError.code === '23505') {
-              toast.error('Bill number already exists. Please use a different number.');
-              return false;
-            } else {
-              throw retryError;
-            }
-          } else {
-            // Successfully saved without bill_rows
-            toast.success('Bill saved successfully! (Note: bill_rows column not found - please run migration)');
-            return true;
-          }
-        } else if (error.code === '23505') {
+        if (error.code === '23505') {
           toast.error('Bill number already exists. Please use a different number.');
-          return false;
         } else {
           throw error;
         }
+        return false;
       }
 
       toast.success('Bill saved successfully!');
       return true;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving bill:', error);
-      const errorMessage = error?.message || error?.details || 'Failed to save bill';
-      toast.error(`Failed to save bill: ${errorMessage}`);
+      toast.error('Failed to save bill');
       return false;
     } finally {
       setSaving(false);

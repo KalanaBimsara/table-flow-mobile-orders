@@ -222,7 +222,7 @@
   width: 100%;
 }
 
-/* Print styles for invoicing and order forms */
+/* Print styles for invoicing */
 @media print {
   .no-print {
     display: none !important;
@@ -239,47 +239,5 @@
   body {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
-    background: transparent !important;
-  }
-  
-  /* Order form print styles - transparent backgrounds */
-  .order-form-print,
-  .order-form-print * {
-    background: transparent !important;
-    background-color: transparent !important;
-  }
-  
-  /* Ensure cards and containers are transparent */
-  .order-form-print .card,
-  .order-form-print [class*="card"],
-  .order-form-print [class*="Card"] {
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
-  
-  /* Keep text colors visible */
-  .order-form-print h1,
-  .order-form-print h2,
-  .order-form-print h3,
-  .order-form-print h4,
-  .order-form-print p,
-  .order-form-print span,
-  .order-form-print label,
-  .order-form-print td,
-  .order-form-print th {
-    color: #1a1a1a !important;
-  }
-  
-  /* Table borders for clarity */
-  .order-form-print table {
-    border-collapse: collapse;
-  }
-  
-  .order-form-print th,
-  .order-form-print td {
-    border: 1px solid #333 !important;
-    background: transparent !important;
   }
 }
