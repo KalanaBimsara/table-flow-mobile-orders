@@ -343,7 +343,7 @@ const createEmptyTable = (): TableItem => ({
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full order-form-print">
       <CardHeader>
         <CardTitle>New Table Order</CardTitle>
         <CardDescription>Create a new delivery order for a customer</CardDescription>
