@@ -283,7 +283,7 @@ const Invoicing: React.FC = () => {
         total_quantity: totals.totalQuantity,
         bill_date: new Date().toISOString().split('T')[0],
         created_by: user.id
-      }] as any).select('bill_number').single();
+      }] as any).select('id, bill_number').single();
 
       if (error) {
         throw error;
@@ -291,6 +291,27 @@ const Invoicing: React.FC = () => {
 
       if (data) {
         setGeneratedBillNumber(data.bill_number);
+
+        // Save bill items
+        const billItems = editedRows.map(row => ({
+          bill_id: data.id,
+          quantity: row.quantity,
+          item: row.item,
+          order_number: row.orderNumber,
+          delivery_city: row.deliveryCity,
+          rate: row.rate,
+          amount: row.amount,
+          is_extra_fee: row.isExtraFee || false
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('bill_items')
+          .insert(billItems as any);
+
+        if (itemsError) {
+          console.error('Error saving bill items:', itemsError);
+          // Don't fail completely, bill is already saved
+        }
       }
 
       toast.success('Bill saved successfully!');

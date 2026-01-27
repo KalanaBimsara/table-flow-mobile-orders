@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      bill_items: {
+        Row: {
+          amount: number
+          bill_id: string
+          created_at: string
+          delivery_city: string
+          id: string
+          is_extra_fee: boolean
+          item: string
+          order_number: string
+          quantity: number
+          rate: number
+        }
+        Insert: {
+          amount?: number
+          bill_id: string
+          created_at?: string
+          delivery_city?: string
+          id?: string
+          is_extra_fee?: boolean
+          item: string
+          order_number: string
+          quantity: number
+          rate?: number
+        }
+        Update: {
+          amount?: number
+          bill_id?: string
+          created_at?: string
+          delivery_city?: string
+          id?: string
+          is_extra_fee?: boolean
+          item?: string
+          order_number?: string
+          quantity?: number
+          rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_items_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bills: {
         Row: {
           bill_date: string
