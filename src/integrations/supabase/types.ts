@@ -17,7 +17,7 @@ export type Database = {
       bills: {
         Row: {
           bill_date: string
-          bill_number: string
+          bill_number: number
           bill_to: string
           created_at: string
           created_by: string | null
@@ -30,7 +30,7 @@ export type Database = {
         }
         Insert: {
           bill_date?: string
-          bill_number: string
+          bill_number: number
           bill_to: string
           created_at?: string
           created_by?: string | null
@@ -43,7 +43,7 @@ export type Database = {
         }
         Update: {
           bill_date?: string
-          bill_number?: string
+          bill_number?: number
           bill_to?: string
           created_at?: string
           created_by?: string | null

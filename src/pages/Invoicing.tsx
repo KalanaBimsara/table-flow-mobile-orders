@@ -37,6 +37,7 @@ const BILL_TO_OPTIONS = [
 const MAX_ROWS_PER_BILL = 10;
 
 interface BillRow {
+  id: string;
   quantity: number;
   item: string;
   orderNumber: string;
@@ -52,11 +53,12 @@ const Invoicing: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [invoiceDate] = useState(format(new Date(), 'dd/MM/yyyy'));
-  const [billNumber, setBillNumber] = useState('');
   const [selectedDriver, setSelectedDriver] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [selectedBillTo, setSelectedBillTo] = useState('');
   const [drivers, setDrivers] = useState<{ id: string; name: string }[]>([]);
+  const [editedRows, setEditedRows] = useState<BillRow[]>([]);
+  const [generatedBillNumber, setGeneratedBillNumber] = useState<number | null>(null);
 
   // Fetch delivery drivers on mount
   useEffect(() => {
@@ -160,6 +162,7 @@ const Invoicing: React.FC = () => {
   // Generate all bill rows from orders - using FACTORY PRICES
   const generateBillRows = (): BillRow[] => {
     const rows: BillRow[] = [];
+    let rowIndex = 0;
 
     orders.forEach(order => {
       order.tables.forEach(table => {
@@ -171,6 +174,7 @@ const Invoicing: React.FC = () => {
 
         // Main item row with factory price
         rows.push({
+          id: `${order.id}-${table.id}-main-${rowIndex}`,
           quantity: table.quantity,
           item: table.size,
           orderNumber: order.order_form_number || '',
@@ -178,10 +182,12 @@ const Invoicing: React.FC = () => {
           rate: factoryPrice,
           amount: itemAmount
         });
+        rowIndex++;
 
         // Extra fee rows
-        feeDetails.forEach(detail => {
+        feeDetails.forEach((detail, feeIndex) => {
           rows.push({
+            id: `${order.id}-${table.id}-fee-${feeIndex}-${rowIndex}`,
             quantity: table.quantity,
             item: detail,
             orderNumber: order.order_form_number || '',
@@ -190,6 +196,7 @@ const Invoicing: React.FC = () => {
             amount: 1000 * table.quantity,
             isExtraFee: true
           });
+          rowIndex++;
         });
       });
     });
@@ -197,25 +204,43 @@ const Invoicing: React.FC = () => {
     return rows;
   };
 
+  // Sync editedRows when orders change
+  useEffect(() => {
+    const generatedRows = generateBillRows();
+    setEditedRows(generatedRows);
+  }, [orders]);
+
+  // Update a row's item or rate
+  const updateRow = (rowId: string, field: 'item' | 'rate', value: string | number) => {
+    setEditedRows(prev => prev.map(row => {
+      if (row.id === rowId) {
+        const updatedRow = { ...row, [field]: value };
+        if (field === 'rate') {
+          updatedRow.amount = updatedRow.quantity * (typeof value === 'number' ? value : parseFloat(value) || 0);
+        }
+        return updatedRow;
+      }
+      return row;
+    }));
+  };
+
   // Split rows into pages of max 10 rows each
   const generateBillPages = () => {
-    const allRows = generateBillRows();
     const pages: BillRow[][] = [];
 
-    for (let i = 0; i < allRows.length; i += MAX_ROWS_PER_BILL) {
-      pages.push(allRows.slice(i, i + MAX_ROWS_PER_BILL));
+    for (let i = 0; i < editedRows.length; i += MAX_ROWS_PER_BILL) {
+      pages.push(editedRows.slice(i, i + MAX_ROWS_PER_BILL));
     }
 
     return pages.length > 0 ? pages : [[]];
   };
 
-  // Calculate totals using factory prices
+  // Calculate totals using edited rows
   const calculateTotals = () => {
-    const rows = generateBillRows();
     let totalAmount = 0;
     let totalQuantity = 0;
 
-    rows.forEach(row => {
+    editedRows.forEach(row => {
       totalAmount += row.amount;
       if (!row.isExtraFee) {
         totalQuantity += row.quantity;
@@ -225,12 +250,8 @@ const Invoicing: React.FC = () => {
     return { totalAmount, totalQuantity };
   };
 
-  // Save bill to database
+  // Save bill to database - bill_number is auto-generated
   const saveBillToDatabase = async () => {
-    if (!billNumber.trim()) {
-      toast.error('Please enter a bill number');
-      return false;
-    }
     if (!selectedBillTo) {
       toast.error('Please select "Bill To" option');
       return false;
@@ -253,8 +274,7 @@ const Invoicing: React.FC = () => {
       const driverName = drivers.find(d => d.id === selectedDriver)?.name || '';
       const vehicleLabel = TRANSPORT_MODES.find(m => m.value === selectedVehicle)?.label || '';
 
-      const { error } = await supabase.from('bills').insert({
-        bill_number: billNumber.trim(),
+      const { data, error } = await supabase.from('bills').insert([{
         bill_to: billToLabel,
         driver_name: driverName,
         vehicle_number: vehicleLabel,
@@ -263,15 +283,14 @@ const Invoicing: React.FC = () => {
         total_quantity: totals.totalQuantity,
         bill_date: new Date().toISOString().split('T')[0],
         created_by: user.id
-      });
+      }] as any).select('bill_number').single();
 
       if (error) {
-        if (error.code === '23505') {
-          toast.error('Bill number already exists. Please use a different number.');
-        } else {
-          throw error;
-        }
-        return false;
+        throw error;
+      }
+
+      if (data) {
+        setGeneratedBillNumber(data.bill_number);
       }
 
       toast.success('Bill saved successfully!');
@@ -286,10 +305,6 @@ const Invoicing: React.FC = () => {
   };
 
   const handlePrint = async () => {
-    if (!billNumber.trim()) {
-      toast.error('Please enter a bill number');
-      return;
-    }
     if (!selectedBillTo) {
       toast.error('Please select "Bill To" option');
       return;
@@ -303,10 +318,6 @@ const Invoicing: React.FC = () => {
   };
 
   const handleDownload = async () => {
-    if (!billNumber.trim()) {
-      toast.error('Please enter a bill number');
-      return;
-    }
     if (!selectedBillTo) {
       toast.error('Please select "Bill To" option');
       return;
@@ -318,9 +329,10 @@ const Invoicing: React.FC = () => {
 
     const invoiceContent = document.getElementById('invoice-content');
     if (invoiceContent) {
+      const billNum = generatedBillNumber || 'draft';
       const opt = {
         margin: 0.3,
-        filename: `Bill-${billNumber}.pdf`,
+        filename: `Bill-${billNum}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
@@ -341,6 +353,7 @@ const Invoicing: React.FC = () => {
   const driverName = drivers.find(d => d.id === selectedDriver)?.name;
   const vehicleLabel = TRANSPORT_MODES.find(m => m.value === selectedVehicle)?.label;
   const billToLabel = BILL_TO_OPTIONS.find(o => o.value === selectedBillTo)?.label || '';
+  const displayBillNumber = generatedBillNumber ? String(generatedBillNumber) : '(Auto-generated)';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -352,7 +365,7 @@ const Invoicing: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Bill To and Bill Number */}
+          {/* Bill To */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Bill To *</Label>
@@ -370,13 +383,10 @@ const Invoicing: React.FC = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="billNumber">Bill Number *</Label>
-              <Input
-                id="billNumber"
-                value={billNumber}
-                onChange={(e) => setBillNumber(e.target.value)}
-                placeholder="Enter bill number"
-              />
+              <Label>Bill Number</Label>
+              <div className="h-10 px-3 py-2 border rounded-md bg-muted text-muted-foreground flex items-center">
+                {displayBillNumber}
+              </div>
             </div>
           </div>
 
@@ -456,6 +466,50 @@ const Invoicing: React.FC = () => {
             </div>
           )}
 
+          {/* Editable Bill Items */}
+          {editedRows.length > 0 && (
+            <div>
+              <Label className="mb-2 block">Edit Bill Items</Label>
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="p-2 text-left">Qty</th>
+                      <th className="p-2 text-left">Item</th>
+                      <th className="p-2 text-left">Order</th>
+                      <th className="p-2 text-right">Rate</th>
+                      <th className="p-2 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editedRows.map(row => (
+                      <tr key={row.id} className="border-t">
+                        <td className="p-2">{row.isExtraFee ? '' : row.quantity}</td>
+                        <td className="p-2">
+                          <Input
+                            value={row.item}
+                            onChange={(e) => updateRow(row.id, 'item', e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </td>
+                        <td className="p-2 text-muted-foreground">{row.isExtraFee ? '' : row.orderNumber}</td>
+                        <td className="p-2">
+                          <Input
+                            type="number"
+                            value={row.rate}
+                            onChange={(e) => updateRow(row.id, 'rate', parseFloat(e.target.value) || 0)}
+                            className="h-8 text-sm text-right w-24 ml-auto"
+                          />
+                        </td>
+                        <td className="p-2 text-right font-medium">{row.amount.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           {orders.length > 0 && (
             <div className="flex gap-4">
@@ -473,12 +527,12 @@ const Invoicing: React.FC = () => {
       </Card>
 
       {/* Bill Preview */}
-      {orders.length > 0 && billNumber && selectedBillTo && (
+      {orders.length > 0 && selectedBillTo && (
         <div id="invoice-content" className="max-w-4xl mx-auto">
           {billPages.map((pageRows, pageIndex) => (
             <InvoiceBillTemplate
               key={pageIndex}
-              billNumber={billNumber}
+              billNumber={displayBillNumber}
               orderNumbers={orderNumbers}
               rows={pageRows}
               pageNumber={pageIndex + 1}
