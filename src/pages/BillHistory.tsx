@@ -14,6 +14,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import InvoiceBillTemplate from '@/components/invoicing/InvoiceBillTemplate';
 import { useToast } from '@/hooks/use-toast';
 
+interface BillItem {
+  id: string;
+  quantity: number;
+  item: string;
+  order_number: string;
+  delivery_city: string;
+  rate: number;
+  amount: number;
+  is_extra_fee: boolean;
+}
+
 interface Bill {
   id: string;
   bill_number: number;
@@ -37,6 +48,8 @@ const BillHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [selectedBillItems, setSelectedBillItems] = useState<BillItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
   const [showBillDialog, setShowBillDialog] = useState(false);
   const { toast } = useToast();
 
@@ -96,9 +109,31 @@ const BillHistory = () => {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const handleViewBill = (bill: Bill) => {
+  const handleViewBill = async (bill: Bill) => {
     setSelectedBill(bill);
     setShowBillDialog(true);
+    setLoadingItems(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('bill_items')
+        .select('*')
+        .eq('bill_id', bill.id)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setSelectedBillItems(data || []);
+    } catch (error) {
+      console.error('Error fetching bill items:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch bill items',
+        variant: 'destructive',
+      });
+      setSelectedBillItems([]);
+    } finally {
+      setLoadingItems(false);
+    }
   };
 
   const handlePrint = () => {
@@ -283,20 +318,29 @@ const BillHistory = () => {
               </div>
               
               <div className="bill-preview-content">
-                <InvoiceBillTemplate
-                  billNumber={String(selectedBill.bill_number)}
-                  orderNumbers={selectedBill.order_numbers}
-                  billTo={selectedBill.bill_to}
-                  driverName={selectedBill.driver_name || ''}
-                  vehicleNumber={selectedBill.vehicle_number || ''}
-                  invoiceDate={format(parseISO(selectedBill.bill_date), 'dd/MM/yyyy')}
-                  rows={[]}
-                  totalAmount={selectedBill.total_amount}
-                  totalQuantity={selectedBill.total_quantity}
-                />
-                <p className="text-center text-muted-foreground mt-4 print:hidden text-sm">
-                  Note: This is a summary view. Original order details may not be available.
-                </p>
+                {loadingItems ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading bill details...</div>
+                ) : (
+                  <InvoiceBillTemplate
+                    billNumber={String(selectedBill.bill_number)}
+                    orderNumbers={selectedBill.order_numbers}
+                    billTo={selectedBill.bill_to}
+                    driverName={selectedBill.driver_name || ''}
+                    vehicleNumber={selectedBill.vehicle_number || ''}
+                    invoiceDate={format(parseISO(selectedBill.bill_date), 'dd/MM/yyyy')}
+                    rows={selectedBillItems.map(item => ({
+                      quantity: item.quantity,
+                      item: item.item,
+                      orderNumber: item.order_number,
+                      deliveryCity: item.delivery_city,
+                      rate: item.rate,
+                      amount: item.amount,
+                      isExtraFee: item.is_extra_fee
+                    }))}
+                    totalAmount={selectedBill.total_amount}
+                    totalQuantity={selectedBill.total_quantity}
+                  />
+                )}
               </div>
             </>
           )}
