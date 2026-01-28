@@ -110,18 +110,26 @@ const BillHistory = () => {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const handleViewBill = async (bill: Bill) => {
+    // Reset state before fetching
+    setSelectedBillItems([]);
+    setLoadingItems(true);
     setSelectedBill(bill);
     setShowBillDialog(true);
-    setLoadingItems(true);
 
     try {
+      console.log('Fetching bill items for bill_id:', bill.id);
       const { data, error } = await supabase
         .from('bill_items')
         .select('*')
         .eq('bill_id', bill.id)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Fetched bill items:', data);
       setSelectedBillItems(data || []);
     } catch (error) {
       console.error('Error fetching bill items:', error);
@@ -320,6 +328,11 @@ const BillHistory = () => {
               <div className="bill-preview-content">
                 {loadingItems ? (
                   <div className="text-center py-8 text-muted-foreground">Loading bill details...</div>
+                ) : selectedBillItems.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-2">No detailed items available for this bill.</p>
+                    <p className="text-sm text-muted-foreground">This bill was created before item-level tracking was enabled.</p>
+                  </div>
                 ) : (
                   <InvoiceBillTemplate
                     billNumber={String(selectedBill.bill_number)}
