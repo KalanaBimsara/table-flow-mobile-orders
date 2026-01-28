@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import InvoiceBillTemplate from '@/components/invoicing/InvoiceBillTemplate';
 import { useToast } from '@/hooks/use-toast';
+import html2pdf from 'html2pdf.js';
 
 interface BillItem {
   id: string;
@@ -146,6 +147,52 @@ const BillHistory = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!selectedBill) return;
+
+    const billElement = document.getElementById('bill-preview-content');
+    if (!billElement) {
+      toast({
+        title: 'Error',
+        description: 'Could not find bill content to download',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // A5 landscape dimensions: 210mm x 148mm (half A4)
+      const opt = {
+        margin: [5, 5, 5, 5], // 5mm margins
+        filename: `Bill-${selectedBill.bill_number}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          logging: false
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: [210, 148], // A5 landscape (width x height)
+          orientation: 'landscape' 
+        }
+      };
+
+      await html2pdf().set(opt).from(billElement).save();
+      toast({
+        title: 'Success',
+        description: 'Bill downloaded as PDF',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to download PDF',
+        variant: 'destructive',
+      });
+    }
   };
 
   const clearDateFilter = () => {
@@ -323,9 +370,13 @@ const BillHistory = () => {
                   <Printer className="h-4 w-4" />
                   Print
                 </Button>
+                <Button onClick={handleDownloadPdf} variant="outline" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Download PDF
+                </Button>
               </div>
               
-              <div className="bill-preview-content">
+              <div id="bill-preview-content" className="bill-preview-content">
                 {loadingItems ? (
                   <div className="text-center py-8 text-muted-foreground">Loading bill details...</div>
                 ) : selectedBillItems.length === 0 ? (
