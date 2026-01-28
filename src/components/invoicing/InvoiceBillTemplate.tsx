@@ -84,7 +84,7 @@ const InvoiceBillTemplate: React.FC<InvoiceBillTemplateProps> = ({
   const emptyRowsCount = Math.max(0, MAX_ROWS - rows.length);
 
   return (
-    <div className="bg-white print:shadow-none mb-8 page-break-after-always">
+    <div className="bill-template bg-white print:shadow-none mb-8 page-break-after-always">
       {/* Header - Transparent background with dark green text for ink saving */}
       <div className="bg-transparent border-b-2 border-[#2d5a27] text-[#2d5a27] p-4 flex justify-between items-start">
         <div className="flex items-center gap-3">
