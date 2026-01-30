@@ -233,6 +233,16 @@
     display: none !important;
   }
   
+  /* Hide toast notifications during print */
+  [data-sonner-toaster],
+  .sonner-toast,
+  [role="status"][aria-live="polite"],
+  .Toastify,
+  .toast,
+  .notification {
+    display: none !important;
+  }
+  
   .page-break-after-always {
     page-break-after: always;
   }

@@ -58,8 +58,9 @@ const Invoicing: React.FC = () => {
   const [drivers, setDrivers] = useState<{ id: string; name: string }[]>([]);
   const [editedRows, setEditedRows] = useState<BillRow[]>([]);
   const [generatedBillNumber, setGeneratedBillNumber] = useState<number | null>(null);
+  const [nextBillNumber, setNextBillNumber] = useState<number | null>(null);
 
-  // Fetch delivery drivers on mount
+  // Fetch delivery drivers and next bill number on mount
   useEffect(() => {
     const fetchDrivers = async () => {
       const { data, error } = await supabase
@@ -71,7 +72,23 @@ const Invoicing: React.FC = () => {
         setDrivers(data.filter(d => d.name));
       }
     };
+
+    const fetchNextBillNumber = async () => {
+      const { data, error } = await supabase
+        .from('bills')
+        .select('bill_number')
+        .order('bill_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (!error) {
+        const lastBillNumber = data?.bill_number || 0;
+        setNextBillNumber(lastBillNumber + 1);
+      }
+    };
+
     fetchDrivers();
+    fetchNextBillNumber();
   }, []);
 
   const addOrder = async () => {
@@ -80,10 +97,23 @@ const Invoicing: React.FC = () => {
       return;
     }
 
-    // Check if already added
+    // Check if already added to current bill
     if (orders.some(o => o.order_form_number === orderNumber.trim())) {
-      toast.error('Order already added');
+      toast.error('Order already added to this bill');
       return;
+    }
+
+    // Check if this order number has been billed before
+    const { data: existingBills, error: billCheckError } = await supabase
+      .from('bills')
+      .select('bill_number, order_numbers')
+      .contains('order_numbers', [orderNumber.trim()]);
+
+    if (!billCheckError && existingBills && existingBills.length > 0) {
+      const billNumbers = existingBills.map(b => b.bill_number).join(', ');
+      toast.warning(`Order #${orderNumber.trim()} has already been billed in Bill #${billNumbers}. Are you sure you want to add it again?`, {
+        duration: 5000
+      });
     }
 
     setLoading(true);
@@ -373,7 +403,7 @@ const Invoicing: React.FC = () => {
   const driverName = drivers.find(d => d.id === selectedDriver)?.name;
   const vehicleLabel = TRANSPORT_MODES.find(m => m.value === selectedVehicle)?.label;
   const billToLabel = BILL_TO_OPTIONS.find(o => o.value === selectedBillTo)?.label || '';
-  const displayBillNumber = generatedBillNumber ? String(generatedBillNumber) : '(Auto-generated)';
+  const displayBillNumber = generatedBillNumber ? String(generatedBillNumber) : (nextBillNumber ? String(nextBillNumber) : '(Loading...)');
 
   return (
     <div className="container mx-auto px-4 py-8">
