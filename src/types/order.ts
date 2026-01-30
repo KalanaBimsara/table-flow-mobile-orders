@@ -152,15 +152,7 @@ export const factoryPriceMap: Record<string, number> = {
   'L-E': 20500,
   'L-F': 21000,
   'L-G': 21500,
-  'L-H': 23500,
-  'l-A': 18500,
-  'l-B': 19000,
-  'l-C': 19500,
-  'l-D': 21500,
-  'l-E': 20500,
-  'l-F': 21000,
-  'l-G': 21500,
-  'l-H': 23500
+  'L-H': 23500
 };
 
 // Standard sizes sorted by area (width * depth) for custom size matching

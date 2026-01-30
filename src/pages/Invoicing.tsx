@@ -14,10 +14,9 @@ import html2pdf from 'html2pdf.js';
 import InvoiceBillTemplate, { calculateExtraFees } from '@/components/invoicing/InvoiceBillTemplate';
 
 const TRANSPORT_MODES = [
-  { value: 'vehicle_1', label: 'Vehicle Number 1' },
-  { value: 'vehicle_2', label: 'Vehicle Number 2' },
-  { value: 'vehicle_3', label: 'Vehicle Number 3' },
-  { value: 'vehicle_4', label: 'Vehicle Number 4' },
+  { value: 'PQ - 0825', label: 'PQ - 0825' },
+  { value: 'LI - 8895', label: 'LI - 8895' },
+  { value: 'DAC - 4912', label: 'DAC - 4912' },
   { value: 'pick_me', label: 'Pick Me' },
   { value: 'factory_pickup', label: 'Factory Pick Up' },
 ];
