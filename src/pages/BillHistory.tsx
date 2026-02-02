@@ -167,24 +167,23 @@ const BillHistory = () => {
       a4.style.position = 'relative';
       a4.style.background = 'white';
 
-      // TOP HALF (Half A4)
+      // TOP HALF (Half A4) - A5 landscape area
       const half = document.createElement('div');
       half.style.width = '210mm';
       half.style.height = '148.5mm';
       half.style.position = 'relative';
       half.style.overflow = 'hidden';
 
-      // A5 portrait wrapper (BEFORE rotation)
+      // A5 portrait wrapper - positioned at top-right, then rotated
       const a5 = document.createElement('div');
       a5.style.width = '148.5mm';
       a5.style.height = '210mm';
       a5.style.position = 'absolute';
       a5.style.top = '0';
       a5.style.left = '0';
-      a5.style.right = '0';
       a5.style.transform = 'rotate(90deg) translateY(-148.5mm)';
       a5.style.transformOrigin = 'top left';
-
+      
       const clone = bill.cloneNode(true) as HTMLElement;
       clone.style.width = '100%';
       clone.style.height = '100%';
@@ -193,7 +192,6 @@ const BillHistory = () => {
       a5.appendChild(clone);
       half.appendChild(a5);
       a4.appendChild(half);
-      container.appendChild(a4);
     }
 
     document.body.appendChild(container);
