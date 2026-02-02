@@ -163,27 +163,69 @@ const BillHistory = () => {
     }
 
     try {
-      // A5 landscape dimensions: 210mm x 148mm (half A4)
+      // Create a container with 2 copies of the bill for A4 page
+      const container = document.createElement('div');
+      container.style.width = '297mm'; // A4 width in landscape
+      container.style.padding = '0';
+      container.style.margin = '0';
+      container.style.backgroundColor = 'white';
+      
+      // Clone the bill element twice - each rotated 90° and sized for A5
+      for (let i = 0; i < 2; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.style.width = '148.5mm'; // Half of A4 width (297/2)
+        wrapper.style.height = '210mm'; // A4 height
+        wrapper.style.display = 'inline-block';
+        wrapper.style.verticalAlign = 'top';
+        wrapper.style.overflow = 'hidden';
+        wrapper.style.pageBreakInside = 'avoid';
+        
+        const innerWrapper = document.createElement('div');
+        innerWrapper.style.width = '210mm';
+        innerWrapper.style.height = '148.5mm';
+        innerWrapper.style.transform = 'rotate(90deg) translateY(-148.5mm)';
+        innerWrapper.style.transformOrigin = 'top left';
+        innerWrapper.style.padding = '5mm';
+        innerWrapper.style.boxSizing = 'border-box';
+        
+        const clone = billElement.cloneNode(true) as HTMLElement;
+        clone.style.width = '200mm';
+        clone.style.fontSize = '9pt';
+        
+        innerWrapper.appendChild(clone);
+        wrapper.appendChild(innerWrapper);
+        container.appendChild(wrapper);
+      }
+      
+      document.body.appendChild(container);
+      
+      // A4 landscape: 297mm x 210mm
       const opt = {
-        margin: [5, 5, 5, 5], // 5mm margins
+        margin: 0,
         filename: `Bill-${selectedBill.bill_number}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2, 
           useCORS: true,
-          logging: false
+          logging: false,
+          width: 1122, // 297mm at 96dpi
+          height: 794  // 210mm at 96dpi
         },
         jsPDF: { 
           unit: 'mm', 
-          format: [210, 148], // A5 landscape (width x height)
+          format: 'a4',
           orientation: 'landscape' 
         }
       };
 
-      await html2pdf().set(opt).from(billElement).save();
+      await html2pdf().set(opt).from(container).save();
+      
+      // Clean up
+      document.body.removeChild(container);
+      
       toast({
         title: 'Success',
-        description: 'Bill downloaded as PDF',
+        description: 'Bill downloaded as PDF with 2 copies',
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
