@@ -110,85 +110,124 @@ const BillHistory = () => {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const handleDownloadPdf = async () => {
-    if (!selectedBill) return;
-
-    const billElement = document.getElementById('bill-preview-content');
-    if (!billElement) {
-      toast({
-        title: 'Error',
-        description: 'Bill content not found',
-        variant: 'destructive',
-      });
-      return;
-    }
+  const handleViewBill = async (bill: Bill) => {
+    // Reset state before fetching
+    setSelectedBillItems([]);
+    setLoadingItems(true);
+    setSelectedBill(bill);
+    setShowBillDialog(true);
 
     try {
-      // Root container
-      const container = document.createElement('div');
-      container.style.background = 'white';
+      console.log('Fetching bill items for bill_id:', bill.id);
+      const { data, error } = await supabase
+        .from('bill_items')
+        .select('*')
+        .eq('bill_id', bill.id)
+        .order('created_at', { ascending: true });
 
-      // Create TWO A4 pages
-      for (let i = 0; i < 2; i++) {
-        // A4 page
-        const a4Page = document.createElement('div');
-        a4Page.style.width = '210mm';
-        a4Page.style.height = '297mm';
-        a4Page.style.pageBreakAfter = 'always';
-        a4Page.style.display = 'flex';
-        a4Page.style.justifyContent = 'center';
-        a4Page.style.alignItems = 'flex-start';
-        a4Page.style.paddingTop = '0mm';
-        a4Page.style.boxSizing = 'border-box';
-
-        // A5 bill container (TOP HALF)
-        const a5Container = document.createElement('div');
-        a5Container.style.width = '148mm';
-        a5Container.style.height = '210mm';
-        a5Container.style.boxSizing = 'border-box';
-
-        const clone = billElement.cloneNode(true) as HTMLElement;
-        clone.style.width = '100%';
-        clone.style.fontSize = '10pt';
-
-        a5Container.appendChild(clone);
-        a4Page.appendChild(a5Container);
-        container.appendChild(a4Page);
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
       }
-
-      document.body.appendChild(container);
-
-      await html2pdf().set({
-        margin: 0,
-        filename: `Bill-${selectedBill.bill_number}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-        },
-      }).from(container).save();
-
-      document.body.removeChild(container);
-
-      toast({
-        title: 'Success',
-        description: 'A5 bill generated correctly for printing',
-      });
-    } catch (err) {
-      console.error(err);
+      
+      console.log('Fetched bill items:', data);
+      setSelectedBillItems(data || []);
+    } catch (error) {
+      console.error('Error fetching bill items:', error);
       toast({
         title: 'Error',
-        description: 'PDF generation failed',
+        description: 'Failed to fetch bill items',
         variant: 'destructive',
       });
+      setSelectedBillItems([]);
+    } finally {
+      setLoadingItems(false);
     }
   };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+    const handleDownloadPdf = async () => {
+  if (!selectedBill) return;
+
+  const billElement = document.getElementById('bill-preview-content');
+  if (!billElement) {
+    toast({
+      title: 'Error',
+      description: 'Bill content not found',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  try {
+    // Root container
+    const container = document.createElement('div');
+    container.style.background = 'white';
+
+    // Create TWO A4 pages
+    for (let i = 0; i < 2; i++) {
+      // A4 page
+      const a4Page = document.createElement('div');
+      a4Page.style.width = '210mm';
+      a4Page.style.height = '297mm';
+      a4Page.style.pageBreakAfter = 'always';
+      a4Page.style.display = 'flex';
+      a4Page.style.justifyContent = 'center';
+      a4Page.style.alignItems = 'flex-start';
+      a4Page.style.paddingTop = '0mm';
+      a4Page.style.boxSizing = 'border-box';
+
+      // A5 bill container (TOP HALF)
+      const a5Container = document.createElement('div');
+      a5Container.style.width = '148mm';
+      a5Container.style.height = '210mm';
+      a5Container.style.boxSizing = 'border-box';
+
+      const clone = billElement.cloneNode(true) as HTMLElement;
+      clone.style.width = '100%';
+      clone.style.fontSize = '10pt';
+
+      a5Container.appendChild(clone);
+      a4Page.appendChild(a5Container);
+      container.appendChild(a4Page);
+    }
+
+    document.body.appendChild(container);
+
+    await html2pdf().set({
+      margin: 0,
+      filename: `Bill-${selectedBill.bill_number}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
+      },
+    }).from(container).save();
+
+    document.body.removeChild(container);
+
+    toast({
+      title: 'Success',
+      description: 'A5 bill generated correctly for printing',
+    });
+  } catch (err) {
+    console.error(err);
+    toast({
+      title: 'Error',
+      description: 'PDF generation failed',
+      variant: 'destructive',
+    });
+  }
+};
 
   const clearDateFilter = () => {
     setDateFilter(undefined);
