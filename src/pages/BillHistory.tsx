@@ -149,50 +149,50 @@ const BillHistory = () => {
     window.print();
   };
 
-    const handleDownloadPdf = async () => {
+  const handleDownloadPdf = async () => {
   if (!selectedBill) return;
 
   const billElement = document.getElementById('bill-preview-content');
-  if (!billElement) {
-    toast({
-      title: 'Error',
-      description: 'Bill content not found',
-      variant: 'destructive',
-    });
-    return;
-  }
+  if (!billElement) return;
 
   try {
-    // Root container
     const container = document.createElement('div');
     container.style.background = 'white';
 
-    // Create TWO A4 pages
+    // TWO A4 PAGES
     for (let i = 0; i < 2; i++) {
       // A4 page
-      const a4Page = document.createElement('div');
-      a4Page.style.width = '210mm';
-      a4Page.style.height = '297mm';
-      a4Page.style.pageBreakAfter = 'always';
-      a4Page.style.display = 'flex';
-      a4Page.style.justifyContent = 'center';
-      a4Page.style.alignItems = 'flex-start';
-      a4Page.style.paddingTop = '0mm';
-      a4Page.style.boxSizing = 'border-box';
+      const a4 = document.createElement('div');
+      a4.style.width = '210mm';
+      a4.style.height = '297mm';
+      a4.style.pageBreakAfter = 'always';
+      a4.style.position = 'relative';
+      a4.style.boxSizing = 'border-box';
+      a4.style.background = 'white';
 
-      // A5 bill container (TOP HALF)
-      const a5Container = document.createElement('div');
-      a5Container.style.width = '148mm';
-      a5Container.style.height = '210mm';
-      a5Container.style.boxSizing = 'border-box';
+      // Half A4 (TOP)
+      const half = document.createElement('div');
+      half.style.width = '210mm';
+      half.style.height = '148.5mm';
+      half.style.position = 'relative';
+      half.style.overflow = 'hidden';
+
+      // Rotated A5 container
+      const rotated = document.createElement('div');
+      rotated.style.width = '210mm';   // becomes height after rotate
+      rotated.style.height = '148mm';  // becomes width after rotate
+      rotated.style.transform = 'rotate(90deg) translateY(-148mm)';
+      rotated.style.transformOrigin = 'top left';
+      rotated.style.boxSizing = 'border-box';
 
       const clone = billElement.cloneNode(true) as HTMLElement;
       clone.style.width = '100%';
-      clone.style.fontSize = '10pt';
+      clone.style.fontSize = '9.5pt';
 
-      a5Container.appendChild(clone);
-      a4Page.appendChild(a5Container);
-      container.appendChild(a4Page);
+      rotated.appendChild(clone);
+      half.appendChild(rotated);
+      a4.appendChild(half);
+      container.appendChild(a4);
     }
 
     document.body.appendChild(container);
@@ -203,8 +203,8 @@ const BillHistory = () => {
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
-        useCORS: true,
         backgroundColor: '#ffffff',
+        useCORS: true,
       },
       jsPDF: {
         unit: 'mm',
@@ -214,20 +214,10 @@ const BillHistory = () => {
     }).from(container).save();
 
     document.body.removeChild(container);
-
-    toast({
-      title: 'Success',
-      description: 'A5 bill generated correctly for printing',
-    });
   } catch (err) {
     console.error(err);
-    toast({
-      title: 'Error',
-      description: 'PDF generation failed',
-      variant: 'destructive',
-    });
   }
-};
+  };
 
   const clearDateFilter = () => {
     setDateFilter(undefined);
