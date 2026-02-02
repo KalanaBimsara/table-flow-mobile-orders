@@ -156,66 +156,55 @@ const BillHistory = () => {
   if (!bill) return;
 
   try {
-    const container = document.createElement('div');
+    const canvas = await html2canvas(bill, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const A4_WIDTH = 210;
+    const A4_HEIGHT = 297;
+    const HALF_A4_HEIGHT = 148.5;
+
+    // Image original size (after rotation)
+    const imgWidth = 210;
+    const imgHeight = (canvas.width / canvas.height) * imgWidth;
 
     for (let i = 0; i < 2; i++) {
-      // A4 PAGE
-      const a4 = document.createElement('div');
-      a4.style.width = '210mm';
-      a4.style.height = '297mm';
-      a4.style.pageBreakAfter = 'always';
-      a4.style.position = 'relative';
-      a4.style.background = 'white';
+      if (i > 0) pdf.addPage();
 
-      // TOP HALF (Half A4) - A5 landscape area
-      const half = document.createElement('div');
-      half.style.width = '210mm';
-      half.style.height = '148.5mm';
-      half.style.position = 'relative';
-      half.style.overflow = 'hidden';
+      // Save graphics state
+      pdf.saveGraphicsState();
 
-      // A5 portrait wrapper - positioned at top-right, then rotated
-      const a5 = document.createElement('div');
-      a5.style.width = '148.5mm';
-      a5.style.height = '210mm';
-      a5.style.position = 'absolute';
-      a5.style.top = '0';
-      a5.style.left = '0';
-      a5.style.transform = 'rotate(90deg) translateY(148.5mm)';
-      a5.style.transformOrigin = 'top left';
-      
-      const clone = bill.cloneNode(true) as HTMLElement;
-      clone.style.width = '100%';
-      clone.style.height = '100%';
-      clone.style.fontSize = '9pt';
+      // Move origin to top-right of top-half
+      pdf.translate(A4_WIDTH, 0);
 
-      a5.appendChild(clone);
-      half.appendChild(a5);
-      a4.appendChild(half);
+      // Rotate 90° clockwise
+      pdf.rotate(90);
+
+      // Draw image
+      pdf.addImage(
+        imgData,
+        'JPEG',
+        0,
+        -imgHeight,
+        HALF_A4_HEIGHT,
+        imgHeight
+      );
+
+      // Restore state
+      pdf.restoreGraphicsState();
     }
 
-    document.body.appendChild(container);
-
-    await html2pdf()
-      .set({
-        margin: 0,
-        filename: `Bill-${selectedBill.bill_number}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-        },
-      })
-      .from(container)
-      .save();
-
-    document.body.removeChild(container);
+    pdf.save(`Bill-${selectedBill.bill_number}.pdf`);
   } catch (err) {
     console.error(err);
   }
