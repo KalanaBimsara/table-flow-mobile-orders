@@ -110,45 +110,6 @@ const BillHistory = () => {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const handleViewBill = async (bill: Bill) => {
-    // Reset state before fetching
-    setSelectedBillItems([]);
-    setLoadingItems(true);
-    setSelectedBill(bill);
-    setShowBillDialog(true);
-
-    try {
-      console.log('Fetching bill items for bill_id:', bill.id);
-      const { data, error } = await supabase
-        .from('bill_items')
-        .select('*')
-        .eq('bill_id', bill.id)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-      
-      console.log('Fetched bill items:', data);
-      setSelectedBillItems(data || []);
-    } catch (error) {
-      console.error('Error fetching bill items:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch bill items',
-        variant: 'destructive',
-      });
-      setSelectedBillItems([]);
-    } finally {
-      setLoadingItems(false);
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
   const handleDownloadPdf = async () => {
     if (!selectedBill) return;
 
@@ -156,82 +117,74 @@ const BillHistory = () => {
     if (!billElement) {
       toast({
         title: 'Error',
-        description: 'Could not find bill content to download',
+        description: 'Bill content not found',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      // Create a container with 2 copies of the bill for A4 page
+      // Root container
       const container = document.createElement('div');
-      container.style.width = '297mm'; // A4 width in landscape
-      container.style.padding = '0';
-      container.style.margin = '0';
-      container.style.backgroundColor = 'white';
-      
-      // Clone the bill element twice - each rotated 90° and sized for A5
+      container.style.background = 'white';
+
+      // Create TWO A4 pages
       for (let i = 0; i < 2; i++) {
-        const wrapper = document.createElement('div');
-        wrapper.style.width = '148.5mm'; // Half of A4 width (297/2)
-        wrapper.style.height = '210mm'; // A4 height
-        wrapper.style.display = 'inline-block';
-        wrapper.style.verticalAlign = 'top';
-        wrapper.style.overflow = 'hidden';
-        wrapper.style.pageBreakInside = 'avoid';
-        
-        const innerWrapper = document.createElement('div');
-        innerWrapper.style.width = '210mm';
-        innerWrapper.style.height = '148.5mm';
-        innerWrapper.style.transform = 'rotate(0deg) translateY(-148.5mm)';
-        innerWrapper.style.transformOrigin = 'top left';
-        innerWrapper.style.padding = '5mm';
-        innerWrapper.style.boxSizing = 'border-box';
-        
+        // A4 page
+        const a4Page = document.createElement('div');
+        a4Page.style.width = '210mm';
+        a4Page.style.height = '297mm';
+        a4Page.style.pageBreakAfter = 'always';
+        a4Page.style.display = 'flex';
+        a4Page.style.justifyContent = 'center';
+        a4Page.style.alignItems = 'flex-start';
+        a4Page.style.paddingTop = '0mm';
+        a4Page.style.boxSizing = 'border-box';
+
+        // A5 bill container (TOP HALF)
+        const a5Container = document.createElement('div');
+        a5Container.style.width = '148mm';
+        a5Container.style.height = '210mm';
+        a5Container.style.boxSizing = 'border-box';
+
         const clone = billElement.cloneNode(true) as HTMLElement;
-        clone.style.width = '200mm';
-        clone.style.fontSize = '9pt';
-        
-        innerWrapper.appendChild(clone);
-        wrapper.appendChild(innerWrapper);
-        container.appendChild(wrapper);
+        clone.style.width = '100%';
+        clone.style.fontSize = '10pt';
+
+        a5Container.appendChild(clone);
+        a4Page.appendChild(a5Container);
+        container.appendChild(a4Page);
       }
-      
+
       document.body.appendChild(container);
-      
-      // A4 landscape: 297mm x 210mm
-      const opt = {
+
+      await html2pdf().set({
         margin: 0,
         filename: `Bill-${selectedBill.bill_number}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
+        html2canvas: {
+          scale: 2,
           useCORS: true,
-          logging: false,
-          width: 1122, // 297mm at 96dpi
-          height: 794  // 210mm at 96dpi
+          backgroundColor: '#ffffff',
         },
-        jsPDF: { 
-          unit: 'mm', 
+        jsPDF: {
+          unit: 'mm',
           format: 'a4',
-          orientation: 'landscape' 
-        }
-      };
+          orientation: 'portrait',
+        },
+      }).from(container).save();
 
-      await html2pdf().set(opt).from(container).save();
-      
-      // Clean up
       document.body.removeChild(container);
-      
+
       toast({
         title: 'Success',
-        description: 'Bill downloaded as PDF with 2 copies',
+        description: 'A5 bill generated correctly for printing',
       });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
+    } catch (err) {
+      console.error(err);
       toast({
         title: 'Error',
-        description: 'Failed to download PDF',
+        description: 'PDF generation failed',
         variant: 'destructive',
       });
     }
