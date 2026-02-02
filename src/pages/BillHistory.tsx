@@ -183,7 +183,7 @@ const BillHistory = () => {
         const innerWrapper = document.createElement('div');
         innerWrapper.style.width = '210mm';
         innerWrapper.style.height = '148.5mm';
-        innerWrapper.style.transform = 'rotate(180deg) translateY(-148.5mm)';
+        innerWrapper.style.transform = 'rotate(0deg) translateY(-148.5mm)';
         innerWrapper.style.transformOrigin = 'top left';
         innerWrapper.style.padding = '5mm';
         innerWrapper.style.boxSizing = 'border-box';
