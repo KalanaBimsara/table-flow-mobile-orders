@@ -182,7 +182,7 @@ const BillHistory = () => {
       a5.style.top = '0';
       a5.style.left = '0';
       a5.style.right = '0';
-      a5.style.transform = 'rotate(90deg) translateY(-148mm)';
+      a5.style.transform = 'rotate(90deg) translateY(-148mm) translateX(147mm)';
       a5.style.transformOrigin = 'top left';
 
       const clone = bill.cloneNode(true) as HTMLElement;
