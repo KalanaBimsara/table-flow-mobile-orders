@@ -170,19 +170,19 @@ const BillHistory = () => {
       // TOP HALF (Half A4)
       const half = document.createElement('div');
       half.style.width = '210mm';
-      half.style.height = '148.5mm';
+      half.style.height = '148mm';
       half.style.position = 'relative';
       half.style.overflow = 'hidden';
 
       // A5 portrait wrapper (BEFORE rotation)
       const a5 = document.createElement('div');
-      a5.style.width = '148.5mm';
-      a5.style.height = '210mm';
+      a5.style.width = '147mm';
+      a5.style.height = '209mm';
       a5.style.position = 'absolute';
       a5.style.top = '0';
       a5.style.left = '0';
       a5.style.right = '0';
-      a5.style.transform = 'rotate(90deg) translateY(-148.5mm)';
+      a5.style.transform = 'rotate(90deg) translateY(-148mm)';
       a5.style.transformOrigin = 'top left';
 
       const clone = bill.cloneNode(true) as HTMLElement;
