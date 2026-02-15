@@ -381,15 +381,16 @@ const Invoicing: React.FC = () => {
     if (invoiceContent) {
       const billNum = generatedBillNumber || 'draft';
       const opt = {
-        margin: 0.3,
+        margin: 0.2,
         filename: `Bill-${billNum}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['css'], after: '.bill-sheet.landscape-a4' }
       };
       try {
         await html2pdf().set(opt).from(invoiceContent).save();
-        toast.success('Bill downloaded successfully!');
+        toast.success('Bill downloaded successfully! (Customer + Account copies)');
       } catch (error) {
         console.error('Error generating PDF:', error);
         toast.error('Failed to download bill');
@@ -576,24 +577,52 @@ const Invoicing: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Bill Preview */}
+      {/* Bill Preview & Print/PDF: One landscape A4 per bill page – left half = Customer Copy, right half = Account Copy */}
       {orders.length > 0 && selectedBillTo && (
-        <div id="invoice-content" className="max-w-4xl mx-auto">
+        <div id="invoice-content" className="bill-print-root max-w-4xl mx-auto">
           {billPages.map((pageRows, pageIndex) => (
-            <InvoiceBillTemplate
-              key={pageIndex}
-              billNumber={displayBillNumber}
-              orderNumbers={orderNumbers}
-              rows={pageRows}
-              pageNumber={pageIndex + 1}
-              totalPages={billPages.length}
-              billTo={billToLabel}
-              driverName={driverName}
-              vehicleNumber={vehicleLabel}
-              totalAmount={totals.totalAmount}
-              totalQuantity={totals.totalQuantity}
-              invoiceDate={invoiceDate}
-            />
+            <div key={pageIndex} className="bill-sheet landscape-a4">
+              {/* Left half: Customer Copy (1) */}
+              <div className="bill-half bill-half-left">
+                <div className="bill-half-inner">
+                  <InvoiceBillTemplate
+                    billNumber={displayBillNumber}
+                    orderNumbers={orderNumbers}
+                    rows={pageRows}
+                    pageNumber={pageIndex + 1}
+                    totalPages={billPages.length}
+                    billTo={billToLabel}
+                    driverName={driverName}
+                    vehicleNumber={vehicleLabel}
+                    totalAmount={totals.totalAmount}
+                    totalQuantity={totals.totalQuantity}
+                    invoiceDate={invoiceDate}
+                    copyLabel="Customer Copy"
+                    variant="customer"
+                  />
+                </div>
+              </div>
+              {/* Right half: Account Copy (2) */}
+              <div className="bill-half bill-half-right">
+                <div className="bill-half-inner">
+                  <InvoiceBillTemplate
+                    billNumber={displayBillNumber}
+                    orderNumbers={orderNumbers}
+                    rows={pageRows}
+                    pageNumber={pageIndex + 1}
+                    totalPages={billPages.length}
+                    billTo={billToLabel}
+                    driverName={driverName}
+                    vehicleNumber={vehicleLabel}
+                    totalAmount={totals.totalAmount}
+                    totalQuantity={totals.totalQuantity}
+                    invoiceDate={invoiceDate}
+                    copyLabel="Account Copy"
+                    variant="account"
+                  />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
