@@ -50,7 +50,7 @@ export type Order = {
 };
 
 export const tableSizeOptions = [
-  // Standard Tables - increased by 500 except 24x48 and 24x60
+  // Standard Tables
   { value: '24x32', label: '24x32 Table', price: 11000 },
   { value: '24x36', label: '24x36 Table', price: 12000 },
   { value: '24x48', label: '24x48 Table', price: 13500 }, 
@@ -58,29 +58,6 @@ export const tableSizeOptions = [
   { value: '24x72', label: '24x72 Table', price: 20000 },
   { value: '24x84', label: '24x84 Table', price: 22500 },
   { value: '24x96', label: '24x96 Table', price: 22500 },
-
-    // Medium Tables - increased by 500
-  { value: '30x48', label: '30x48 Table', price: 22500 },
-  { value: '36x48', label: '36x48 Table', price: 22500 },
-  { value: '48x48', label: '48x48 Table', price: 22500 },
-
-  // Large Tables - increased by 500
-  { value: '30x60', label: '30x60 Table', price: 26500 },
-  { value: '36x60', label: '36x60 Table', price: 26500 },
-  { value: '48x60', label: '48x60 Table', price: 26500 },
-
-  // Extra Large Tables - increased by 500
-  { value: '30x72', label: '30x72 Table', price: 34500 },
-  { value: '36x72', label: '36x72 Table', price: 34500 },
-  { value: '48x72', label: '48x72 Table', price: 34500 },
-
-  // Jumbo Tables - increased by 500
-  { value: '30x84', label: '30x84 Table', price: 39500 },
-  { value: '36x84', label: '36x84 Table', price: 39500 },
-  { value: '48x84', label: '48x84 Table', price: 39500 },
-  { value: '30x96', label: '30x96 Table', price: 39500 },
-  { value: '36x96', label: '36x96 Table', price: 39500 },
-  { value: '48x96', label: '48x96 Table', price: 39500 },
 
   // Dining Tables
   { value: 'DS (36x36)', label: '36x36 Dinning', price: 14500 },
