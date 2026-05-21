@@ -700,7 +700,7 @@ function useFormProvider() {
           frameColour: 'black',
           colour: 'teak', // For compatibility
           quantity: 1,
-          price: 11000,  // Updated default price
+          price: 11500,  // Default price
           legSize: '1.5x1.5',
           legShape: 'O Shape',
           legHeight: '30',
