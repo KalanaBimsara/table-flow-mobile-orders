@@ -86,7 +86,7 @@ const BillHistory = () => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (
-      bill.bill_number.toLowerCase().includes(term) ||
+      String(bill.bill_number).toLowerCase().includes(term) ||
       bill.bill_to.toLowerCase().includes(term) ||
       bill.order_numbers.some((orderNum) => orderNum.toLowerCase().includes(term)) ||
       bill.driver_name?.toLowerCase().includes(term) ||
