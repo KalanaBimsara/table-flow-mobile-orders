@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Bill {
   id: string;
-  bill_number: string;
+  bill_number: number;
   bill_to: string;
   driver_name: string | null;
   vehicle_number: string | null;
@@ -284,7 +284,7 @@ const BillHistory = () => {
               
               <div className="bill-preview-content">
                 <InvoiceBillTemplate
-                  billNumber={selectedBill.bill_number}
+                  billNumber={String(selectedBill.bill_number)}
                   orderNumbers={selectedBill.order_numbers}
                   billTo={selectedBill.bill_to}
                   driverName={selectedBill.driver_name || ''}
