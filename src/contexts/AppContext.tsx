@@ -334,7 +334,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           additional_charges: orderData.additionalCharges || 0,
           sales_person_name: profileData?.name || null,
           delivery_date: (orderData as any).deliveryDate || null,
-          delivery_type: (orderData as any).deliveryType || null
+          delivery_type: (orderData as any).deliveryType || null,
+          odoo_sync_status: null
         })
         .select('id, order_form_number')
         .single();
