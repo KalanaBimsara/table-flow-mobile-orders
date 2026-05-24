@@ -551,6 +551,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
 
+      // Mark order for Odoo update sync
+      const { error: syncError } = await supabase
+        .from('orders')
+        .update({ odoo_sync_status: 'pending_update' })
+        .eq('id', orderId);
+
+      if (syncError) {
+        console.error('Error updating odoo_sync_status:', syncError);
+      }
+
       fetchOrders();
       toast.success('Order updated successfully!');
     } catch (error) {
