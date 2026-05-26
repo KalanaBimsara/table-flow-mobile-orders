@@ -117,6 +117,43 @@ const OrderForm: React.FC = () => {
     window.print();
   };
 
+  const handleSendToPrinter = async () => {
+    if (!order) return;
+    setSendingEmail(true);
+    try {
+      const formsContainer = document.getElementById('order-forms-container');
+      if (!formsContainer) throw new Error('Form content not found');
+
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order ${order.orderFormNumber || ''}</title>
+        <style>
+          body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; }
+          table { border-collapse: collapse; width: 100%; }
+          .form-copy { page-break-after: always; page-break-inside: avoid; }
+          .form-copy:last-child { page-break-after: auto; }
+          @page { size: A4; margin: 10mm; }
+        </style></head><body>${formsContainer.innerHTML}</body></html>`;
+
+      const { data, error } = await supabase.functions.invoke('send-order-to-printer', {
+        body: {
+          to: PRINTER_EMAIL,
+          subject: `Order Form #${order.orderFormNumber || order.id} - ${order.customerName}`,
+          html,
+        },
+      });
+
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      toast.success('Order form sent to printer email');
+    } catch (err: any) {
+      console.error('Send to printer failed:', err);
+      toast.error(err.message || 'Failed to send to printer');
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+
   const getTotalQuantity = () => {
     return order?.tables.reduce((sum, table) => sum + table.quantity, 0) || 0;
   };
