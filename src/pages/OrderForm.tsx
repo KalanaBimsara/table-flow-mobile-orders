@@ -14,6 +14,8 @@ const OrderForm: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const PRINTER_EMAIL = 'qup96883pdtaa8@print.epsonconnect.com';
   const [salesPersonContact, setSalesPersonContact] = useState<string>('');
   const [editableDetails, setEditableDetails] = useState({
     pageName: '',
