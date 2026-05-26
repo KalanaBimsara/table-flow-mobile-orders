@@ -20,6 +20,7 @@ interface AppContextType {
   getDeliveryPersonName: (userId: string) => string | null;
   getSalesPersons: () => string[];
   loadMoreCompletedOrders: () => Promise<void>;
+  refreshAll: () => Promise<void>;
 }
 
 interface DeliveryPerson {
@@ -664,7 +665,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getAssignedOrders,
         getDeliveryPersonName,
         getSalesPersons,
-        loadMoreCompletedOrders
+        loadMoreCompletedOrders,
+        refreshAll: async () => {
+          await Promise.all([fetchOrders(), fetchCompletedOrders(true), fetchDeliveryPeople()]);
+        }
       }}
     >
       {children}
