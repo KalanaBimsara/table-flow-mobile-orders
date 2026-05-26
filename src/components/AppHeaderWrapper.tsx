@@ -16,7 +16,8 @@ const AppHeaderWrapper = () => {
     signOut
   } = useAuth();
   const {
-    userRole
+    userRole,
+    refreshAll
   } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
