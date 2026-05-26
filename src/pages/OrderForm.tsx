@@ -501,6 +501,10 @@ const OrderForm: React.FC = () => {
                 </>
               )}
             </Button>
+            <Button onClick={handleSendToPrinter} disabled={sendingEmail} variant="secondary">
+              <Mail size={16} className="mr-2" />
+              {sendingEmail ? 'Sending...' : 'Send to Printer'}
+            </Button>
             <Button onClick={handlePrint} className="bg-primary">
               <Printer size={16} className="mr-2" />
               Print Form (4 Copies)
@@ -510,7 +514,7 @@ const OrderForm: React.FC = () => {
       </div>
 
       {/* Forms Container - one set of 4 copies per table */}
-      <div className="container py-8 space-y-8">
+      <div id="order-forms-container" className="container py-8 space-y-8">
         {order.tables.map((table, tableIndex) => (
           <React.Fragment key={tableIndex}>
             <FormCopy copyNumber={2} colorName="magenta" copyLabel="ACCOUNT COPY" singleTable={table} tableIndex={tableIndex} />
