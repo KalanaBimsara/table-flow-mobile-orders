@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Printer, Edit, X, Save } from 'lucide-react';
+import { Printer, Edit, X, Save, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order } from '@/types/order';
 
