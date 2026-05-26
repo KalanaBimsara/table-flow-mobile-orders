@@ -23,6 +23,7 @@ const AppHeaderWrapper = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const {
     theme,
