@@ -20,6 +20,7 @@ interface AppContextType {
   getDeliveryPersonName: (userId: string) => string | null;
   getSalesPersons: () => string[];
   loadMoreCompletedOrders: () => Promise<void>;
+  refreshAll: () => Promise<void>;
 }
 
 interface DeliveryPerson {
