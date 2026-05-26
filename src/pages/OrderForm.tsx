@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Printer, Edit, X, Save } from 'lucide-react';
+import { Printer, Edit, X, Save, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order } from '@/types/order';
 
@@ -14,6 +14,8 @@ const OrderForm: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const PRINTER_EMAIL = 'qup96883pdtaa8@print.epsonconnect.com';
   const [salesPersonContact, setSalesPersonContact] = useState<string>('');
   const [editableDetails, setEditableDetails] = useState({
     pageName: '',
@@ -114,6 +116,43 @@ const OrderForm: React.FC = () => {
     }
     window.print();
   };
+
+  const handleSendToPrinter = async () => {
+    if (!order) return;
+    setSendingEmail(true);
+    try {
+      const formsContainer = document.getElementById('order-forms-container');
+      if (!formsContainer) throw new Error('Form content not found');
+
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order ${order.orderFormNumber || ''}</title>
+        <style>
+          body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; }
+          table { border-collapse: collapse; width: 100%; }
+          .form-copy { page-break-after: always; page-break-inside: avoid; }
+          .form-copy:last-child { page-break-after: auto; }
+          @page { size: A4; margin: 10mm; }
+        </style></head><body>${formsContainer.innerHTML}</body></html>`;
+
+      const { data, error } = await supabase.functions.invoke('send-order-to-printer', {
+        body: {
+          to: PRINTER_EMAIL,
+          subject: `Order Form #${order.orderFormNumber || order.id} - ${order.customerName}`,
+          html,
+        },
+      });
+
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      toast.success('Order form sent to printer email');
+    } catch (err: any) {
+      console.error('Send to printer failed:', err);
+      toast.error(err.message || 'Failed to send to printer');
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
 
   const getTotalQuantity = () => {
     return order?.tables.reduce((sum, table) => sum + table.quantity, 0) || 0;
@@ -462,6 +501,10 @@ const OrderForm: React.FC = () => {
                 </>
               )}
             </Button>
+            <Button onClick={handleSendToPrinter} disabled={sendingEmail} variant="secondary">
+              <Mail size={16} className="mr-2" />
+              {sendingEmail ? 'Sending...' : 'Send to Printer'}
+            </Button>
             <Button onClick={handlePrint} className="bg-primary">
               <Printer size={16} className="mr-2" />
               Print Form (4 Copies)
@@ -471,7 +514,7 @@ const OrderForm: React.FC = () => {
       </div>
 
       {/* Forms Container - one set of 4 copies per table */}
-      <div className="container py-8 space-y-8">
+      <div id="order-forms-container" className="container py-8 space-y-8">
         {order.tables.map((table, tableIndex) => (
           <React.Fragment key={tableIndex}>
             <FormCopy copyNumber={2} colorName="magenta" copyLabel="ACCOUNT COPY" singleTable={table} tableIndex={tableIndex} />
