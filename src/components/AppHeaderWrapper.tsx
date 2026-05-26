@@ -36,6 +36,16 @@ const AppHeaderWrapper = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await refreshAll();
+    } finally {
+      setTimeout(() => setRefreshing(false), 500);
+    }
+  };
+
   // Menu items based on user role
   const menuItems = [{
     href: '/',
