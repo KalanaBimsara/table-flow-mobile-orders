@@ -124,27 +124,53 @@ const OrderForm: React.FC = () => {
       const formsContainer = document.getElementById('order-forms-container');
       if (!formsContainer) throw new Error('Form content not found');
 
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order ${order.orderFormNumber || ''}</title>
-        <style>
-          body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; }
-          table { border-collapse: collapse; width: 100%; }
-          .form-copy { page-break-after: always; page-break-inside: avoid; }
-          .form-copy:last-child { page-break-after: auto; }
-          @page { size: A4; margin: 10mm; }
-        </style></head><body>${formsContainer.innerHTML}</body></html>`;
+      // Dynamically import html2pdf
+      const html2pdf = (await import('html2pdf.js')).default;
+
+      // Clone container so we don't disturb the live view
+      const clone = formsContainer.cloneNode(true) as HTMLElement;
+      const wrapper = document.createElement('div');
+      wrapper.style.background = '#fff';
+      wrapper.appendChild(clone);
+
+      const filename = `order-${order.orderFormNumber || order.id}.pdf`;
+
+      const pdfBlob: Blob = await html2pdf()
+        .set({
+          margin: 0,
+          filename,
+          image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'], avoid: '.form-copy' },
+        })
+        .from(wrapper)
+        .outputPdf('blob');
+
+      // Convert blob to base64
+      const arrayBuf = await pdfBlob.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuf);
+      let binary = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      }
+      const pdfBase64 = btoa(binary);
 
       const { data, error } = await supabase.functions.invoke('send-order-to-printer', {
         body: {
           to: PRINTER_EMAIL,
           subject: `Order Form #${order.orderFormNumber || order.id} - ${order.customerName}`,
-          html,
+          html: `<p>Order form #${order.orderFormNumber || order.id} for ${order.customerName} is attached as PDF.</p>`,
+          pdfBase64,
+          pdfFilename: filename,
         },
       });
 
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
-      toast.success('Order form sent to printer email');
+      toast.success('Order form PDF sent to printer email');
     } catch (err: any) {
       console.error('Send to printer failed:', err);
       toast.error(err.message || 'Failed to send to printer');
@@ -152,6 +178,7 @@ const OrderForm: React.FC = () => {
       setSendingEmail(false);
     }
   };
+
 
 
   const getTotalQuantity = () => {
