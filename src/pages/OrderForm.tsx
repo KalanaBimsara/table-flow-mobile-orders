@@ -28,8 +28,6 @@ const OrderForm: React.FC = () => {
     wAppNo: '',
   });
 
-    wAppNo: '',
-  });
 
   useEffect(() => {
     if (orderId) {
