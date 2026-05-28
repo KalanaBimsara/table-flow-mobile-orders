@@ -16,9 +16,8 @@ const OrderForm: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
-  const PRINTER_EMAIL = 'kalanabimsara8@gmail.com';
   const [salesPersonContact, setSalesPersonContact] = useState<string>('');
+  const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
   const [editableDetails, setEditableDetails] = useState({
     pageName: '',
     pageTel: '',
@@ -26,6 +25,9 @@ const OrderForm: React.FC = () => {
     deliveryDate: '',
     assemblingType: '',
     specialNotes: '',
+    wAppNo: '',
+  });
+
     wAppNo: '',
   });
 
