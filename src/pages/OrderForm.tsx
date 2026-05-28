@@ -38,6 +38,53 @@ const OrderForm: React.FC = () => {
     }
   }, [orderId]);
 
+  // Generate QR codes containing order details for each form copy (scan & count)
+  useEffect(() => {
+    if (!order) return;
+    const copyLabels = ['PRODUCTION COPY', 'OFFICE COPY', 'TRANSPORT COPY', 'CUSTOMER COPY'];
+    const generate = async () => {
+      const map: Record<string, string> = {};
+      for (let t = 0; t < order.tables.length; t++) {
+        const table = order.tables[t];
+        for (let c = 1; c <= 4; c++) {
+          const payload = {
+            v: 1,
+            orderNo: order.orderFormNumber || order.id,
+            orderId: order.id,
+            customer: order.customerName,
+            district: order.customerDistrict || null,
+            deliveryDate: order.deliveryDate || null,
+            deliveryType: order.deliveryType || null,
+            copy: copyLabels[c - 1],
+            tableIndex: t + 1,
+            tableCount: order.tables.length,
+            size: table.size,
+            topColour: table.topColour || table.colour,
+            frameColour: table.frameColour || null,
+            qty: table.quantity,
+            legSize: table.legSize || null,
+            legShape: table.legShape || null,
+            legHeight: table.legHeight || null,
+            ts: order.createdAt ? new Date(order.createdAt).toISOString() : null,
+          };
+          try {
+            const url = await QRCode.toDataURL(JSON.stringify(payload), {
+              margin: 0,
+              width: 160,
+              errorCorrectionLevel: 'M',
+            });
+            map[`${t}-${c}`] = url;
+          } catch (e) {
+            console.error('QR generation failed', e);
+          }
+        }
+      }
+      setQrCodes(map);
+    };
+    generate();
+  }, [order]);
+
+
   const fetchOrder = async () => {
     try {
       const { data, error } = await supabase
