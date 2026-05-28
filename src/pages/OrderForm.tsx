@@ -129,23 +129,84 @@ const OrderForm: React.FC = () => {
 
       // Clone container so we don't disturb the live view
       const clone = formsContainer.cloneNode(true) as HTMLElement;
+
+      // Build an off-screen A4-sized wrapper that mimics the print stylesheet
+      // (white/transparent backgrounds, no UI chrome) so the PDF matches the
+      // "Print Form" output exactly.
       const wrapper = document.createElement('div');
-      wrapper.style.background = '#fff';
-      wrapper.appendChild(clone);
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-10000px';
+      wrapper.style.top = '0';
+      wrapper.style.width = '210mm';
+      wrapper.style.background = '#ffffff';
+      wrapper.style.padding = '0';
+      wrapper.style.margin = '0';
+
+      // Inject the same overrides used by @media print so backgrounds are
+      // white and each .form-copy fills exactly half an A4 page (2 per page,
+      // 4 copies per table => 2 pages per table).
+      const styleEl = document.createElement('style');
+      styleEl.innerHTML = `
+        #pdf-root, #pdf-root * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        #pdf-root .no-print { display: none !important; }
+        #pdf-root, #pdf-root .container {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          max-width: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+        #pdf-root .form-copy {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          height: 148.5mm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        #pdf-root .form-copy > div,
+        #pdf-root .form-copy .p-3,
+        #pdf-root .form-copy table,
+        #pdf-root .form-copy thead,
+        #pdf-root .form-copy tbody,
+        #pdf-root .form-copy tr,
+        #pdf-root .form-copy th,
+        #pdf-root .form-copy td {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+        }
+      `;
+      wrapper.appendChild(styleEl);
+
+      const root = document.createElement('div');
+      root.id = 'pdf-root';
+      root.style.background = '#ffffff';
+      root.appendChild(clone);
+      wrapper.appendChild(root);
+      document.body.appendChild(wrapper);
 
       const filename = `order-${order.orderFormNumber || order.id}.pdf`;
 
-      const pdfBlob: Blob = await html2pdf()
-        .set({
-          margin: 0,
-          filename,
-          image: { type: 'jpeg', quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'], avoid: '.form-copy' },
-        })
-        .from(wrapper)
-        .outputPdf('blob');
+      let pdfBlob: Blob;
+      try {
+        pdfBlob = await html2pdf()
+          .set({
+            margin: 0,
+            filename,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'], avoid: '.form-copy' },
+          })
+          .from(root)
+          .outputPdf('blob');
+      } finally {
+        document.body.removeChild(wrapper);
+      }
 
       // Convert blob to base64
       const arrayBuf = await pdfBlob.arrayBuffer();
@@ -178,6 +239,7 @@ const OrderForm: React.FC = () => {
       setSendingEmail(false);
     }
   };
+
 
 
 
