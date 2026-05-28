@@ -351,6 +351,30 @@ const OrderForm: React.FC = () => {
           backgroundColor: colors.bg,
           color: colors.text
         }}>
+          {/* QR Code - for scan & count tracking */}
+          {qrCodes[`${tableIndex}-${copyNumber}`] && (
+            <div style={{
+              position: 'absolute',
+              bottom: '8px',
+              left: '8px',
+              textAlign: 'center',
+              zIndex: 10,
+              backgroundColor: '#ffffff',
+              padding: '3px',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '3px',
+            }}>
+              <img
+                src={qrCodes[`${tableIndex}-${copyNumber}`]}
+                alt="Order QR"
+                style={{ width: '70px', height: '70px', display: 'block' }}
+              />
+              <div style={{ fontSize: '8px', color: colors.text, marginTop: '1px', fontWeight: 600 }}>
+                Scan to count
+              </div>
+            </div>
+          )}
+
           {/* Custom Order Seal */}
           {hasCustomizations && (
             <div style={{
