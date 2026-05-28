@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Printer, Edit, X, Save, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order } from '@/types/order';
+import QRCode from 'qrcode';
+
 
 const OrderForm: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
