@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Printer, Edit, X, Save, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order } from '@/types/order';
+import QRCode from 'qrcode';
+
 
 const OrderForm: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -17,6 +19,8 @@ const OrderForm: React.FC = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const PRINTER_EMAIL = 'kalanabimsara8@gmail.com';
   const [salesPersonContact, setSalesPersonContact] = useState<string>('');
+  const [qrCodes, setQrCodes] = useState<Record<string, string>>({});
+
   const [editableDetails, setEditableDetails] = useState({
     pageName: '',
     pageTel: '',
@@ -27,11 +31,59 @@ const OrderForm: React.FC = () => {
     wAppNo: '',
   });
 
+
   useEffect(() => {
     if (orderId) {
       fetchOrder();
     }
   }, [orderId]);
+
+  // Generate QR codes containing order details for each form copy (scan & count)
+  useEffect(() => {
+    if (!order) return;
+    const copyLabels = ['PRODUCTION COPY', 'OFFICE COPY', 'TRANSPORT COPY', 'CUSTOMER COPY'];
+    const generate = async () => {
+      const map: Record<string, string> = {};
+      for (let t = 0; t < order.tables.length; t++) {
+        const table = order.tables[t];
+        for (let c = 1; c <= 4; c++) {
+          const payload = {
+            v: 1,
+            orderNo: order.orderFormNumber || order.id,
+            orderId: order.id,
+            customer: order.customerName,
+            district: order.customerDistrict || null,
+            deliveryDate: order.deliveryDate || null,
+            deliveryType: order.deliveryType || null,
+            copy: copyLabels[c - 1],
+            tableIndex: t + 1,
+            tableCount: order.tables.length,
+            size: table.size,
+            topColour: table.topColour || table.colour,
+            frameColour: table.frameColour || null,
+            qty: table.quantity,
+            legSize: table.legSize || null,
+            legShape: table.legShape || null,
+            legHeight: table.legHeight || null,
+            ts: order.createdAt ? new Date(order.createdAt).toISOString() : null,
+          };
+          try {
+            const url = await QRCode.toDataURL(JSON.stringify(payload), {
+              margin: 0,
+              width: 160,
+              errorCorrectionLevel: 'M',
+            });
+            map[`${t}-${c}`] = url;
+          } catch (e) {
+            console.error('QR generation failed', e);
+          }
+        }
+      }
+      setQrCodes(map);
+    };
+    generate();
+  }, [order]);
+
 
   const fetchOrder = async () => {
     try {
@@ -299,6 +351,30 @@ const OrderForm: React.FC = () => {
           backgroundColor: colors.bg,
           color: colors.text
         }}>
+          {/* QR Code - for scan & count tracking */}
+          {qrCodes[`${tableIndex}-${copyNumber}`] && (
+            <div style={{
+              position: 'absolute',
+              bottom: '8px',
+              left: '8px',
+              textAlign: 'center',
+              zIndex: 10,
+              backgroundColor: '#ffffff',
+              padding: '3px',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '3px',
+            }}>
+              <img
+                src={qrCodes[`${tableIndex}-${copyNumber}`]}
+                alt="Order QR"
+                style={{ width: '70px', height: '70px', display: 'block' }}
+              />
+              <div style={{ fontSize: '8px', color: colors.text, marginTop: '1px', fontWeight: 600 }}>
+                Scan to count
+              </div>
+            </div>
+          )}
+
           {/* Custom Order Seal */}
           {hasCustomizations && (
             <div style={{
