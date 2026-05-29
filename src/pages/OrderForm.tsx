@@ -351,29 +351,8 @@ const OrderForm: React.FC = () => {
           backgroundColor: colors.bg,
           color: colors.text
         }}>
-          {/* QR Code - for scan & count tracking */}
-          {qrCodes[`${tableIndex}-${copyNumber}`] && (
-            <div style={{
-              position: 'absolute',
-              bottom: '8px',
-              left: '8px',
-              textAlign: 'center',
-              zIndex: 10,
-              backgroundColor: '#ffffff',
-              padding: '3px',
-              border: `1px solid ${colors.border}`,
-              borderRadius: '3px',
-            }}>
-              <img
-                src={qrCodes[`${tableIndex}-${copyNumber}`]}
-                alt="Order QR"
-                style={{ width: '70px', height: '70px', display: 'block' }}
-              />
-              <div style={{ fontSize: '8px', color: colors.text, marginTop: '1px', fontWeight: 600 }}>
-                Scan to count
-              </div>
-            </div>
-          )}
+          {/* QR Code moved into notes section (rendered inline at bottom of form) */}
+
 
           {/* Custom Order Seal */}
           {hasCustomizations && (
@@ -571,43 +550,63 @@ const OrderForm: React.FC = () => {
               </div>
             </div>
           )}
-          <div className="mt-2 pt-2 border-t text-xs space-y-1" style={{ borderColor: colors.border }}>
-            {order.note && (
-              <div
-                style={{
-                  color: 'red',
-                  fontWeight: 'bold',
-                  fontSize: '13px',
-                  marginTop: '6px'
-                }}>
-                Notes / Drawing: {order.note}
-              </div>
-            )}
-            {singleTable.wireHolesComment && (
-              <div
-                style={{
-                  color: 'red',
-                  fontWeight: 'bold',
-                  fontSize: '13px',
-                  marginTop: '6px'
-                }}
-              >
-                Wire Hole Comment: {singleTable.wireHolesComment}
-              </div>
-            )}
-            {(singleTable.frontPanelSize || singleTable.frontPanelLength) && (
-              <div
-                style={{
-                  color: 'red',
-                  fontWeight: 'bold',
-                  fontSize: '13px',
-                  marginTop: '6px'
-                }}
-              >
-                Front Panel: {singleTable.frontPanelSize || ''}{singleTable.frontPanelLength ? ` (Length: ${singleTable.frontPanelLength})` : ''}
-              </div>
-            )}
+          {/* Notes section split into two columns: notes on the left, QR code on the right */}
+          <div className="mt-2 pt-2 border-t text-xs flex" style={{ borderColor: colors.border }}>
+            {/* Left column: Notes / comments */}
+            <div className="flex-1 space-y-1 pr-2" style={{ borderRight: `1px solid ${colors.border}` }}>
+              {order.note && (
+                <div
+                  style={{
+                    color: 'red',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    marginTop: '6px'
+                  }}>
+                  Notes / Drawing: {order.note}
+                </div>
+              )}
+              {singleTable.wireHolesComment && (
+                <div
+                  style={{
+                    color: 'red',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    marginTop: '6px'
+                  }}
+                >
+                  Wire Hole Comment: {singleTable.wireHolesComment}
+                </div>
+              )}
+              {(singleTable.frontPanelSize || singleTable.frontPanelLength) && (
+                <div
+                  style={{
+                    color: 'red',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    marginTop: '6px'
+                  }}
+                >
+                  Front Panel: {singleTable.frontPanelSize || ''}{singleTable.frontPanelLength ? ` (Length: ${singleTable.frontPanelLength})` : ''}
+                </div>
+              )}
+            </div>
+            {/* Right column: QR code for scan & count tracking. Size will be tuned later. */}
+            <div className="pl-2 flex flex-col items-center justify-center" style={{ minWidth: '90px' }}>
+              {qrCodes[`${tableIndex}-${copyNumber}`] && (
+                <>
+                  <img
+                    src={qrCodes[`${tableIndex}-${copyNumber}`]}
+                    alt="Order QR"
+                    style={{ width: '80px', height: '80px', display: 'block' }}
+                  />
+                  <div style={{ fontSize: '8px', color: colors.text, marginTop: '2px', fontWeight: 600 }}>
+                    Scan to count
+                  </div>
+                </>
+              )}
+            </div>
           </div>
+
         </div>
       </div>
     );
