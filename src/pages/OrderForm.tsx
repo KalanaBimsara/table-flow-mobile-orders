@@ -644,15 +644,16 @@ const OrderForm: React.FC = () => {
       `}</style>
       {/* Control Bar */}
       <div className="no-print bg-white border-b sticky top-0 z-10 shadow-sm">
-        <div className="container py-4 flex justify-between items-center">
-          <Button variant="outline" onClick={() => navigate(-1)}>
+        <div className="container py-4 flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
+          <Button variant="outline" onClick={() => navigate(-1)} className="w-full sm:w-auto">
             <X size={16} className="mr-2" />
             Close
           </Button>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
               variant={editMode ? "default" : "outline"}
               onClick={() => setEditMode(!editMode)}
+              className="w-full sm:w-auto"
             >
               {editMode ? (
                 <>
@@ -666,16 +667,17 @@ const OrderForm: React.FC = () => {
                 </>
               )}
             </Button>
-            <Button onClick={handleSendToPrinter} disabled={sendingEmail} variant="secondary">
+            <Button onClick={handleSendToPrinter} disabled={sendingEmail} variant="secondary" className="w-full sm:w-auto">
               <Mail size={16} className="mr-2" />
               {sendingEmail ? 'Sending...' : 'Send to Printer'}
             </Button>
-            <Button onClick={handlePrint} className="bg-primary">
+            <Button onClick={handlePrint} className="bg-primary w-full sm:w-auto">
               <Printer size={16} className="mr-2" />
               Print Form (4 Copies)
             </Button>
           </div>
         </div>
+
       </div>
 
       {/* Forms Container - one set of 4 copies per table */}
