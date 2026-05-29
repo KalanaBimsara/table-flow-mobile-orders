@@ -70,7 +70,7 @@ const OrderForm: React.FC = () => {
           try {
             const url = await QRCode.toDataURL(JSON.stringify(payload), {
               margin: 0,
-              width: 160,
+              width: 220,
               errorCorrectionLevel: 'M',
             });
             map[`${t}-${c}`] = url;
@@ -591,13 +591,13 @@ const OrderForm: React.FC = () => {
               )}
             </div>
             {/* Right column: QR code for scan & count tracking. Size will be tuned later. */}
-            <div className="pl-2 flex flex-col items-center justify-center" style={{ minWidth: '90px' }}>
+            <div className="pl-2 flex flex-col items-center justify-center" style={{ minWidth: '120px' }}>
               {qrCodes[`${tableIndex}-${copyNumber}`] && (
                 <>
                   <img
                     src={qrCodes[`${tableIndex}-${copyNumber}`]}
                     alt="Order QR"
-                    style={{ width: '80px', height: '80px', display: 'block' }}
+                    style={{ width: '110px', height: '110px', display: 'block' }}
                   />
                   <div style={{ fontSize: '8px', color: colors.text, marginTop: '2px', fontWeight: 600 }}>
                     Scan to count
