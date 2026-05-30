@@ -186,14 +186,22 @@ const OrderDetailsTable = ({ orders: initialOrders, loading }: OrderDetailsTable
     setDisplayedOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
 
-    const updates: Record<string, any> = { status: newStatus };
-    if (newStatus === 'completed') updates.completed_at = new Date().toISOString();
+    // Super admin doesn't use Supabase auth, so call edge function with service role
+    const sessionToken = localStorage.getItem('super_admin_session');
+    if (!sessionToken) {
+      toast.error('Super admin session not found. Please log in again.');
+      setDisplayedOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: previous || o.status } : o));
+      setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: previous || o.status } : o));
+      return;
+    }
 
-    const { error } = await supabase.from('orders').update(updates).eq('id', orderId);
-    if (error) {
-      console.error('Failed to update status', error);
+    const { data, error } = await supabase.functions.invoke('super-admin-update-order-status', {
+      body: { orderId, newStatus, sessionToken },
+    });
+
+    if (error || (data && (data as any).error)) {
+      console.error('Failed to update status', error || (data as any).error);
       toast.error('Failed to update order status');
-      // revert
       setDisplayedOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: previous || o.status } : o));
       setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: previous || o.status } : o));
     } else {
