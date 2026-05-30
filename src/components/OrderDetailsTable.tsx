@@ -354,9 +354,16 @@ const OrderDetailsTable = ({ orders: initialOrders, loading }: OrderDetailsTable
                         LKR {(order.price + (order.delivery_fee || 0) + (order.additional_charges || 0)).toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status}
-                        </Badge>
+                        <Select value={order.status} onValueChange={(v) => handleStatusChange(order.id, v)}>
+                          <SelectTrigger className={`h-8 w-[150px] border-0 ${getStatusColor(order.status)}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map(s => (
+                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         {format(new Date(order.created_at), 'MMM dd, yyyy')}
