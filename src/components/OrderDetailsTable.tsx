@@ -178,6 +178,29 @@ const OrderDetailsTable = ({ orders: initialOrders, loading }: OrderDetailsTable
     }
   };
 
+  const STATUS_OPTIONS = ['pending', 'assigned', 'awaiting_approval', 'completed', 'cancelled'];
+
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    const previous = displayedOrders.find(o => o.id === orderId)?.status;
+    // Optimistic UI update
+    setDisplayedOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+
+    const updates: Record<string, any> = { status: newStatus };
+    if (newStatus === 'completed') updates.completed_at = new Date().toISOString();
+
+    const { error } = await supabase.from('orders').update(updates).eq('id', orderId);
+    if (error) {
+      console.error('Failed to update status', error);
+      toast.error('Failed to update order status');
+      // revert
+      setDisplayedOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: previous || o.status } : o));
+      setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: previous || o.status } : o));
+    } else {
+      toast.success(`Order status updated to ${newStatus}`);
+    }
+  };
+
   if (loading) {
     return (
       <Card>
