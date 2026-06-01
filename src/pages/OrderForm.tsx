@@ -345,7 +345,7 @@ const OrderForm: React.FC = () => {
     
     return (
       <div className="form-copy" style={{ height: '50vh', pageBreakAfter:!(tableIndex === order.tables.length - 1 && copyNumber === 4)? 'always': 'auto', pageBreakInside: 'avoid' }}>
-        <div className="p-3 h-full relative" style={{ 
+        <div className={`h-full relative ${copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' ? 'pt-1 px-3 pb-3' : 'p-3'}`} style={{ 
           fontFamily: 'Arial, sans-serif', 
           fontSize: '11px',
           backgroundColor: colors.bg,
@@ -417,7 +417,7 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Header - Condensed */}
-          <div className="flex justify-between items-start" style={{ marginTop: '50px' }}>
+          <div className="flex justify-between items-start" style={{ marginTop: copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' ? '38px' : '50px' }}>
             <div className="flex flex-col">
               {/* Customer Information - Aligned with Delivery Date */}
               <div style={{ marginTop: '0px', fontSize: '12px' }}>
@@ -559,7 +559,7 @@ const OrderForm: React.FC = () => {
                   style={{
                     color: 'red',
                     fontWeight: 'bold',
-                    fontSize: '13px',
+                    fontSize: '16px',
                     marginTop: '6px'
                   }}>
                   Notes / Drawing: {order.note}
@@ -570,7 +570,7 @@ const OrderForm: React.FC = () => {
                   style={{
                     color: 'red',
                     fontWeight: 'bold',
-                    fontSize: '13px',
+                    fontSize: '16px',
                     marginTop: '6px'
                   }}
                 >
@@ -582,7 +582,7 @@ const OrderForm: React.FC = () => {
                   style={{
                     color: 'red',
                     fontWeight: 'bold',
-                    fontSize: '13px',
+                    fontSize: '16px',
                     marginTop: '6px'
                   }}
                 >
