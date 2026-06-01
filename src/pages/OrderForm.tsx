@@ -345,7 +345,7 @@ const OrderForm: React.FC = () => {
     
     return (
       <div className="form-copy" style={{ height: '50vh', pageBreakAfter:!(tableIndex === order.tables.length - 1 && copyNumber === 4)? 'always': 'auto', pageBreakInside: 'avoid' }}>
-        <div className="p-3 h-full relative" style={{ 
+        <div className={`h-full relative ${copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' ? 'pt-1 px-3 pb-3' : 'p-3'}`} style={{ 
           fontFamily: 'Arial, sans-serif', 
           fontSize: '11px',
           backgroundColor: colors.bg,
