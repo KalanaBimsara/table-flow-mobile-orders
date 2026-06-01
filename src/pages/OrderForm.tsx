@@ -570,7 +570,7 @@ const OrderForm: React.FC = () => {
                   style={{
                     color: 'red',
                     fontWeight: 'bold',
-                    fontSize: '13px',
+                    fontSize: '16px',
                     marginTop: '6px'
                   }}
                 >
