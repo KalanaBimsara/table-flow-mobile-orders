@@ -382,7 +382,7 @@ const OrderForm: React.FC = () => {
           {/* Company Info - Fixed at Top Center */}
           <div style={{
             position: 'absolute',
-            top: '12px',
+            top: '4px',
             left: '50%',
             transform: 'translateX(-50%)',
             textAlign: 'center',
