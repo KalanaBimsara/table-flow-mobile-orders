@@ -407,7 +407,7 @@ const OrderForm: React.FC = () => {
           {/* Order No - Fixed at Top Right */}
           <div style={{
             position: 'absolute',
-            top: '12px',
+            top: '4px',
             right: '12px',
             textAlign: 'right',
             zIndex: 5
