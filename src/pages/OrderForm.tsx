@@ -349,7 +349,7 @@ const OrderForm: React.FC = () => {
     
     return (
       <div className="form-copy" style={{ height: '50vh', pageBreakAfter:!(tableIndex === order.tables.length - 1 && copyNumber === 4)? 'always': 'auto', pageBreakInside: 'avoid' }}>
-        <div className={`h-full relative ${copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' ? 'pt-1 px-3 pb-3' : 'p-3'}`} style={{ 
+        <div className={`h-full relative ${copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' || copyLabel === 'GATE PASS' ? 'pt-1 px-3 pb-3' : 'p-3'}`} style={{ 
           fontFamily: 'Arial, sans-serif', 
           fontSize: '11px',
           backgroundColor: colors.bg,
@@ -382,7 +382,7 @@ const OrderForm: React.FC = () => {
           {/* Company Info - Fixed at Top Center */}
           <div style={{
             position: 'absolute',
-            top: '12px',
+            top: '4px',
             left: '50%',
             transform: 'translateX(-50%)',
             textAlign: 'center',
@@ -397,7 +397,7 @@ const OrderForm: React.FC = () => {
           {/* Copy Label - Fixed at Top Left */}
           <div style={{
             position: 'absolute',
-            top: '12px',
+            top: '4px',
             left: '12px',
             zIndex: 5
           }}>
@@ -407,7 +407,7 @@ const OrderForm: React.FC = () => {
           {/* Order No - Fixed at Top Right */}
           <div style={{
             position: 'absolute',
-            top: '12px',
+            top: '4px',
             right: '12px',
             textAlign: 'right',
             zIndex: 5
@@ -421,7 +421,7 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Header - Condensed */}
-          <div className="flex justify-between items-start" style={{ marginTop: copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' ? '38px' : '50px' }}>
+          <div className="flex justify-between items-start" style={{ marginTop: copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' ? '28px' : copyLabel === 'GATE PASS' ? '40px' : '50px' }}>
             <div className="flex flex-col">
               {/* Customer Information - Aligned with Delivery Date */}
               <div style={{ marginTop: '0px', fontSize: '12px' }}>
