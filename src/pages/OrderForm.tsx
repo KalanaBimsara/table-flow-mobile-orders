@@ -421,7 +421,7 @@ const OrderForm: React.FC = () => {
           </div>
 
           {/* Header - Condensed */}
-          <div className="flex justify-between items-start" style={{ marginTop: copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' ? '38px' : '50px' }}>
+          <div className="flex justify-between items-start" style={{ marginTop: copyLabel === 'TRANSPORT COPY' || copyLabel === 'PRODUCTION COPY' ? '28px' : copyLabel === 'GATE PASS' ? '40px' : '50px' }}>
             <div className="flex flex-col">
               {/* Customer Information - Aligned with Delivery Date */}
               <div style={{ marginTop: '0px', fontSize: '12px' }}>
