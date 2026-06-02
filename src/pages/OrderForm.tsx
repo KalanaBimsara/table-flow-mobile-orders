@@ -397,7 +397,7 @@ const OrderForm: React.FC = () => {
           {/* Copy Label - Fixed at Top Left */}
           <div style={{
             position: 'absolute',
-            top: '12px',
+            top: '4px',
             left: '12px',
             zIndex: 5
           }}>
