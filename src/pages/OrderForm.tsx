@@ -536,14 +536,15 @@ const OrderForm: React.FC = () => {
           {/* Notes section split into two columns: notes on the left, QR code on the right */}
           <div className="mt-1 pt-1 border-t text-xs flex" style={{ borderColor: colors.border }}>
             {/* Left column: Notes / comments */}
-            <div className="flex-1 space-y-1 pr-2" style={{ borderRight: `1px solid ${colors.border}` }}>
+            <div className="flex-1 space-y-2 pr-2" style={{ borderRight: `1px solid ${colors.border}` }}>
               {order.note && (
                 <div
                   style={{
                     color: 'red',
                     fontWeight: 'bold',
-                    fontSize: '20px',
-                    marginTop: '6px'
+                    fontSize: '18px',
+                    marginTop: '6px',
+                    lineHeight: '1.1'
                   }}>
                   Notes / Drawing: {order.note}
                 </div>
@@ -553,8 +554,9 @@ const OrderForm: React.FC = () => {
                   style={{
                     color: 'red',
                     fontWeight: 'bold',
-                    fontSize: '18px',
-                    marginTop: '6px'
+                    fontSize: '16px',
+                    marginTop: '6px',
+                    lineHeight: '1.1'
                   }}
                 >
                   Wire Hole Comment: {singleTable.wireHolesComment}
@@ -565,8 +567,9 @@ const OrderForm: React.FC = () => {
                   style={{
                     color: 'red',
                     fontWeight: 'bold',
-                    fontSize: '18px',
-                    marginTop: '6px'
+                    fontSize: '16px',
+                    marginTop: '6px',
+                    lineHeight: '1.1'
                   }}
                 >
                   Front Panel: {singleTable.frontPanelSize || ''}{singleTable.frontPanelLength ? ` (Length: ${singleTable.frontPanelLength})` : ''}
