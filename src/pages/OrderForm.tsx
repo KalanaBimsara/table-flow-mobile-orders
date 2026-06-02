@@ -516,17 +516,17 @@ const OrderForm: React.FC = () => {
           {/* Customer Signature for Transport Copy */}
           {copyLabel === "TRANSPORT COPY" && (
             <div className="mt-1 pt-1 border-t" style={{ borderColor: colors.border }}>
-              <div className="text-xs mb-2" style={{ fontSize: '11px', lineHeight: '1.4' }}>
+              <div className="text-xs" style={{ fontSize: '11px', lineHeight: '1.3', marginBottom: '2px' }}>
                 <strong>Customer Declaration:</strong> I confirm that I have received the goods in undamaged condition and have checked everything properly before the driver left the premises.
               </div>
-              <div className="flex justify-between items-end">
-                <div className="flex-1">
-                  <div className="border-b mt-1 mr-4" style={{ borderColor: colors.border }}>&nbsp;</div>
-                  <div className="font-medium text-xs mt-1">Customer Signature</div>
+              <div className="flex justify-between items-start">
+                <div className="flex-1 mr-4">
+                  <div className="font-medium text-xs">Customer Signature</div>
+                  <div className="border-b" style={{ borderColor: colors.border }}>&nbsp;</div>
                 </div>
-                <div className="flex-1">
-                  <div className="border-b mt-1 ml-4" style={{ borderColor: colors.border }}>&nbsp;</div>
-                  <div className="font-medium text-xs mt-1 text-right">Date</div>
+                <div className="flex-1 ml-4">
+                  <div className="font-medium text-xs text-right">Date</div>
+                  <div className="border-b" style={{ borderColor: colors.border }}>&nbsp;</div>
                 </div>
               </div>
             </div>
