@@ -142,7 +142,8 @@ const OrderHistory: React.FC = () => {
     // Prepare data for Excel export
     const exportData = dataset.flatMap(order =>
       order.tables.map((table, index) => ({
-        'Order ID': order.id,
+      'Order ID': order.id,
+        'Order Form Number': order.orderFormNumber || order.order_form_number || 'N/A',
         'Customer Name': order.customerName,
         'Contact Number': order.contactNumber,
         'Address': order.address,
