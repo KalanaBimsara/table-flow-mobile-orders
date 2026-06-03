@@ -205,14 +205,25 @@ const OrderHistory: React.FC = () => {
               <CheckCircle2 size={20} />
               Completed Orders
             </div>
-            <Button 
-              onClick={exportToExcel}
-              disabled={searchFilteredOrders.length === 0}
-              className="flex items-center gap-2"
-            >
-              <Download size={16} />
-              Export to Excel
-            </Button>
+            <div className="flex items-center gap-2">
+              <Select value={exportStatus} onValueChange={(v) => setExportStatus(v as ExportStatus)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={exportToExcel}
+                className="flex items-center gap-2"
+              >
+                <Download size={16} />
+                Export to Excel
+              </Button>
+            </div>
           </CardTitle>
           <CardDescription>
             All successfully delivered and completed orders
