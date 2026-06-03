@@ -14,11 +14,15 @@ import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-f
 import * as XLSX from 'xlsx';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type ExportStatus = 'pending' | 'assigned' | 'completed';
 
 const OrderHistory: React.FC = () => {
-  const { completedOrders, hasMoreCompleted, loadingMoreCompleted, loadMoreCompletedOrders } = useApp();
+  const { orders, completedOrders, hasMoreCompleted, loadingMoreCompleted, loadMoreCompletedOrders } = useApp();
   const { user } = useAuth();
-  
+
+  const [exportStatus, setExportStatus] = useState<ExportStatus>('completed');
   const [searchFromDate, setSearchFromDate] = useState<Date | undefined>();
   const [searchToDate, setSearchToDate] = useState<Date | undefined>();
   const [customerNameSearch, setCustomerNameSearch] = useState('');
