@@ -109,13 +109,38 @@ const OrderHistory: React.FC = () => {
   const hasActiveFilters = searchFromDate || searchToDate || customerNameSearch.trim();
 
   const exportToExcel = () => {
-    if (searchFilteredOrders.length === 0) {
-      toast.error('No orders to export');
+    const sourceOrders = exportStatus === 'completed'
+      ? completedOrders
+      : orders.filter(o => o.status === exportStatus);
+
+    if (sourceOrders.length === 0) {
+      toast.error(`No ${exportStatus} orders to export`);
+      return;
+    }
+
+    // Apply date + name filters to chosen status
+    let dataset = sourceOrders;
+    if (customerNameSearch.trim()) {
+      dataset = dataset.filter(o => o.customerName.toLowerCase().includes(customerNameSearch.toLowerCase().trim()));
+    }
+    if (searchFromDate || searchToDate) {
+      dataset = dataset.filter(o => {
+        const ref = o.completedAt || o.createdAt;
+        if (!ref) return false;
+        const d = new Date(ref);
+        if (searchFromDate && d < startOfDay(searchFromDate)) return false;
+        if (searchToDate && d > endOfDay(searchToDate)) return false;
+        return true;
+      });
+    }
+
+    if (dataset.length === 0) {
+      toast.error('No orders match the current filters');
       return;
     }
 
     // Prepare data for Excel export
-    const exportData = searchFilteredOrders.flatMap(order => 
+    const exportData = dataset.flatMap(order =>
       order.tables.map((table, index) => ({
         'Order ID': order.id,
         'Customer Name': order.customerName,
