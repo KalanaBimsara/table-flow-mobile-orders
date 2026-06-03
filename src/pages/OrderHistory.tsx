@@ -174,10 +174,10 @@ const OrderHistory: React.FC = () => {
     ws['!cols'] = colWidths;
 
     // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Completed Orders');
+    XLSX.utils.book_append_sheet(wb, ws, `${exportStatus} Orders`);
 
     // Generate filename with date range or current date
-    let filename = 'completed_orders';
+    let filename = `${exportStatus}_orders`;
     if (searchFromDate && searchToDate) {
       filename += `_${format(searchFromDate, 'yyyy-MM-dd')}_to_${format(searchToDate, 'yyyy-MM-dd')}`;
     } else if (searchFromDate) {
