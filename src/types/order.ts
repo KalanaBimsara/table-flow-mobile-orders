@@ -140,7 +140,7 @@ export const factoryPriceMap: Record<string, number> = {
   '48x96': 41000,
 
   //dinning table
-  '48x30': 11500,
+  'DM(48x30)': 11500,
   '36x36': 10000,
   '60x36': 12000,
 
