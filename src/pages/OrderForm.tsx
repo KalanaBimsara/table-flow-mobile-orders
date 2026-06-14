@@ -51,29 +51,18 @@ const OrderForm: React.FC = () => {
     if (!order) return;
     const generate = async () => {
       const map: Record<string, string> = {};
-      // Per-size unit breakdown e.g. { "24x48": 3, "DM(48x30)": 2 }
-      const sizeBreakdown: Record<string, number> = {};
-      for (const tbl of order.tables) {
-        sizeBreakdown[tbl.size] = (sizeBreakdown[tbl.size] || 0) + tbl.quantity;
-      }
       const totalUnits = order.tables.reduce((s, t) => s + t.quantity, 0);
       for (let t = 0; t < order.tables.length; t++) {
         const table = order.tables[t];
         for (const copy of FORM_COPIES) {
           const payload = {
-            v: 1,
             orderNo: order.orderFormNumber || order.id,
-            orderId: order.id,
             customer: order.customerName,
             district: order.customerDistrict || null,
-            deliveryDate: order.deliveryDate || null,
             deliveryType: order.deliveryType || null,
             salesPerson: order.salesPersonName || null,
             copy: copy.copyLabel,
-            tableIndex: t + 1,
-            tableCount: order.tables.length,
             totalUnits,
-            sizeBreakdown,
             size: table.size,
             topColour: table.topColour || table.colour,
             frameColour: table.frameColour || null,
@@ -81,7 +70,6 @@ const OrderForm: React.FC = () => {
             legSize: table.legSize || null,
             legShape: table.legShape || null,
             legHeight: table.legHeight || null,
-            ts: order.createdAt ? new Date(order.createdAt).toISOString() : null,
           };
           try {
             const url = await QRCode.toDataURL(JSON.stringify(payload), {
