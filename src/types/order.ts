@@ -83,7 +83,7 @@ export const tableSizeOptions = [
   { value: '48x96', label: '48x96 Table', price: 43000 },
 
   // Dining Tables
-  { value: '48x30', label: '48x30 Dinning', price: 16500 },
+  { value: 'DM(48x30)', label: '48x30 Dinning', price: 16500 },
   { value: 'DS (36x36)', label: '36x36 Dinning', price: 15000 },
   { value: 'DL (60x36)', label: '60x36 Dinning', price: 17000 },
 
@@ -140,7 +140,7 @@ export const factoryPriceMap: Record<string, number> = {
   '48x96': 41000,
 
   //dinning table
-  '48x30': 11500,
+  'DM(48x30)': 11500,
   '36x36': 10000,
   '60x36': 12000,
 
