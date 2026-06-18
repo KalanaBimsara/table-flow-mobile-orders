@@ -263,7 +263,16 @@ const SystemUserManagement = () => {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handleEmailClick(user)}
+                        title="Change Email"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handlePasswordClick(user)}
+                        title="Change Password"
                       >
                         <KeyRound className="h-4 w-4" />
                       </Button>
