@@ -470,7 +470,7 @@ export function OrderList() {
             </div>
           </div>
           <Tabs defaultValue="myDeliveries">
-            <TabsList className="grid w-full grid-cols-4 mobile-tabs-container">
+            <TabsList className="grid w-full grid-cols-3 mobile-tabs-container">
               <TabsTrigger value="myDeliveries" className="mobile-tab-item">
                 <Truck size={isMobile ? 14 : 16} />
                 <span className="mobile-tab-label">My Deliveries</span>
@@ -478,10 +478,6 @@ export function OrderList() {
               <TabsTrigger value="ready" className="mobile-tab-item">
                 <CheckCircle2 size={isMobile ? 14 : 16} />
                 <span className="mobile-tab-label">Ready</span>
-              </TabsTrigger>
-              <TabsTrigger value="available" className="mobile-tab-item">
-                <Package size={isMobile ? 14 : 16} />
-                <span className="mobile-tab-label">Available</span>
               </TabsTrigger>
               <TabsTrigger value="completed" className="mobile-tab-item">
                 <CheckCircle2 size={isMobile ? 14 : 16} />
@@ -498,7 +494,6 @@ export function OrderList() {
                       order={order}
                       onComplete={() => {
                         completeOrder(order.id);
-                        // Refresh completed orders after completing an order
                         setTimeout(() => fetchDeliveryCompletedOrders(), 1000);
                       }}
                     />
@@ -528,12 +523,27 @@ export function OrderList() {
                           order={order}
                           showSalesPerson={true}
                           actionButton={
-                            <button 
-                              onClick={() => handleSelfAssign(order.id)}
-                              className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
-                            >
-                              ✓ Assign to Me
-                            </button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium">
+                                  ✓ Assign to Me
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirm Assignment</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to assign order #{order.orderFormNumber || ''} ({order.customerName}) to yourself?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleSelfAssign(order.id)}>
+                                    Yes, Assign to Me
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           }
                         />
                       </div>
@@ -547,33 +557,6 @@ export function OrderList() {
               </div>
             </TabsContent>
             
-            <TabsContent value="available" className="mt-4">
-              <div className="space-y-6">
-                {filteredAvailableOrders.length > 0 ? (
-                  filteredAvailableOrders.map(order => (
-                    <div key={order.id} className="relative">
-                      <OrderCard 
-                        key={order.id} 
-                        order={order}
-                        showSalesPerson={true}
-                        actionButton={
-                          <button 
-                            onClick={() => handleSelfAssign(order.id)}
-                            className="w-full md:w-auto px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                          >
-                            Assign to Me
-                          </button>
-                        }
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-center py-10 text-xl md:text-2xl text-muted-foreground">
-                    No available orders to deliver.
-                  </p>
-                )}
-              </div>
-            </TabsContent>
             
             <TabsContent value="completed" className="mt-4">
               <div className="space-y-6">
