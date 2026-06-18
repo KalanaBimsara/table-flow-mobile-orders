@@ -220,6 +220,8 @@ export function OrderList() {
 
       const formatted = ordersData.map(order => ({
         id: order.id,
+        orderFormNumber: order.order_form_number,
+        order_form_number: order.order_form_number,
         customerName: order.customer_name,
         address: order.address,
         contactNumber: order.contact_number,
@@ -290,6 +292,8 @@ export function OrderList() {
 
       const formatted = ordersData.map(order => ({
         id: order.id,
+        orderFormNumber: order.order_form_number,
+        order_form_number: order.order_form_number,
         customerName: order.customer_name,
         address: order.address,
         contactNumber: order.contact_number,
@@ -359,6 +363,8 @@ export function OrderList() {
 
       const formatted = ordersData.map(order => ({
         id: order.id,
+        orderFormNumber: order.order_form_number,
+        order_form_number: order.order_form_number,
         customerName: order.customer_name,
         address: order.address,
         contactNumber: order.contact_number,
