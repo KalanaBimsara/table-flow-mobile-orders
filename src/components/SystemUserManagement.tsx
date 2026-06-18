@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Trash2, Edit, KeyRound, RefreshCw, Users } from 'lucide-react';
+import { Trash2, Edit, KeyRound, RefreshCw, Users, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 type UserProfile = {
@@ -17,6 +17,7 @@ type UserProfile = {
   name: string | null;
   role: 'admin' | 'customer' | 'delivery' | 'manager' | 'seller' | null;
   contact_no: string | null;
+  email: string | null;
   created_at: string;
 };
 
@@ -25,10 +26,12 @@ const SystemUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [editForm, setEditForm] = useState<{ name: string; role: string; contact_no: string }>({ name: '', role: 'customer', contact_no: '' });
   const [newPassword, setNewPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -119,6 +122,33 @@ const SystemUserManagement = () => {
     } catch (error: any) {
       console.error('Error changing password:', error);
       toast.error(error.message || 'Failed to change password');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEmailClick = (user: UserProfile) => {
+    setSelectedUser(user);
+    setNewEmail(user.email || '');
+    setEmailDialogOpen(true);
+  };
+
+  const handleEmailSubmit = async () => {
+    if (!selectedUser || !newEmail) return;
+    try {
+      setIsSubmitting(true);
+      const sessionToken = localStorage.getItem('super_admin_session');
+      const { error } = await supabase.functions.invoke('super-admin-change-email', {
+        body: { userId: selectedUser.id, newEmail, sessionToken }
+      });
+      if (error) throw error;
+      toast.success('Email changed successfully');
+      setEmailDialogOpen(false);
+      setNewEmail('');
+      loadUsers();
+    } catch (error: any) {
+      console.error('Error changing email:', error);
+      toast.error(error.message || 'Failed to change email');
     } finally {
       setIsSubmitting(false);
     }
