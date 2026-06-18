@@ -232,6 +232,7 @@ const SystemUserManagement = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Created</TableHead>
@@ -242,6 +243,7 @@ const SystemUserManagement = () => {
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">{user.email || 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={getRoleBadgeVariant(user.role)}>
                       {user.role || 'customer'}
