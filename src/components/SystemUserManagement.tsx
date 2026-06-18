@@ -383,6 +383,42 @@ const SystemUserManagement = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Change Email Dialog */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Email</DialogTitle>
+            <DialogDescription>
+              Set a new email for {selectedUser?.name || 'this user'}. They will use this email to sign in.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="new-email">New Email Address</Label>
+              <Input
+                id="new-email"
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="user@example.com"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEmailSubmit}
+              disabled={isSubmitting || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail) || newEmail === selectedUser?.email}
+            >
+              {isSubmitting ? 'Changing...' : 'Change Email'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       {/* Delete User Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
