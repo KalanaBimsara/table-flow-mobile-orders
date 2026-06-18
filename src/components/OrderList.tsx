@@ -195,7 +195,7 @@ export function OrderList() {
         .from('orders')
         .select(`
           id, customer_name, address, contact_number,
-          table_size, colour, quantity, price, note, status, created_at,
+          order_form_number, table_size, colour, quantity, price, note, status, created_at,
           completed_at, delivery_person_id, sales_person_name
         `)
         .eq('status', 'pending')
@@ -264,7 +264,7 @@ export function OrderList() {
         .from('orders')
         .select(`
           id, customer_name, address, contact_number,
-          table_size, colour, quantity, price, note, status, created_at,
+          order_form_number, table_size, colour, quantity, price, note, status, created_at,
           completed_at, delivery_person_id, sales_person_name
         `)
         .eq('status', 'pending')
@@ -334,7 +334,7 @@ export function OrderList() {
         .from('orders')
         .select(`
           id, customer_name, address, contact_number,
-          table_size, colour, quantity, price, note, status, created_at,
+          order_form_number, table_size, colour, quantity, price, note, status, created_at,
           completed_at, delivery_person_id, sales_person_name
         `)
         .eq('status', 'completed')
