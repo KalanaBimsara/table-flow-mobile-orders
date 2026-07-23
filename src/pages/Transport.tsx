@@ -193,11 +193,11 @@ const Transport: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
             <div>
               <label className="text-sm font-medium block mb-1">From</label>
-              <DatePicker date={fromDate} setDate={setFromDate} />
+              <DatePicker date={fromDate} onSelect={setFromDate} />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">To</label>
-              <DatePicker date={toDate} setDate={setToDate} />
+              <DatePicker date={toDate} onSelect={setToDate} />
             </div>
             <Button variant="outline" onClick={fetchRows} disabled={loading}>
               {loading ? 'Loading...' : 'Apply'}
