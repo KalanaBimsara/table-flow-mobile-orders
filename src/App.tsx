@@ -153,6 +153,14 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                               />
+                              <Route 
+                                path="/transport" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                                    <Transport />
+                                  </ProtectedRoute>
+                                } 
+                              />
                             </Route>
                             <Route path="*" element={<NotFound />} />
                           </Routes>
