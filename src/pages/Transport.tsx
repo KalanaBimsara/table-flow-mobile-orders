@@ -20,6 +20,8 @@ interface OrderRow {
   order_form_number: string | null;
   sales_person_name: string | null;
   customer_name: string;
+  address: string | null;
+  contact_number: string | null;
   price: number | null;
   delivery_fee: number | null;
   additional_charges: number | null;
@@ -31,11 +33,11 @@ interface OrderRow {
 
 const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string) => {
   const isManager = kind === 'manager';
-  const title = isManager ? 'ප්‍රවාහන කළමනාකරු වාර්තාව' : 'ධාවක වාර්තාව';
+  const title = isManager ? 'ප්‍රවාහන කළමනාකරු වාර්තාව' : 'රියදුරු වාර්තාව';
 
   const headers = isManager
-    ? ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම', 'ලැබීම්', 'ගෙවීම්']
-    : ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම'];
+    ? ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම', 'ලැබීම්', 'ගෙවීම්']
+    : ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම'];
 
   const bodyRows = rows
     .map((r) => {
@@ -43,6 +45,8 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
         <td></td>
         <td>${r.order_form_number ?? ''}</td>
         <td>${r.sales_person_name ?? ''}</td>
+        <td>${r.address ?? ''}</td>
+        <td>${r.contact_number ?? ''}</td>
         <td></td>
         <td class="num"></td>`;
       const managerExtra = isManager ? `<td class="num"></td><td class="num"></td>` : '';
@@ -50,23 +54,27 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
     })
     .join('');
 
-  // Column widths: wrap the narrow text headers, give numeric columns extra space for 10-digit values.
+  // Column widths: optimized for A4 landscape orientation.
   const colgroup = isManager
     ? `<colgroup>
-        <col style="width:11%"/>
-        <col style="width:10%"/>
-        <col style="width:15%"/>
+        <col style="width:8%"/>
+        <col style="width:8%"/>
         <col style="width:12%"/>
-        <col style="width:17%"/>
-        <col style="width:17%"/>
-        <col style="width:18%"/>
+        <col style="width:24%"/>
+        <col style="width:12%"/>
+        <col style="width:10%"/>
+        <col style="width:9%"/>
+        <col style="width:8.5%"/>
+        <col style="width:8.5%"/>
       </colgroup>`
     : `<colgroup>
+        <col style="width:9%"/>
+        <col style="width:9%"/>
         <col style="width:14%"/>
-        <col style="width:14%"/>
-        <col style="width:22%"/>
-        <col style="width:20%"/>
         <col style="width:30%"/>
+        <col style="width:14%"/>
+        <col style="width:12%"/>
+        <col style="width:12%"/>
       </colgroup>`;
 
   return `<!DOCTYPE html>
@@ -75,19 +83,19 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
 <meta charset="utf-8" />
 <title>${title}</title>
 <style>
-  @page { size: A4; margin: 12mm; }
+  @page { size: A4 landscape; margin: 10mm; }
   * { box-sizing: border-box; }
   body { font-family: "Iskoola Pota", "Noto Sans Sinhala", Arial, sans-serif; color:#111; margin:0; padding:0; }
   header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #111; padding-bottom:8px; margin-bottom:12px; }
-  h1 { font-size:20px; margin:0; }
-  .meta { font-size:12px; color:#333; text-align:right; }
+  h1 { font-size:20px; margin:0 0 4px 0; }
+  .meta { font-size:11px; color:#333; }
+  .signatures { display:flex; gap:36px; font-size:11px; align-items:flex-end; }
+  .sig { width:150px; text-align:center; }
+  .sig .line { border-top:1px solid #111; margin-top:24px; padding-top:4px; }
   table { width:100%; border-collapse:collapse; font-size:12px; table-layout: fixed; }
   th, td { border:1px solid #333; padding:6px 8px; vertical-align:top; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; }
   th { background:#f0f0f0; text-align:left; line-height:1.25; }
   td.num { text-align:right; font-variant-numeric: tabular-nums; }
-  .signatures { margin-top:32px; display:flex; justify-content:space-between; font-size:12px; }
-  .sig { width:45%; }
-  .sig .line { border-top:1px solid #111; margin-top:40px; padding-top:4px; text-align:center; }
   @media print { .noprint { display:none !important; } }
   .toolbar { position:fixed; top:8px; right:8px; }
   .toolbar button { padding:8px 14px; font-size:12px; cursor:pointer; }
@@ -96,10 +104,16 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
 <body>
   <div class="toolbar noprint"><button onclick="window.print()">Print</button></div>
   <header>
-    <h1>${title}</h1>
-    <div class="meta">
-      ඕඩර අංක පරාසය: ${rangeLabel}<br/>
-      මුද්‍රණ දිනය: ${format(new Date(), 'yyyy-MM-dd HH:mm')}
+    <div>
+      <h1>${title}</h1>
+      <div class="meta">
+        ඕඩර අංක පරාසය: ${rangeLabel}<br/>
+        මුද්‍රණ දිනය: ${format(new Date(), 'yyyy-MM-dd HH:mm')}
+      </div>
+    </div>
+    <div class="signatures">
+      <div class="sig"><div class="line">${isManager ? 'ප්‍රවාහන කළමනාකරු' : 'රියදුරු අත්සන'}</div></div>
+      <div class="sig"><div class="line">දිනය</div></div>
     </div>
   </header>
   <table>
@@ -109,10 +123,6 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
       ${bodyRows || `<tr><td colspan="${headers.length}" style="text-align:center;padding:20px;">දත්ත නොමැත</td></tr>`}
     </tbody>
   </table>
-  <div class="signatures">
-    <div class="sig"><div class="line">${isManager ? 'ප්‍රවාහන කළමනාකරු' : 'ධාවක අත්සන'}</div></div>
-    <div class="sig"><div class="line">දිනය</div></div>
-  </div>
   <script>window.addEventListener('load', () => setTimeout(() => window.print(), 400));</script>
 </body>
 </html>`;
@@ -129,7 +139,7 @@ const Transport: React.FC = () => {
     try {
       let q = supabase
         .from('orders')
-        .select('id, order_form_number, sales_person_name, customer_name, price, delivery_fee, additional_charges, completed_at, delivery_date, created_at, status')
+        .select('id, order_form_number, sales_person_name, customer_name, address, contact_number, price, delivery_fee, additional_charges, completed_at, delivery_date, created_at, status')
         .eq('status', 'pending')
         .not('order_form_number', 'is', null)
         .order('order_form_number', { ascending: true })
@@ -230,7 +240,7 @@ const Transport: React.FC = () => {
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuItem onClick={() => openReport('driver')}>
                     <FileText className="mr-2 h-4 w-4" />
-                    Driver Report (ධාවක)
+                    Driver Report (රියදුරු)
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => openReport('manager')}>
                     <FileText className="mr-2 h-4 w-4" />
