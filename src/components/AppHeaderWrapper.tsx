@@ -85,6 +85,10 @@ const AppHeaderWrapper = () => {
       href: '/management',
       label: 'Management',
       icon: Settings
+    }, {
+      href: '/transport',
+      label: 'Transport',
+      icon: Truck
     });
   }
   if (userRole === 'admin') {
