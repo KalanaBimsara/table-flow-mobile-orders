@@ -58,8 +58,8 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
   const title = isManager ? 'ප්‍රවාහන කළමනාකරු වාර්තාව' : 'රියදුරු වාර්තාව';
 
   const headers = isManager
-    ? ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම', 'ලැබීම්', 'ගෙවීම්']
-    : ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම'];
+    ? ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'ලැබිය යුතු මුදල', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම', 'ලැබීම්', 'ගෙවීම්']
+    : ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'ලැබිය යුතු මුදල', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම'];
 
   const bodyRows = rows
     .map((r) => {
@@ -69,6 +69,7 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
         <td>${r.sales_person_name ?? ''}</td>
         <td>${r.address ?? ''}</td>
         <td>${r.contact_number ?? ''}</td>
+        <td class="num"></td>
         <td></td>
         <td class="num"></td>`;
       const managerExtra = isManager ? `<td class="num"></td><td class="num"></td>` : '';
@@ -76,28 +77,36 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
     })
     .join('');
 
+  // Filler rows so the last page's remaining space stays usable for handwriting.
+  const fillerRows = Array.from({ length: 6 })
+    .map(() => `<tr class="filler">${headers.map(() => '<td>&nbsp;</td>').join('')}</tr>`)
+    .join('');
+
   // Column widths: optimized for A4 landscape orientation.
   const colgroup = isManager
     ? `<colgroup>
+        <col style="width:7%"/>
+        <col style="width:7%"/>
+        <col style="width:11%"/>
+        <col style="width:21%"/>
+        <col style="width:11%"/>
         <col style="width:8%"/>
-        <col style="width:8%"/>
-        <col style="width:12%"/>
-        <col style="width:24%"/>
-        <col style="width:12%"/>
         <col style="width:10%"/>
         <col style="width:9%"/>
-        <col style="width:8.5%"/>
-        <col style="width:8.5%"/>
+        <col style="width:8%"/>
+        <col style="width:8%"/>
       </colgroup>`
     : `<colgroup>
+        <col style="width:8%"/>
+        <col style="width:8%"/>
+        <col style="width:13%"/>
+        <col style="width:27%"/>
+        <col style="width:13%"/>
         <col style="width:9%"/>
-        <col style="width:9%"/>
-        <col style="width:14%"/>
-        <col style="width:30%"/>
-        <col style="width:14%"/>
-        <col style="width:12%"/>
-        <col style="width:12%"/>
+        <col style="width:11%"/>
+        <col style="width:11%"/>
       </colgroup>`;
+
 
   return `<!DOCTYPE html>
 <html lang="si">
@@ -143,6 +152,7 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
     <thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
     <tbody>
       ${bodyRows || `<tr><td colspan="${headers.length}" style="text-align:center;padding:20px;">දත්ත නොමැත</td></tr>`}
+      ${fillerRows}
     </tbody>
   </table>
   <script>window.addEventListener('load', () => setTimeout(() => window.print(), 400));</script>
