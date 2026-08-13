@@ -61,6 +61,11 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
     ? ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'ලැබිය යුතු මුදල', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම', 'ලැබීම්', 'ගෙවීම්']
     : ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'ලැබිය යුතු මුදල', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම'];
 
+  const formatAmount = (n: number | null) => {
+    if (n === null || n === undefined || isNaN(Number(n))) return '';
+    return Number(n).toLocaleString('en-LK', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  };
+
   const bodyRows = rows
     .map((r) => {
       const base = `
@@ -69,7 +74,7 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
         <td>${r.sales_person_name ?? ''}</td>
         <td>${r.address ?? ''}</td>
         <td>${r.contact_number ?? ''}</td>
-        <td class="num"></td>
+        <td class="num">${formatAmount(r.price)}</td>
         <td></td>
         <td class="num"></td>`;
       const managerExtra = isManager ? `<td class="num"></td><td class="num"></td>` : '';
