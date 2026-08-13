@@ -152,6 +152,7 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
     <thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
     <tbody>
       ${bodyRows || `<tr><td colspan="${headers.length}" style="text-align:center;padding:20px;">දත්ත නොමැත</td></tr>`}
+      ${fillerRows}
     </tbody>
   </table>
   <script>window.addEventListener('load', () => setTimeout(() => window.print(), 400));</script>
