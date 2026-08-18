@@ -797,28 +797,88 @@ export function OrderList() {
             </Select>
           </div>
         </div>
-        {/* Sales Person Filter */}
-        {salesPersons.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
+        {/* Table Filters */}
+        <div className="mb-6 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
               <Filter size={16} />
-              <label className="text-sm font-medium">Filter by Sales Person:</label>
+              <label className="text-sm font-medium">Filter by Table Details:</label>
             </div>
-            <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
-              <SelectTrigger className="w-full md:w-64">
-                <SelectValue placeholder="Select sales person" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                <SelectItem value="all">All Sales Persons</SelectItem>
-                {salesPersons.map(salesPerson => (
-                  <SelectItem key={salesPerson} value={salesPerson}>
-                    {salesPerson}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {hasActiveTableFilters && (
+              <Button variant="ghost" size="sm" onClick={clearTableFilters}>
+                Clear Table Filters
+              </Button>
+            )}
           </div>
-        )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {salesPersons.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Sales Person</label>
+                <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All sales persons" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                    <SelectItem value="all">All Sales Persons</SelectItem>
+                    {salesPersons.map(salesPerson => (
+                      <SelectItem key={salesPerson} value={salesPerson}>
+                        {salesPerson}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Top Color</label>
+              <Select value={selectedTopColor} onValueChange={setSelectedTopColor}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All top colors" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                  <SelectItem value="all">All Top Colors</SelectItem>
+                  {topColorOptions.map(color => (
+                    <SelectItem key={color} value={color}>
+                      {colorLabelMap[color] || color}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Frame Color</label>
+              <Select value={selectedFrameColor} onValueChange={setSelectedFrameColor}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All frame colors" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                  <SelectItem value="all">All Frame Colors</SelectItem>
+                  {frameColorOptions.map(color => (
+                    <SelectItem key={color} value={color}>
+                      {colorLabelMap[color] || color}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Size</label>
+              <Select value={selectedSize} onValueChange={setSelectedSize}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All sizes" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-[300px]">
+                  <SelectItem value="all">All Sizes</SelectItem>
+                  {sizeOptions.map(size => (
+                    <SelectItem key={size} value={size}>
+                      {sizeLabelMap[size] || size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
 
         <Tabs defaultValue="pending">
           <TabsList className="grid w-full grid-cols-3 gap-1">
