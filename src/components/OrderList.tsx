@@ -95,17 +95,34 @@ export function OrderList() {
     );
   };
 
-  const pendingOrders = filterOrdersBySearch(getFilteredOrders('pending', selectedSalesPerson));
-  const assignedOrders = filterOrdersBySearch(getFilteredOrders('assigned', selectedSalesPerson));
+  // Filter orders by table properties (top color, frame color, size)
+  const filterOrdersByTableProps = (orderList: Order[]) => {
+    if (selectedTopColor === 'all' && selectedFrameColor === 'all' && selectedSize === 'all') {
+      return orderList;
+    }
+
+    return orderList.filter(order => 
+      order.tables.some(table => {
+        const topColorMatch = selectedTopColor === 'all' || table.topColour === selectedTopColor;
+        const frameColorMatch = selectedFrameColor === 'all' || table.frameColour === selectedFrameColor;
+        const sizeMatch = selectedSize === 'all' || table.size === selectedSize;
+        return topColorMatch && frameColorMatch && sizeMatch;
+      })
+    );
+  };
+
+  const pendingOrders = filterOrdersByTableProps(filterOrdersBySearch(getFilteredOrders('pending', selectedSalesPerson)));
+  const assignedOrders = filterOrdersByTableProps(filterOrdersBySearch(getFilteredOrders('assigned', selectedSalesPerson)));
   
-  // Use paginated completed orders from context, apply sales person filter
+  // Use paginated completed orders from context, apply sales person filter and table filters
   const completedOrders = useMemo(() => {
     let filtered = paginatedCompletedOrders;
     if (selectedSalesPerson && selectedSalesPerson !== 'all') {
       filtered = filtered.filter(order => order.salesPersonName === selectedSalesPerson);
     }
+    filtered = filterOrdersByTableProps(filtered);
     return filterOrdersBySearch(filtered);
-  }, [paginatedCompletedOrders, selectedSalesPerson, globalSearch, searchFilter]);
+  }, [paginatedCompletedOrders, selectedSalesPerson, selectedTopColor, selectedFrameColor, selectedSize, globalSearch, searchFilter]);
   
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
   const [readyOrders, setReadyOrders] = useState<Order[]>([]);
