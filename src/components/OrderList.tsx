@@ -160,9 +160,13 @@ export function OrderList() {
   // Label maps for color and size options
   const colorLabelMap = useMemo(() => {
     const map: Record<string, string> = {};
-    import('@/types/order').then(m => {
-      m.colourOptions.forEach(option => map[option.value] = option.label);
-    });
+    colourOptions.forEach(option => map[option.value] = option.label);
+    return map;
+  }, []);
+
+  const sizeLabelMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    tableSizeOptions.forEach(option => map[option.value] = option.label);
     return map;
   }, []);
 
