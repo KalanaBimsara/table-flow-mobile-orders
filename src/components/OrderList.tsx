@@ -129,6 +129,43 @@ export function OrderList() {
   const [deliveryCompletedOrders, setDeliveryCompletedOrders] = useState<Order[]>([]);
   const salesPersons = getSalesPersons();
 
+  // Derive available filter options from all orders
+  const topColorOptions = useMemo(() => {
+    const colors = new Set<string>();
+    orders.forEach(order => order.tables.forEach(table => {
+      if (table.topColour) colors.add(table.topColour);
+    }));
+    return Array.from(colors).sort();
+  }, [orders]);
+
+  const frameColorOptions = useMemo(() => {
+    const colors = new Set<string>();
+    orders.forEach(order => order.tables.forEach(table => {
+      if (table.frameColour) colors.add(table.frameColour);
+    }));
+    return Array.from(colors).sort();
+  }, [orders]);
+
+  const sizeOptions = useMemo(() => {
+    const sizes = new Set<string>();
+    orders.forEach(order => order.tables.forEach(table => {
+      if (table.size) sizes.add(table.size);
+    }));
+    completedOrders.forEach(order => order.tables.forEach(table => {
+      if (table.size) sizes.add(table.size);
+    }));
+    return Array.from(sizes).sort();
+  }, [orders, completedOrders]);
+
+  // Label maps for color and size options
+  const colorLabelMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    import('@/types/order').then(m => {
+      m.colourOptions.forEach(option => map[option.value] = option.label);
+    });
+    return map;
+  }, []);
+
   // Apply date and customer name filters to completed orders
   const searchFilteredCompletedOrders = useMemo(() => {
     let filtered = completedOrders;
