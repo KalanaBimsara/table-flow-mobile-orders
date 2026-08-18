@@ -240,6 +240,14 @@ export function OrderList() {
     setCustomerNameSearch('');
   };
 
+  const clearTableFilters = () => {
+    setSelectedTopColor('all');
+    setSelectedFrameColor('all');
+    setSelectedSize('all');
+  };
+
+  const hasActiveTableFilters = selectedTopColor !== 'all' || selectedFrameColor !== 'all' || selectedSize !== 'all';
+
   const hasActiveCompletedFilters = searchFromDate || searchToDate || customerNameSearch.trim();
 
   React.useEffect(() => {
