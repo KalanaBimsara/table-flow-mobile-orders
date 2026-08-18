@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Order, OrderStatus, DeliveryStatus } from '@/types/order';
+import { Order, OrderStatus, DeliveryStatus, colourOptions, tableSizeOptions } from '@/types/order';
 import { DatePicker } from '@/components/DatePicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
