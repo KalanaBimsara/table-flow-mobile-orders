@@ -129,33 +129,39 @@ export function OrderList() {
   const [deliveryCompletedOrders, setDeliveryCompletedOrders] = useState<Order[]>([]);
   const salesPersons = getSalesPersons();
 
-  // Derive available filter options from all orders
+  // Derive available filter options from all orders (pending + assigned + completed)
   const topColorOptions = useMemo(() => {
     const colors = new Set<string>();
     orders.forEach(order => order.tables.forEach(table => {
       if (table.topColour) colors.add(table.topColour);
     }));
+    paginatedCompletedOrders.forEach(order => order.tables.forEach(table => {
+      if (table.topColour) colors.add(table.topColour);
+    }));
     return Array.from(colors).sort();
-  }, [orders]);
+  }, [orders, paginatedCompletedOrders]);
 
   const frameColorOptions = useMemo(() => {
     const colors = new Set<string>();
     orders.forEach(order => order.tables.forEach(table => {
       if (table.frameColour) colors.add(table.frameColour);
     }));
+    paginatedCompletedOrders.forEach(order => order.tables.forEach(table => {
+      if (table.frameColour) colors.add(table.frameColour);
+    }));
     return Array.from(colors).sort();
-  }, [orders]);
+  }, [orders, paginatedCompletedOrders]);
 
   const sizeOptions = useMemo(() => {
     const sizes = new Set<string>();
     orders.forEach(order => order.tables.forEach(table => {
       if (table.size) sizes.add(table.size);
     }));
-    completedOrders.forEach(order => order.tables.forEach(table => {
+    paginatedCompletedOrders.forEach(order => order.tables.forEach(table => {
       if (table.size) sizes.add(table.size);
     }));
     return Array.from(sizes).sort();
-  }, [orders, completedOrders]);
+  }, [orders, paginatedCompletedOrders]);
 
   // Label maps for color and size options
   const colorLabelMap = useMemo(() => {
