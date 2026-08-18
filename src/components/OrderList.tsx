@@ -52,6 +52,9 @@ export function OrderList() {
   const { userRole, user } = useAuth();
   const isMobile = useIsMobile();
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
+  const [selectedTopColor, setSelectedTopColor] = useState<string>('all');
+  const [selectedFrameColor, setSelectedFrameColor] = useState<string>('all');
+  const [selectedSize, setSelectedSize] = useState<string>('all');
   const [globalSearch, setGlobalSearch] = useState('');
   const [searchFilter, setSearchFilter] = useState<'all' | 'orderNumber' | 'customerName' | 'address'>('all');
   
