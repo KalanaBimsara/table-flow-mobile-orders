@@ -173,6 +173,24 @@ export function OrderList() {
     return Array.from(sizes).sort();
   }, [orders, paginatedCompletedOrders]);
 
+  // Build the size dropdown options: standard sizes (from the order form) plus "Custom Size"
+  // for any non-standard sizes present in the orders.
+  const sizeFilterOptions = useMemo(() => {
+    const standardSizes = tableSizeOptions.map(option => ({
+      value: option.value,
+      label: option.label,
+    }));
+    const hasCustomSize = orders.some(order =>
+      order.tables.some(table => table.size && !standardSizeValues.has(table.size))
+    ) || paginatedCompletedOrders.some(order =>
+      order.tables.some(table => table.size && !standardSizeValues.has(table.size))
+    );
+    if (hasCustomSize) {
+      return [...standardSizes, { value: 'custom', label: 'Custom Size' }];
+    }
+    return standardSizes;
+  }, [orders, paginatedCompletedOrders, standardSizeValues]);
+
   // Label maps for color and size options
   const colorLabelMap = useMemo(() => {
     const map: Record<string, string> = {};
