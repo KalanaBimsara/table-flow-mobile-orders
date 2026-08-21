@@ -162,17 +162,6 @@ export function OrderList() {
     return Array.from(colors).sort();
   }, [orders, paginatedCompletedOrders]);
 
-  const sizeOptions = useMemo(() => {
-    const sizes = new Set<string>();
-    orders.forEach(order => order.tables.forEach(table => {
-      if (table.size) sizes.add(table.size);
-    }));
-    paginatedCompletedOrders.forEach(order => order.tables.forEach(table => {
-      if (table.size) sizes.add(table.size);
-    }));
-    return Array.from(sizes).sort();
-  }, [orders, paginatedCompletedOrders]);
-
   // Build the size dropdown options: standard sizes (from the order form) plus "Custom Size"
   // for any non-standard sizes present in the orders.
   const sizeFilterOptions = useMemo(() => {
@@ -191,16 +180,10 @@ export function OrderList() {
     return standardSizes;
   }, [orders, paginatedCompletedOrders, standardSizeValues]);
 
-  // Label maps for color and size options
+  // Label map for color options
   const colorLabelMap = useMemo(() => {
     const map: Record<string, string> = {};
     colourOptions.forEach(option => map[option.value] = option.label);
-    return map;
-  }, []);
-
-  const sizeLabelMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    tableSizeOptions.forEach(option => map[option.value] = option.label);
     return map;
   }, []);
 
