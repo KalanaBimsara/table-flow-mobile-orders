@@ -95,6 +95,9 @@ export function OrderList() {
     );
   };
 
+  // Set of standard size values (from the order form dropdown)
+  const standardSizeValues = useMemo(() => new Set(tableSizeOptions.map(o => o.value)), []);
+
   // Filter orders by table properties (top color, frame color, size)
   const filterOrdersByTableProps = (orderList: Order[]) => {
     if (selectedTopColor === 'all' && selectedFrameColor === 'all' && selectedSize === 'all') {
@@ -105,7 +108,14 @@ export function OrderList() {
       order.tables.some(table => {
         const topColorMatch = selectedTopColor === 'all' || table.topColour === selectedTopColor;
         const frameColorMatch = selectedFrameColor === 'all' || table.frameColour === selectedFrameColor;
-        const sizeMatch = selectedSize === 'all' || table.size === selectedSize;
+        let sizeMatch = selectedSize === 'all';
+        if (!sizeMatch) {
+          if (selectedSize === 'custom') {
+            sizeMatch = !standardSizeValues.has(table.size);
+          } else {
+            sizeMatch = table.size === selectedSize;
+          }
+        }
         return topColorMatch && frameColorMatch && sizeMatch;
       })
     );
