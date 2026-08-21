@@ -903,9 +903,9 @@ export function OrderList() {
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-[300px]">
                   <SelectItem value="all">All Sizes</SelectItem>
-                  {sizeOptions.map(size => (
-                    <SelectItem key={size} value={size}>
-                      {sizeLabelMap[size] || size}
+                  {sizeFilterOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
