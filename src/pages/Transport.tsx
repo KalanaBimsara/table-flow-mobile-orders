@@ -22,6 +22,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+// The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
+const SL_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+// Convert a `datetime-local` value (entered as Sri Lanka local time) to a UTC ISO string
+// so Postgres compares it correctly against timestamptz columns.
+const slLocalToUtcIso = (local: string) => {
+  const ms = Date.parse(`${local}:00`.slice(0, 19) + 'Z');
+  if (isNaN(ms)) return null;
+  return new Date(ms - SL_OFFSET_MS).toISOString();
+};
+
+// Format a stored UTC timestamp in Sri Lanka time.
+const formatSl = (iso: string) => format(new Date(new Date(iso).getTime() + SL_OFFSET_MS), 'yyyy-MM-dd HH:mm');
+
 type ReportKind = 'driver' | 'manager';
 
 interface OrderTableSummary {
@@ -144,7 +158,7 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
       <h1>${title}</h1>
       <div class="meta">
         ඕඩර අංක පරාසය: ${rangeLabel}<br/>
-        මුද්‍රණ දිනය: ${format(new Date(), 'yyyy-MM-dd HH:mm')}
+        මුද්‍රණ දිනය: ${formatSl(new Date().toISOString())}
       </div>
     </div>
     <div class="signatures">
@@ -187,8 +201,10 @@ const Transport: React.FC = () => {
         .limit(1000);
       if (fromNo.trim()) q = q.gte('order_form_number', fromNo.trim());
       if (toNo.trim()) q = q.lte('order_form_number', toNo.trim());
-      if (fromDate.trim()) q = q.gte('created_at', fromDate.trim());
-      if (toDate.trim()) q = q.lte('created_at', toDate.trim());
+      const fromIso = fromDate.trim() ? slLocalToUtcIso(fromDate.trim()) : null;
+      const toIso = toDate.trim() ? slLocalToUtcIso(toDate.trim()) : null;
+      if (fromIso) q = q.gte('created_at', fromIso);
+      if (toIso) q = q.lte('created_at', toIso);
       const { data, error } = await q;
       if (error) throw error;
       const sorted = ((data || []) as OrderRow[]).slice().sort((a, b) => {
@@ -285,7 +301,7 @@ const Transport: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">From Date/Time</label>
+              <label className="text-sm font-medium block mb-1">From Date/Time (Sri Lanka)</label>
               <Input
                 type="datetime-local"
                 value={fromDate}
@@ -293,7 +309,7 @@ const Transport: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">To Date/Time</label>
+              <label className="text-sm font-medium block mb-1">To Date/Time (Sri Lanka)</label>
               <Input
                 type="datetime-local"
                 value={toDate}
@@ -391,7 +407,7 @@ const Transport: React.FC = () => {
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.order_form_number ?? '-'}</TableCell>
                       <TableCell>{order.customer_name}</TableCell>
-                      <TableCell>{format(new Date(order.created_at), 'yyyy-MM-dd HH:mm')}</TableCell>
+                      <TableCell>{formatSl(order.created_at)}</TableCell>
                       <TableCell className="text-right">{order.units}</TableCell>
                     </TableRow>
                   ))
