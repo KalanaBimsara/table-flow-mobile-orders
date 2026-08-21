@@ -33,8 +33,12 @@ const slLocalToUtcIso = (local: string) => {
   return new Date(ms - SL_OFFSET_MS).toISOString();
 };
 
-// Format a stored UTC timestamp in Sri Lanka time.
-const formatSl = (iso: string) => format(new Date(new Date(iso).getTime() + SL_OFFSET_MS), 'yyyy-MM-dd HH:mm');
+// Format a stored UTC timestamp in Sri Lanka time (independent of the browser's timezone).
+const formatSl = (iso: string) => {
+  const d = new Date(new Date(iso).getTime() + SL_OFFSET_MS);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+};
 
 type ReportKind = 'driver' | 'manager';
 
