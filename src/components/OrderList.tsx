@@ -8,6 +8,7 @@ import { Package, Truck, CheckCircle2, ShoppingBag, Filter, Calendar, Search } f
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
+import { useOrderSearch } from '@/hooks/useOrderSearch';
 import { toast } from '@/hooks/use-toast';
 import { Order, OrderStatus, DeliveryStatus, colourOptions, tableSizeOptions } from '@/types/order';
 import { DatePicker } from '@/components/DatePicker';
