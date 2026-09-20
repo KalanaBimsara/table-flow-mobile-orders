@@ -1060,7 +1060,7 @@ export function OrderList() {
                 )}
 
                 {/* Show More Button */}
-                {!hasActiveCompletedFilters && hasMoreCompleted && sortedCompletedDateKeys.length > 0 && (
+                {!searchActive && !hasActiveCompletedFilters && hasMoreCompleted && sortedCompletedDateKeys.length > 0 && (
                   <div className="flex justify-center pt-4">
                     <Button 
                       onClick={loadMoreCompletedOrders}
