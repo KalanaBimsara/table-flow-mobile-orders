@@ -373,7 +373,7 @@ const Transport: React.FC = () => {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            {rows.length} pending orders in range
+            {rows.length} pending orders in range · {summaryRows.length} total orders in range
           </div>
         </CardContent>
       </Card>
