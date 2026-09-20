@@ -831,6 +831,11 @@ export function OrderList() {
               </SelectContent>
             </Select>
           </div>
+          {searchActive && (
+            <p className="text-xs text-muted-foreground">
+              {searchLoading ? 'Searching all orders…' : `Showing ${searchResults.length} matching order(s) from the database.`}
+            </p>
+          )}
         </div>
         {/* Table Filters */}
         <div className="mb-6 space-y-4">
