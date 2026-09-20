@@ -249,7 +249,7 @@ const Transport: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchRows();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
