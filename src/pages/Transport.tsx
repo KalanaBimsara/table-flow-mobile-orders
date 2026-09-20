@@ -189,6 +189,7 @@ const Transport: React.FC = () => {
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [rows, setRows] = useState<OrderRow[]>([]);
+  const [summaryRows, setSummaryRows] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchRows = async () => {
