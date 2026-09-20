@@ -192,33 +192,54 @@ const Transport: React.FC = () => {
   const [summaryRows, setSummaryRows] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchRows = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      let q = supabase
+      const applyFilters = (q: any) => {
+        if (fromNo.trim()) q = q.gte('order_form_number', fromNo.trim());
+        if (toNo.trim()) q = q.lte('order_form_number', toNo.trim());
+        const fromIso = fromDate.trim() ? slLocalToUtcIso(fromDate.trim()) : null;
+        const toIso = toDate.trim() ? slLocalToUtcIso(toDate.trim()) : null;
+        if (fromIso) q = q.gte('created_at', fromIso);
+        if (toIso) q = q.lte('created_at', toIso);
+        return q;
+      };
+
+      const baseSelect =
+        'id, order_form_number, sales_person_name, customer_name, address, contact_number, price, delivery_fee, additional_charges, completed_at, delivery_date, created_at, status, order_tables(quantity)';
+
+      let reportQ = supabase
         .from('orders')
-        .select(
-          'id, order_form_number, sales_person_name, customer_name, address, contact_number, price, delivery_fee, additional_charges, completed_at, delivery_date, created_at, status, order_tables(quantity)'
-        )
+        .select(baseSelect)
         .eq('status', 'pending')
         .not('order_form_number', 'is', null)
         .order('order_form_number', { ascending: true })
         .limit(1000);
-      if (fromNo.trim()) q = q.gte('order_form_number', fromNo.trim());
-      if (toNo.trim()) q = q.lte('order_form_number', toNo.trim());
-      const fromIso = fromDate.trim() ? slLocalToUtcIso(fromDate.trim()) : null;
-      const toIso = toDate.trim() ? slLocalToUtcIso(toDate.trim()) : null;
-      if (fromIso) q = q.gte('created_at', fromIso);
-      if (toIso) q = q.lte('created_at', toIso);
-      const { data, error } = await q;
-      if (error) throw error;
-      const sorted = ((data || []) as OrderRow[]).slice().sort((a, b) => {
-        const an = Number(a.order_form_number);
-        const bn = Number(b.order_form_number);
-        if (!isNaN(an) && !isNaN(bn)) return an - bn;
-        return String(a.order_form_number).localeCompare(String(b.order_form_number));
-      });
-      setRows(sorted);
+      reportQ = applyFilters(reportQ);
+
+      let summaryQ = supabase
+        .from('orders')
+        .select(baseSelect)
+        .not('order_form_number', 'is', null)
+        .order('order_form_number', { ascending: true })
+        .limit(1000);
+      summaryQ = applyFilters(summaryQ);
+
+      const [{ data: reportData, error: reportError }, { data: summaryData, error: summaryError }] =
+        await Promise.all([reportQ, summaryQ]);
+      if (reportError) throw reportError;
+      if (summaryError) throw summaryError;
+
+      const sortRows = (data: any[]) =>
+        (data || []).slice().sort((a: OrderRow, b: OrderRow) => {
+          const an = Number(a.order_form_number);
+          const bn = Number(b.order_form_number);
+          if (!isNaN(an) && !isNaN(bn)) return an - bn;
+          return String(a.order_form_number).localeCompare(String(b.order_form_number));
+        });
+
+      setRows(sortRows(reportData) as OrderRow[]);
+      setSummaryRows(sortRows(summaryData) as OrderRow[]);
     } catch (e: any) {
       console.error(e);
       toast.error('දත්ත ලබා ගැනීමට අසමත් විය');
