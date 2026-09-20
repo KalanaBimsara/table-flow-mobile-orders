@@ -345,7 +345,7 @@ const Transport: React.FC = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-            <Button variant="outline" onClick={fetchRows} disabled={loading}>
+            <Button variant="outline" onClick={fetchData} disabled={loading}>
               {loading ? 'Loading...' : 'Apply'}
             </Button>
 
