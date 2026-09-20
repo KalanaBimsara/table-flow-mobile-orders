@@ -260,7 +260,7 @@ const Transport: React.FC = () => {
   }, [fromNo, toNo]);
 
   const summary = useMemo(() => {
-    const breakdown: OrderSummary[] = rows.map((r) => {
+    const breakdown: OrderSummary[] = summaryRows.map((r) => {
       const units = r.order_tables?.reduce((sum, t) => sum + (t.quantity || 0), 0) || 0;
       return {
         id: r.id,
@@ -272,11 +272,11 @@ const Transport: React.FC = () => {
     });
     const totalUnits = breakdown.reduce((sum, o) => sum + o.units, 0);
     return {
-      totalOrders: rows.length,
+      totalOrders: summaryRows.length,
       totalUnits,
       breakdown,
     };
-  }, [rows]);
+  }, [summaryRows]);
 
   const openReport = (kind: ReportKind) => {
     if (!rows.length) {
