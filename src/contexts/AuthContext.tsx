@@ -37,8 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       const profile = data as { role?: string | null; can_view_all_orders?: boolean | null } | null;
-      const privilegedRole = profile?.role === 'admin' || profile?.role === 'manager';
-      setCanViewAllOrders(privilegedRole || profile?.can_view_all_orders === true);
+      const isManager = profile?.role === 'manager';
+      setCanViewAllOrders(isManager || profile?.can_view_all_orders === true);
     };
 
     // Set up auth state listener

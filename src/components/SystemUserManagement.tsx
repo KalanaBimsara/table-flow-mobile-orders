@@ -279,7 +279,7 @@ const SystemUserManagement = () => {
                   </TableCell>
                   <TableCell>{user.contact_no || 'N/A'}</TableCell>
                   <TableCell>
-                    {user.role === 'admin' || user.role === 'manager' ? (
+                    {user.role === 'manager' ? (
                       <span className="text-xs text-muted-foreground">All orders (role)</span>
                     ) : (
                       <div className="flex items-center gap-2">
