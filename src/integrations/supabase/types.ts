@@ -592,7 +592,6 @@ export type Database = {
         Args: { algorithm: string; secret: string; signables: string }
         Returns: string
       }
-      current_user_can_view_all_orders: { Args: never; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
       sign: {
         Args: { algorithm?: string; payload: Json; secret: string }
