@@ -440,6 +440,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          can_view_all_orders: boolean
           contact_no: string | null
           created_at: string | null
           email: string | null
@@ -448,6 +449,7 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"] | null
         }
         Insert: {
+          can_view_all_orders?: boolean
           contact_no?: string | null
           created_at?: string | null
           email?: string | null
@@ -456,6 +458,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"] | null
         }
         Update: {
+          can_view_all_orders?: boolean
           contact_no?: string | null
           created_at?: string | null
           email?: string | null
@@ -589,6 +592,7 @@ export type Database = {
         Args: { algorithm: string; secret: string; signables: string }
         Returns: string
       }
+      current_user_can_view_all_orders: { Args: never; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
       sign: {
         Args: { algorithm?: string; payload: Json; secret: string }
