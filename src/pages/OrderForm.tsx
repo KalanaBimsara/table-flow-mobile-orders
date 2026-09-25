@@ -376,18 +376,19 @@ const OrderForm: React.FC = () => {
           {hasCustomizations && (
             <div style={{
               position: 'absolute',
-              bottom: '20px',
-              right: '20px',
-              backgroundColor: '#dc2626',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '8px',
+              top: '42px',
+              left: '50%',
+              color: '#dc2626',
+              padding: '5px 18px',
+              borderRadius: '4px',
               fontWeight: 'bold',
-              fontSize: '14px',
-              border: '3px solid #991b1b',
-              transform: 'rotate(-5deg)',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              zIndex: 10
+              fontSize: '18px',
+              lineHeight: '1',
+              border: '3px solid #dc2626',
+              transform: 'translateX(-50%) rotate(-3deg)',
+              zIndex: 10,
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none'
             }}>
               CUSTOM ORDER
             </div>
