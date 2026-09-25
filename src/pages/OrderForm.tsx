@@ -18,8 +18,8 @@ const FORM_COPIES = [
 
 const getQrCodeKey = (tableIndex: number, copyLabel: string) => `${tableIndex}-${copyLabel}`;
 
-const standardTableSizes = new Set(tableSizeOptions.map(option => option.value.toLowerCase()));
 const normalizeSpecification = (value: unknown) => String(value ?? '').trim().toLowerCase().replace(/["'\s-]/g, '');
+const standardTableSizes = new Set(tableSizeOptions.map(option => normalizeSpecification(option.value)));
 
 const getCustomizationFlags = (table: TableItem) => ({
   size: !standardTableSizes.has(normalizeSpecification(table.size)),
