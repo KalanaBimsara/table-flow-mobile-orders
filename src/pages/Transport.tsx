@@ -100,12 +100,22 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
 
   const bodyRows = rows
     .map((r) => {
-      const base = `
+      const base = isManager
+        ? `
         <td></td>
         <td>${r.order_form_number ?? ''}</td>
         <td>${r.sales_person_name ?? ''}</td>
         <td>${r.address ?? ''}</td>
         <td>${r.contact_number ?? ''}</td>
+        <td class="num">${formatAmount(r.price)}</td>
+        <td></td>
+        <td class="num"></td>`
+        : `
+        <td>${r.order_form_number ?? ''}</td>
+        <td>${r.sales_person_name ?? ''}</td>
+        <td>${r.address ?? ''}</td>
+        <td>${r.contact_number ?? ''}</td>
+        <td>${formatTables(r.order_tables)}</td>
         <td class="num">${formatAmount(r.price)}</td>
         <td></td>
         <td class="num"></td>`;
