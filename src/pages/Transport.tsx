@@ -44,6 +44,10 @@ type ReportKind = 'driver' | 'manager';
 
 interface OrderTableSummary {
   quantity: number;
+  size: string;
+  colour: string | null;
+  top_colour: string | null;
+  frame_colour: string | null;
 }
 
 interface OrderRow {
