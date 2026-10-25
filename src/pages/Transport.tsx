@@ -144,13 +144,13 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
         <col style="width:8%"/>
       </colgroup>`
     : `<colgroup>
-        <col style="width:8%"/>
-        <col style="width:8%"/>
-        <col style="width:13%"/>
-        <col style="width:27%"/>
-        <col style="width:13%"/>
-        <col style="width:9%"/>
+        <col style="width:7%"/>
         <col style="width:11%"/>
+        <col style="width:20%"/>
+        <col style="width:11%"/>
+        <col style="width:18%"/>
+        <col style="width:10%"/>
+        <col style="width:12%"/>
         <col style="width:11%"/>
       </colgroup>`;
 
@@ -230,7 +230,7 @@ const Transport: React.FC = () => {
       };
 
       const baseSelect =
-        'id, order_form_number, sales_person_name, customer_name, address, contact_number, price, delivery_fee, additional_charges, completed_at, delivery_date, created_at, status, order_tables(quantity)';
+        'id, order_form_number, sales_person_name, customer_name, address, contact_number, price, delivery_fee, additional_charges, completed_at, delivery_date, created_at, status, order_tables(quantity, size, colour, top_colour, frame_colour)';
 
       let reportQ = supabase
         .from('orders')
