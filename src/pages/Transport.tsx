@@ -81,7 +81,17 @@ const buildReportHtml = (kind: ReportKind, rows: OrderRow[], rangeLabel: string)
 
   const headers = isManager
     ? ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'ලැබිය යුතු මුදල', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම', 'ලැබීම්', 'ගෙවීම්']
-    : ['දිනය', 'ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'ලැබිය යුතු මුදල', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම'];
+    : ['ඕඩර අංකය', 'විකුණුම්කරු', 'ලිපිනය', 'දු. අංකය', 'මේස (ප්‍රමාණය / වර්ණය)', 'ලැබිය යුතු මුදල', 'මුදල් ලැබුණු ආකාරය', 'ලැබුණු වටිනාකම'];
+
+  const formatTables = (tables: OrderTableSummary[] | null) => {
+    if (!tables || tables.length === 0) return '';
+    return tables
+      .map((t) => {
+        const colors = [t.top_colour, t.frame_colour].filter(Boolean).join(' / ') || t.colour || '';
+        return `${t.size}${colors ? ` (${colors})` : ''} × ${t.quantity}`;
+      })
+      .join('<br/>');
+  };
 
   const formatAmount = (n: number | null) => {
     if (n === null || n === undefined || isNaN(Number(n))) return '';
