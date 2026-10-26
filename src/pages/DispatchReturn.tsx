@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import {
   Table,
@@ -23,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Download, PackageCheck, PackageX, RefreshCw, Search, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
@@ -64,6 +64,39 @@ interface DispatchReturnLog {
 
 const isReturnLog = (log: DispatchReturnLog) =>
   log.operation_mode.toLowerCase().includes('return');
+
+// Each mode carries its own colour: dispatched = primary, returned = destructive.
+const MODE_THEMES = {
+  dispatch: {
+    title: 'Dispatched Orders',
+    Icon: PackageCheck,
+    cardClass: 'border-primary/40',
+    headerClass: 'rounded-t-lg bg-primary/[0.06]',
+    titleClass: 'text-primary',
+    badgeClass: 'bg-primary text-primary-foreground',
+    activeButtonClass:
+      'bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground',
+    outlineClass: 'border-primary/50 text-primary',
+    headClass: 'bg-primary/[0.08] text-primary',
+    rowClass: 'hover:bg-primary/[0.05]',
+  },
+  return: {
+    title: 'Returned Orders',
+    Icon: PackageX,
+    cardClass: 'border-destructive/50',
+    headerClass: 'rounded-t-lg bg-destructive/[0.07]',
+    titleClass: 'text-destructive',
+    badgeClass: 'bg-destructive text-destructive-foreground',
+    activeButtonClass:
+      'bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90 hover:text-destructive-foreground',
+    outlineClass: 'border-destructive/60 text-destructive',
+    headClass: 'bg-destructive/[0.09] text-destructive',
+    rowClass: 'hover:bg-destructive/[0.06]',
+  },
+} as const;
+
+const INACTIVE_BUTTON_CLASS =
+  'bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground';
 
 const DispatchReturn = () => {
   const navigate = useNavigate();
@@ -155,6 +188,7 @@ const DispatchReturn = () => {
   const returnedLogs = useMemo(() => filteredLogs.filter(isReturnLog), [filteredLogs]);
 
   const visibleLogs = recordView === 'dispatch' ? dispatchedLogs : returnedLogs;
+  const theme = MODE_THEMES[recordView];
 
   const openOrder = async (log: DispatchReturnLog) => {
     setOpeningOrder(log.id);
@@ -260,7 +294,7 @@ const DispatchReturn = () => {
     <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className={theme.headClass}>
             <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
             <TableHead className="whitespace-nowrap">Order No</TableHead>
             <TableHead>Customer</TableHead>
@@ -285,7 +319,7 @@ const DispatchReturn = () => {
             </TableRow>
           ) : (
             rows.map((log) => (
-              <TableRow key={log.id}>
+              <TableRow key={log.id} className={theme.rowClass}>
                 <TableCell className="whitespace-nowrap">{formatSl(log.created_at)}</TableCell>
                 <TableCell className="font-medium whitespace-nowrap">
                   <Button
@@ -441,33 +475,52 @@ const DispatchReturn = () => {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <Button variant={recordView === 'dispatch' ? 'secondary' : 'ghost'} size="sm" onClick={() => setRecordView('dispatch')}>
-          <PackageCheck className="mr-2 h-4 w-4" />
+      {/* Mode switch — the active mode is shown filled in its own colour */}
+      <div className="grid grid-cols-2 gap-3 sm:mx-auto sm:max-w-lg">
+        <Button
+          variant="outline"
+          size="sm"
+          aria-pressed={recordView === 'dispatch'}
+          onClick={() => setRecordView('dispatch')}
+          className={cn(
+            'h-11 justify-center gap-2 font-semibold transition-colors',
+            recordView === 'dispatch'
+              ? MODE_THEMES.dispatch.activeButtonClass
+              : INACTIVE_BUTTON_CLASS
+          )}
+        >
+          <PackageCheck className="h-4 w-4" />
           Dispatched ({dispatchedLogs.length})
         </Button>
-        <Switch
-          aria-label="Show returned records"
-          checked={recordView === 'return'}
-          onCheckedChange={(checked) => setRecordView(checked ? 'return' : 'dispatch')}
-        />
-        <Button variant={recordView === 'return' ? 'secondary' : 'ghost'} size="sm" onClick={() => setRecordView('return')}>
-          <PackageX className="mr-2 h-4 w-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          aria-pressed={recordView === 'return'}
+          onClick={() => setRecordView('return')}
+          className={cn(
+            'h-11 justify-center gap-2 font-semibold transition-colors',
+            recordView === 'return'
+              ? MODE_THEMES.return.activeButtonClass
+              : INACTIVE_BUTTON_CLASS
+          )}
+        >
+          <PackageX className="h-4 w-4" />
           Returned ({returnedLogs.length})
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className={cn('transition-colors', theme.cardClass)}>
+        <CardHeader className={theme.headerClass}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              {recordView === 'dispatch' ? <PackageCheck className="h-5 w-5 text-primary" /> : <PackageX className="h-5 w-5 text-destructive" />}
-              {recordView === 'dispatch' ? 'Dispatched Orders' : 'Returned Orders'}
-              <Badge variant="secondary">{visibleLogs.length}</Badge>
+            <CardTitle className={cn('flex items-center gap-2 text-lg', theme.titleClass)}>
+              <theme.Icon className="h-5 w-5" />
+              {theme.title}
+              <Badge className={theme.badgeClass}>{visibleLogs.length}</Badge>
             </CardTitle>
             <Button
               variant="outline"
               size="sm"
+              className={cn('shrink-0', theme.outlineClass)}
               onClick={() => exportToExcel(visibleLogs, recordView === 'dispatch' ? 'Dispatched' : 'Returned', `${recordView === 'dispatch' ? 'dispatched' : 'returned'}-orders`)}
               disabled={visibleLogs.length === 0}
             >
