@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -64,6 +66,9 @@ const isReturnLog = (log: DispatchReturnLog) =>
   log.operation_mode.toLowerCase().includes('return');
 
 const DispatchReturn = () => {
+  const navigate = useNavigate();
+  const [recordView, setRecordView] = useState<'dispatch' | 'return'>('dispatch');
+  const [openingOrder, setOpeningOrder] = useState<string | null>(null);
   const [logs, setLogs] = useState<DispatchReturnLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -148,6 +153,35 @@ const DispatchReturn = () => {
     [filteredLogs]
   );
   const returnedLogs = useMemo(() => filteredLogs.filter(isReturnLog), [filteredLogs]);
+
+  const visibleLogs = recordView === 'dispatch' ? dispatchedLogs : returnedLogs;
+
+  const openOrder = async (log: DispatchReturnLog) => {
+    setOpeningOrder(log.id);
+    try {
+      // Resolve the printed order number when the scanner did not save an order ID.
+      let orderId = log.order_id;
+      if (!orderId) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('order_form_number', log.order_form_number)
+          .maybeSingle();
+        if (error) throw error;
+        orderId = data?.id || null;
+      }
+      if (!orderId) {
+        toast.error(`Order ${log.order_form_number} was not found or is not accessible`);
+        return;
+      }
+      navigate(`/order-form/${orderId}`);
+    } catch (error) {
+      console.error('Failed to open order details:', error);
+      toast.error('Unable to open order details');
+    } finally {
+      setOpeningOrder(null);
+    }
+  };
 
   const clearFilters = () => {
     setSearch('');
@@ -253,7 +287,19 @@ const DispatchReturn = () => {
             rows.map((log) => (
               <TableRow key={log.id}>
                 <TableCell className="whitespace-nowrap">{formatSl(log.created_at)}</TableCell>
-                <TableCell className="font-medium whitespace-nowrap">{log.order_form_number}</TableCell>
+                <TableCell className="font-medium whitespace-nowrap">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0"
+                    onClick={() => openOrder(log)}
+                    disabled={openingOrder !== null}
+                    aria-label={`View order ${log.order_form_number}`}
+                  >
+                    {openingOrder === log.id && <RefreshCw className="mr-1 h-3 w-3 animate-spin" />}
+                    {log.order_form_number}
+                  </Button>
+                </TableCell>
                 <TableCell>{log.customer_name || '—'}</TableCell>
                 <TableCell>{log.customer_district || '—'}</TableCell>
                 <TableCell className="whitespace-nowrap">{log.table_size || '—'}</TableCell>
@@ -395,50 +441,42 @@ const DispatchReturn = () => {
         </CardContent>
       </Card>
 
-      {/* Dispatched section */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <PackageCheck className="h-5 w-5 text-green-600" />
-              Dispatched Orders
-              <Badge variant="secondary">{dispatchedLogs.length}</Badge>
-            </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => exportToExcel(dispatchedLogs, 'Dispatched', 'dispatched-orders')}
-              disabled={dispatchedLogs.length === 0}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download Excel
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>{renderTable(dispatchedLogs, 'dispatch')}</CardContent>
-      </Card>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Button variant={recordView === 'dispatch' ? 'secondary' : 'ghost'} size="sm" onClick={() => setRecordView('dispatch')}>
+          <PackageCheck className="mr-2 h-4 w-4" />
+          Dispatched ({dispatchedLogs.length})
+        </Button>
+        <Switch
+          aria-label="Show returned records"
+          checked={recordView === 'return'}
+          onCheckedChange={(checked) => setRecordView(checked ? 'return' : 'dispatch')}
+        />
+        <Button variant={recordView === 'return' ? 'secondary' : 'ghost'} size="sm" onClick={() => setRecordView('return')}>
+          <PackageX className="mr-2 h-4 w-4" />
+          Returned ({returnedLogs.length})
+        </Button>
+      </div>
 
-      {/* Returned section */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <PackageX className="h-5 w-5 text-red-600" />
-              Returned Orders
-              <Badge variant="secondary">{returnedLogs.length}</Badge>
+              {recordView === 'dispatch' ? <PackageCheck className="h-5 w-5 text-primary" /> : <PackageX className="h-5 w-5 text-destructive" />}
+              {recordView === 'dispatch' ? 'Dispatched Orders' : 'Returned Orders'}
+              <Badge variant="secondary">{visibleLogs.length}</Badge>
             </CardTitle>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => exportToExcel(returnedLogs, 'Returned', 'returned-orders')}
-              disabled={returnedLogs.length === 0}
+              onClick={() => exportToExcel(visibleLogs, recordView === 'dispatch' ? 'Dispatched' : 'Returned', `${recordView === 'dispatch' ? 'dispatched' : 'returned'}-orders`)}
+              disabled={visibleLogs.length === 0}
             >
               <Download className="h-4 w-4 mr-2" />
               Download Excel
             </Button>
           </div>
         </CardHeader>
-        <CardContent>{renderTable(returnedLogs, 'return')}</CardContent>
+        <CardContent>{renderTable(visibleLogs, recordView)}</CardContent>
       </Card>
     </div>
   );
