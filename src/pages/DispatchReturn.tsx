@@ -77,7 +77,7 @@ const MODE_THEMES = {
     activeButtonClass:
       'bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground',
     outlineClass: 'border-primary/50 text-primary',
-    headClass: 'bg-primary/[0.08] text-primary',
+    headClass: 'bg-primary/[0.14] text-primary',
     rowClass: 'hover:bg-primary/[0.05]',
   },
   return: {
@@ -90,7 +90,7 @@ const MODE_THEMES = {
     activeButtonClass:
       'bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90 hover:text-destructive-foreground',
     outlineClass: 'border-destructive/60 text-destructive',
-    headClass: 'bg-destructive/[0.09] text-destructive',
+    headClass: 'bg-destructive/[0.14] text-destructive',
     rowClass: 'hover:bg-destructive/[0.06]',
   },
 } as const;
