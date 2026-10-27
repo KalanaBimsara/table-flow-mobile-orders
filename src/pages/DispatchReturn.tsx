@@ -70,8 +70,8 @@ const MODE_THEMES = {
   dispatch: {
     title: 'Dispatched Orders',
     Icon: PackageCheck,
-    cardClass: 'border-primary/40',
-    headerClass: 'rounded-t-lg bg-primary/[0.06]',
+    cardClass: 'border-primary/50',
+    headerClass: 'rounded-t-lg bg-primary/10',
     titleClass: 'text-primary',
     badgeClass: 'bg-primary text-primary-foreground',
     activeButtonClass:
@@ -83,8 +83,8 @@ const MODE_THEMES = {
   return: {
     title: 'Returned Orders',
     Icon: PackageX,
-    cardClass: 'border-destructive/50',
-    headerClass: 'rounded-t-lg bg-destructive/[0.07]',
+    cardClass: 'border-destructive/60',
+    headerClass: 'rounded-t-lg bg-destructive/10',
     titleClass: 'text-destructive',
     badgeClass: 'bg-destructive text-destructive-foreground',
     activeButtonClass:
