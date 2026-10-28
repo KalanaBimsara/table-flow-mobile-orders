@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, ScanLine, FileSpreadsheet, Download, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -19,6 +20,10 @@ const formatSl = (iso: string) => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 };
+
+// Display copy types stored in UPPER CASE (e.g. "PRODUCTION COPY") as title case.
+const formatCopyType = (value: string | null) =>
+  value ? value.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : '';
 
 // Convert a Sri Lanka local datetime-local value to a UTC ISO string.
 const slLocalToUtcIso = (local: string, endOfMinute = false) => {
@@ -142,6 +147,7 @@ const Production = () => {
       if (!q) return true;
       return (
         scan.order_form_number?.toLowerCase().includes(q) ||
+        scan.copy_type?.toLowerCase().includes(q) ||
         scan.customer_name?.toLowerCase().includes(q) ||
         scan.scanner_name?.toLowerCase().includes(q) ||
         scan.vehicle_number?.toLowerCase().includes(q) ||
@@ -156,6 +162,7 @@ const Production = () => {
     const rows = filterScans(tab).map(scan => ({
       'Date & Time (SL)': formatSl(scan.created_at),
       'Order No': scan.order_form_number,
+      'Copy Type': formatCopyType(scan.copy_type),
       'Customer': scan.customer_name || '',
       'District': scan.customer_district || '',
       'Size': scan.table_size || '',
@@ -174,7 +181,7 @@ const Production = () => {
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
     worksheet['!cols'] = [
-      { wch: 18 }, { wch: 12 }, { wch: 22 }, { wch: 14 }, { wch: 12 },
+      { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 22 }, { wch: 14 }, { wch: 12 },
       { wch: 12 }, { wch: 6 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 30 },
     ];
     const workbook = XLSX.utils.book_new();
@@ -227,6 +234,7 @@ const Production = () => {
             <TableRow className={theme.headClass}>
               <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
               <TableHead className="whitespace-nowrap">Order No</TableHead>
+              <TableHead className="whitespace-nowrap">Copy Type</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>District</TableHead>
               <TableHead>Size</TableHead>
@@ -253,6 +261,11 @@ const Production = () => {
                   >
                     {scan.order_form_number}
                   </Button>
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  <Badge variant="outline" className="text-xs font-medium">
+                    {formatCopyType(scan.copy_type) || '—'}
+                  </Badge>
                 </TableCell>
                 <TableCell>{scan.customer_name || '—'}</TableCell>
                 <TableCell>{scan.customer_district || '—'}</TableCell>
