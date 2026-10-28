@@ -32,6 +32,7 @@ interface ProductionScan {
   order_id: string | null;
   order_form_number: string;
   operation_mode: string;
+  copy_type: string | null;
   vehicle_number: string;
   scanner_name: string;
   device_id: string;
