@@ -367,8 +367,8 @@ const DispatchReturn = () => {
                 </TableCell>
                 <TableCell>{log.customer_name || '—'}</TableCell>
                 <TableCell>{log.customer_district || '—'}</TableCell>
-                <TableCell className="whitespace-nowrap">{sizeFor(log) || '—'}</TableCell>
-                <TableCell>{colourFor(log) || '—'}</TableCell>
+                <TableCell className="whitespace-pre-line">{sizeFor(log) || '—'}</TableCell>
+                <TableCell className="whitespace-pre-line">{colourFor(log) || '—'}</TableCell>
                 <TableCell className="text-center">{quantityFor(log)}</TableCell>
                 <TableCell className="whitespace-nowrap">{log.vehicle_number || '—'}</TableCell>
                 <TableCell>{log.scanner_name || '—'}</TableCell>

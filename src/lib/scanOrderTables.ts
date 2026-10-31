@@ -68,11 +68,11 @@ export async function fetchTablesForScans<T extends ScanLike>(scans: T[]): Promi
   return result;
 }
 
-/** "24x48 ×2, 24x60" — one entry per order_tables row. */
+/** One line per order_tables row: "24x48 ×2\n24x60". */
 export const formatTableSizes = (rows: OrderTableRow[]) =>
-  rows.map(r => (r.quantity > 1 ? `${r.size} ×${r.quantity}` : r.size)).join(', ');
+  rows.map(r => (r.quantity > 1 ? `${r.size} ×${r.quantity}` : r.size)).join('\n');
 
-/** "White / Black" — top and frame colours (falls back to the single colour column). */
+/** One line per order_tables row: "White / Black" (top / frame colours). */
 export const formatTableColours = (rows: OrderTableRow[]) =>
   rows
     .map(r => {
@@ -81,7 +81,7 @@ export const formatTableColours = (rows: OrderTableRow[]) =>
       return frame && frame !== top ? `${top} / ${frame}` : top;
     })
     .filter(Boolean)
-    .join(', ');
+    .join('\n');
 
 export const totalTableQuantity = (rows: OrderTableRow[]) =>
   rows.reduce((sum, r) => sum + (r.quantity || 0), 0);
