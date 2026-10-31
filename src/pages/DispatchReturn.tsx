@@ -24,6 +24,13 @@ import { Download, PackageCheck, PackageX, RefreshCw, Search, Truck } from 'luci
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import {
+  fetchTablesForScans,
+  formatTableColours,
+  formatTableSizes,
+  totalTableQuantity,
+  type OrderTableRow,
+} from '@/lib/scanOrderTables';
 
 // The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
 const SL_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -103,6 +110,7 @@ const DispatchReturn = () => {
   const [recordView, setRecordView] = useState<'dispatch' | 'return'>('dispatch');
   const [openingOrder, setOpeningOrder] = useState<string | null>(null);
   const [logs, setLogs] = useState<DispatchReturnLog[]>([]);
+  const [logTables, setLogTables] = useState<Map<string, OrderTableRow[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [fromDateTime, setFromDateTime] = useState('');
@@ -128,13 +136,35 @@ const DispatchReturn = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      setLogs((data as DispatchReturnLog[]) || []);
+      const rows = (data as DispatchReturnLog[]) || [];
+      setLogs(rows);
+      try {
+        setLogTables(await fetchTablesForScans(rows));
+      } catch (tableError) {
+        console.error('Failed to fetch order table details:', tableError);
+        toast.error('Could not load table details — showing scanned values instead');
+      }
     } catch (err) {
       console.error('Failed to fetch dispatch/return logs:', err);
       toast.error('Failed to load dispatch & return logs');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Table details come from the order_tables table; the log's own columns are the fallback.
+  const tablesFor = (log: DispatchReturnLog) => logTables.get(log.id) || [];
+  const sizeFor = (log: DispatchReturnLog) => {
+    const rows = tablesFor(log);
+    return rows.length ? formatTableSizes(rows) : log.table_size || '';
+  };
+  const colourFor = (log: DispatchReturnLog) => {
+    const rows = tablesFor(log);
+    return rows.length ? formatTableColours(rows) : log.colour || '';
+  };
+  const quantityFor = (log: DispatchReturnLog) => {
+    const rows = tablesFor(log);
+    return rows.length ? totalTableQuantity(rows) : log.quantity;
   };
 
   useEffect(() => {
