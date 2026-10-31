@@ -24,6 +24,13 @@ import { Download, PackageCheck, PackageX, RefreshCw, Search, Truck } from 'luci
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import {
+  fetchTablesForScans,
+  formatTableColours,
+  formatTableSizes,
+  totalTableQuantity,
+  type OrderTableRow,
+} from '@/lib/scanOrderTables';
 
 // The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
 const SL_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -103,6 +110,7 @@ const DispatchReturn = () => {
   const [recordView, setRecordView] = useState<'dispatch' | 'return'>('dispatch');
   const [openingOrder, setOpeningOrder] = useState<string | null>(null);
   const [logs, setLogs] = useState<DispatchReturnLog[]>([]);
+  const [logTables, setLogTables] = useState<Map<string, OrderTableRow[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [fromDateTime, setFromDateTime] = useState('');
@@ -128,13 +136,35 @@ const DispatchReturn = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      setLogs((data as DispatchReturnLog[]) || []);
+      const rows = (data as DispatchReturnLog[]) || [];
+      setLogs(rows);
+      try {
+        setLogTables(await fetchTablesForScans(rows));
+      } catch (tableError) {
+        console.error('Failed to fetch order table details:', tableError);
+        toast.error('Could not load table details — showing scanned values instead');
+      }
     } catch (err) {
       console.error('Failed to fetch dispatch/return logs:', err);
       toast.error('Failed to load dispatch & return logs');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Table details come from the order_tables table; the log's own columns are the fallback.
+  const tablesFor = (log: DispatchReturnLog) => logTables.get(log.id) || [];
+  const sizeFor = (log: DispatchReturnLog) => {
+    const rows = tablesFor(log);
+    return rows.length ? formatTableSizes(rows) : log.table_size || '';
+  };
+  const colourFor = (log: DispatchReturnLog) => {
+    const rows = tablesFor(log);
+    return rows.length ? formatTableColours(rows) : log.colour || '';
+  };
+  const quantityFor = (log: DispatchReturnLog) => {
+    const rows = tablesFor(log);
+    return rows.length ? totalTableQuantity(rows) : log.quantity;
   };
 
   useEffect(() => {
@@ -169,8 +199,8 @@ const DispatchReturn = () => {
         log.vehicle_number,
         log.scanner_name,
         log.device_id,
-        log.table_size,
-        log.colour,
+        sizeFor(log),
+        colourFor(log),
         log.copy_type,
         log.notes,
         log.operation_mode,
@@ -238,9 +268,9 @@ const DispatchReturn = () => {
       'Operation': log.operation_mode,
       'Customer': log.customer_name || '',
       'District': log.customer_district || '',
-      'Table Size': log.table_size || '',
-      'Colour': log.colour || '',
-      'Quantity': log.quantity,
+      'Table Size': sizeFor(log),
+      'Colour': colourFor(log),
+      'Quantity': quantityFor(log),
       'Vehicle / Driver': log.vehicle_number,
       'Scanner': log.scanner_name,
       'Device': log.device_id,
@@ -274,9 +304,9 @@ const DispatchReturn = () => {
         'Operation': log.operation_mode,
         'Customer': log.customer_name || '',
         'District': log.customer_district || '',
-        'Table Size': log.table_size || '',
-        'Colour': log.colour || '',
-        'Quantity': log.quantity,
+        'Table Size': sizeFor(log),
+        'Colour': colourFor(log),
+        'Quantity': quantityFor(log),
         'Vehicle / Driver': log.vehicle_number,
         'Scanner': log.scanner_name,
         'Device': log.device_id,
@@ -337,9 +367,9 @@ const DispatchReturn = () => {
                 </TableCell>
                 <TableCell>{log.customer_name || '—'}</TableCell>
                 <TableCell>{log.customer_district || '—'}</TableCell>
-                <TableCell className="whitespace-nowrap">{log.table_size || '—'}</TableCell>
-                <TableCell>{log.colour || '—'}</TableCell>
-                <TableCell className="text-center">{log.quantity}</TableCell>
+                <TableCell className="whitespace-nowrap">{sizeFor(log) || '—'}</TableCell>
+                <TableCell>{colourFor(log) || '—'}</TableCell>
+                <TableCell className="text-center">{quantityFor(log)}</TableCell>
                 <TableCell className="whitespace-nowrap">{log.vehicle_number || '—'}</TableCell>
                 <TableCell>{log.scanner_name || '—'}</TableCell>
                 <TableCell>{log.device_id || '—'}</TableCell>

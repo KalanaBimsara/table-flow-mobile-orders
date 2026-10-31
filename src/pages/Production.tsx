@@ -12,6 +12,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { cn } from '@/lib/utils';
+import {
+  fetchTablesForScans,
+  formatTableColours,
+  formatTableSizes,
+  totalTableQuantity,
+  type OrderTableRow,
+} from '@/lib/scanOrderTables';
 
 // The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
 const SL_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -73,6 +80,7 @@ type ScanTabKey = keyof typeof SCAN_TABS;
 
 const Production = () => {
   const [scans, setScans] = useState<ProductionScan[]>([]);
+  const [scanTables, setScanTables] = useState<Map<string, OrderTableRow[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -94,13 +102,35 @@ const Production = () => {
         .limit(2000);
 
       if (error) throw error;
-      setScans((data as ProductionScan[]) || []);
+      const rows = (data as ProductionScan[]) || [];
+      setScans(rows);
+      try {
+        setScanTables(await fetchTablesForScans(rows));
+      } catch (tableError) {
+        console.error('Error fetching order table details:', tableError);
+        toast.error('Could not load table details — showing scanned values instead');
+      }
     } catch (error) {
       console.error('Error fetching scans:', error);
       toast.error('Failed to fetch scan records');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Table details come from the order_tables table; the scan's own columns are the fallback.
+  const tablesFor = (scan: ProductionScan) => scanTables.get(scan.id) || [];
+  const sizeFor = (scan: ProductionScan) => {
+    const rows = tablesFor(scan);
+    return rows.length ? formatTableSizes(rows) : scan.table_size || '';
+  };
+  const colourFor = (scan: ProductionScan) => {
+    const rows = tablesFor(scan);
+    return rows.length ? formatTableColours(rows) : scan.colour || '';
+  };
+  const quantityFor = (scan: ProductionScan) => {
+    const rows = tablesFor(scan);
+    return rows.length ? totalTableQuantity(rows) : scan.quantity;
   };
 
   useEffect(() => {
@@ -151,8 +181,8 @@ const Production = () => {
         scan.customer_name?.toLowerCase().includes(q) ||
         scan.scanner_name?.toLowerCase().includes(q) ||
         scan.vehicle_number?.toLowerCase().includes(q) ||
-        scan.table_size?.toLowerCase().includes(q) ||
-        scan.colour?.toLowerCase().includes(q) ||
+        sizeFor(scan).toLowerCase().includes(q) ||
+        colourFor(scan).toLowerCase().includes(q) ||
         scan.notes?.toLowerCase().includes(q)
       );
     });
@@ -165,9 +195,9 @@ const Production = () => {
       'Copy Type': formatCopyType(scan.copy_type),
       'Customer': scan.customer_name || '',
       'District': scan.customer_district || '',
-      'Size': scan.table_size || '',
-      'Colour': scan.colour || '',
-      'Qty': scan.quantity,
+      'Size': sizeFor(scan),
+      'Colour': colourFor(scan),
+      'Qty': quantityFor(scan),
       'Vehicle / Driver': scan.vehicle_number || '',
       'Scanner': scan.scanner_name || '',
       'Device': scan.device_id || '',
@@ -269,9 +299,9 @@ const Production = () => {
                 </TableCell>
                 <TableCell>{scan.customer_name || '—'}</TableCell>
                 <TableCell>{scan.customer_district || '—'}</TableCell>
-                <TableCell className="whitespace-nowrap">{scan.table_size || '—'}</TableCell>
-                <TableCell>{scan.colour || '—'}</TableCell>
-                <TableCell className="text-center">{scan.quantity}</TableCell>
+                <TableCell className="whitespace-nowrap">{sizeFor(scan) || '—'}</TableCell>
+                <TableCell>{colourFor(scan) || '—'}</TableCell>
+                <TableCell className="text-center">{quantityFor(scan)}</TableCell>
                 <TableCell className="whitespace-nowrap">{scan.vehicle_number || '—'}</TableCell>
                 <TableCell>{scan.scanner_name || '—'}</TableCell>
                 <TableCell>{scan.device_id || '—'}</TableCell>
