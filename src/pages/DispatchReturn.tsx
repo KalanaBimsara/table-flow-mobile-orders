@@ -199,8 +199,8 @@ const DispatchReturn = () => {
         log.vehicle_number,
         log.scanner_name,
         log.device_id,
-        log.table_size,
-        log.colour,
+        sizeFor(log),
+        colourFor(log),
         log.copy_type,
         log.notes,
         log.operation_mode,
@@ -268,9 +268,9 @@ const DispatchReturn = () => {
       'Operation': log.operation_mode,
       'Customer': log.customer_name || '',
       'District': log.customer_district || '',
-      'Table Size': log.table_size || '',
-      'Colour': log.colour || '',
-      'Quantity': log.quantity,
+      'Table Size': sizeFor(log),
+      'Colour': colourFor(log),
+      'Quantity': quantityFor(log),
       'Vehicle / Driver': log.vehicle_number,
       'Scanner': log.scanner_name,
       'Device': log.device_id,
@@ -304,9 +304,9 @@ const DispatchReturn = () => {
         'Operation': log.operation_mode,
         'Customer': log.customer_name || '',
         'District': log.customer_district || '',
-        'Table Size': log.table_size || '',
-        'Colour': log.colour || '',
-        'Quantity': log.quantity,
+        'Table Size': sizeFor(log),
+        'Colour': colourFor(log),
+        'Quantity': quantityFor(log),
         'Vehicle / Driver': log.vehicle_number,
         'Scanner': log.scanner_name,
         'Device': log.device_id,
@@ -367,9 +367,9 @@ const DispatchReturn = () => {
                 </TableCell>
                 <TableCell>{log.customer_name || '—'}</TableCell>
                 <TableCell>{log.customer_district || '—'}</TableCell>
-                <TableCell className="whitespace-nowrap">{log.table_size || '—'}</TableCell>
-                <TableCell>{log.colour || '—'}</TableCell>
-                <TableCell className="text-center">{log.quantity}</TableCell>
+                <TableCell className="whitespace-nowrap">{sizeFor(log) || '—'}</TableCell>
+                <TableCell>{colourFor(log) || '—'}</TableCell>
+                <TableCell className="text-center">{quantityFor(log)}</TableCell>
                 <TableCell className="whitespace-nowrap">{log.vehicle_number || '—'}</TableCell>
                 <TableCell>{log.scanner_name || '—'}</TableCell>
                 <TableCell>{log.device_id || '—'}</TableCell>
