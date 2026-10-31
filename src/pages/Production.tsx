@@ -299,8 +299,8 @@ const Production = () => {
                 </TableCell>
                 <TableCell>{scan.customer_name || '—'}</TableCell>
                 <TableCell>{scan.customer_district || '—'}</TableCell>
-                <TableCell className="whitespace-nowrap">{sizeFor(scan) || '—'}</TableCell>
-                <TableCell>{colourFor(scan) || '—'}</TableCell>
+                <TableCell className="whitespace-pre-line">{sizeFor(scan) || '—'}</TableCell>
+                <TableCell className="whitespace-pre-line">{colourFor(scan) || '—'}</TableCell>
                 <TableCell className="text-center">{quantityFor(scan)}</TableCell>
                 <TableCell className="whitespace-nowrap">{scan.vehicle_number || '—'}</TableCell>
                 <TableCell>{scan.scanner_name || '—'}</TableCell>
