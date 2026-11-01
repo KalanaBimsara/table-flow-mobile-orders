@@ -28,9 +28,14 @@ import {
   fetchTablesForScans,
   formatTableColours,
   formatTableSizes,
+  formatUnitsBySize,
   totalTableQuantity,
   type OrderTableRow,
 } from '@/lib/scanOrderTables';
+
+// Grid lines on every cell so rows and columns are easy to follow.
+const GRID_CLASS = '[&_th]:border [&_th]:border-border [&_td]:border [&_td]:border-border';
+
 
 // The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
 const SL_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -166,6 +171,12 @@ const DispatchReturn = () => {
     const rows = tablesFor(log);
     return rows.length ? totalTableQuantity(rows) : log.quantity;
   };
+  const unitsFor = (log: DispatchReturnLog) => {
+    const rows = tablesFor(log);
+    if (rows.length) return formatUnitsBySize(rows);
+    return log.table_size ? `${log.table_size} — ${log.quantity}` : '';
+  };
+
 
   useEffect(() => {
     fetchLogs();
@@ -201,6 +212,8 @@ const DispatchReturn = () => {
         log.device_id,
         sizeFor(log),
         colourFor(log),
+        unitsFor(log),
+
         log.copy_type,
         log.notes,
         log.operation_mode,
@@ -271,6 +284,8 @@ const DispatchReturn = () => {
       'Table Size': sizeFor(log),
       'Colour': colourFor(log),
       'Quantity': quantityFor(log),
+      'Units by Size': unitsFor(log),
+
       'Vehicle / Driver': log.vehicle_number,
       'Scanner': log.scanner_name,
       'Device': log.device_id,
@@ -281,8 +296,9 @@ const DispatchReturn = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     worksheet['!cols'] = [
       { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 14 },
-      { wch: 12 }, { wch: 12 }, { wch: 9 }, { wch: 16 }, { wch: 14 },
+      { wch: 12 }, { wch: 12 }, { wch: 9 }, { wch: 16 }, { wch: 16 },
       { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 30 },
+
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -307,6 +323,8 @@ const DispatchReturn = () => {
         'Table Size': sizeFor(log),
         'Colour': colourFor(log),
         'Quantity': quantityFor(log),
+        'Units by Size': unitsFor(log),
+
         'Vehicle / Driver': log.vehicle_number,
         'Scanner': log.scanner_name,
         'Device': log.device_id,
