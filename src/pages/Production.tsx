@@ -275,7 +275,7 @@ const Production = () => {
 
     return (
       <div className="rounded-md border overflow-x-auto">
-        <Table>
+        <Table className={GRID_CLASS}>
           <TableHeader>
             <TableRow className={theme.headClass}>
               <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
@@ -286,6 +286,8 @@ const Production = () => {
               <TableHead>Size</TableHead>
               <TableHead>Colour</TableHead>
               <TableHead className="text-center">Qty</TableHead>
+              <TableHead className="whitespace-nowrap">Units by Size</TableHead>
+
               <TableHead className="whitespace-nowrap">Vehicle / Driver</TableHead>
               <TableHead>Scanner</TableHead>
               <TableHead>Device</TableHead>
@@ -318,6 +320,8 @@ const Production = () => {
                 <TableCell className="whitespace-pre-line">{sizeFor(scan) || '—'}</TableCell>
                 <TableCell className="whitespace-pre-line">{colourFor(scan) || '—'}</TableCell>
                 <TableCell className="text-center">{quantityFor(scan)}</TableCell>
+                <TableCell className="whitespace-pre-line">{unitsFor(scan) || '—'}</TableCell>
+
                 <TableCell className="whitespace-nowrap">{scan.vehicle_number || '—'}</TableCell>
                 <TableCell>{scan.scanner_name || '—'}</TableCell>
                 <TableCell>{scan.device_id || '—'}</TableCell>
