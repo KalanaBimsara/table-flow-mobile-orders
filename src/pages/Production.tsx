@@ -222,7 +222,7 @@ const Production = () => {
     const worksheet = XLSX.utils.json_to_sheet(rows);
     worksheet['!cols'] = [
       { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 22 }, { wch: 14 }, { wch: 12 },
-      { wch: 12 }, { wch: 6 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 30 },
+      { wch: 8 }, { wch: 12 }, { wch: 6 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 30 },
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, SCAN_TABS[tab].label);
@@ -269,7 +269,7 @@ const Production = () => {
 
     return (
       <div className="rounded-md border overflow-x-auto">
-        <Table>
+        <Table className="[&_th]:border [&_td]:border">
           <TableHeader>
             <TableRow className={theme.headClass}>
               <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
