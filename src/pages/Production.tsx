@@ -16,6 +16,8 @@ import {
   fetchTablesForScans,
   formatTableColours,
   formatTableSizes,
+  formatSizeUnits,
+  tableSizeUnits,
   totalTableQuantity,
   type OrderTableRow,
 } from '@/lib/scanOrderTables';
