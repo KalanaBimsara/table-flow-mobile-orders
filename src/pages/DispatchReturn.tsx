@@ -341,7 +341,7 @@ const DispatchReturn = () => {
 
   const renderTable = (rows: DispatchReturnLog[], variant: 'dispatch' | 'return') => (
     <div className="rounded-md border overflow-x-auto">
-      <Table>
+      <Table className={GRID_CLASS}>
         <TableHeader>
           <TableRow className={theme.headClass}>
             <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
@@ -351,6 +351,8 @@ const DispatchReturn = () => {
             <TableHead>Size</TableHead>
             <TableHead>Colour</TableHead>
             <TableHead className="text-center">Qty</TableHead>
+            <TableHead className="whitespace-nowrap">Units by Size</TableHead>
+
             <TableHead className="whitespace-nowrap">Vehicle / Driver</TableHead>
             <TableHead>Scanner</TableHead>
             <TableHead>Device</TableHead>
@@ -362,7 +364,7 @@ const DispatchReturn = () => {
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={variant === 'return' ? 13 : 12} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={variant === 'return' ? 14 : 13} className="text-center text-muted-foreground py-8">
                 {loading ? 'Loading…' : 'No records found'}
               </TableCell>
             </TableRow>
@@ -388,6 +390,8 @@ const DispatchReturn = () => {
                 <TableCell className="whitespace-pre-line">{sizeFor(log) || '—'}</TableCell>
                 <TableCell className="whitespace-pre-line">{colourFor(log) || '—'}</TableCell>
                 <TableCell className="text-center">{quantityFor(log)}</TableCell>
+                <TableCell className="whitespace-pre-line">{unitsFor(log) || '—'}</TableCell>
+
                 <TableCell className="whitespace-nowrap">{log.vehicle_number || '—'}</TableCell>
                 <TableCell>{log.scanner_name || '—'}</TableCell>
                 <TableCell>{log.device_id || '—'}</TableCell>
