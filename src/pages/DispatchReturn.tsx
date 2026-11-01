@@ -28,14 +28,9 @@ import {
   fetchTablesForScans,
   formatTableColours,
   formatTableSizes,
-  formatUnitsBySize,
   totalTableQuantity,
   type OrderTableRow,
 } from '@/lib/scanOrderTables';
-
-// Grid lines on every cell so rows and columns are easy to follow.
-const GRID_CLASS = '[&_th]:border [&_th]:border-border [&_td]:border [&_td]:border-border';
-
 
 // The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
 const SL_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -171,12 +166,6 @@ const DispatchReturn = () => {
     const rows = tablesFor(log);
     return rows.length ? totalTableQuantity(rows) : log.quantity;
   };
-  const unitsFor = (log: DispatchReturnLog) => {
-    const rows = tablesFor(log);
-    if (rows.length) return formatUnitsBySize(rows);
-    return log.table_size ? `${log.table_size} — ${log.quantity}` : '';
-  };
-
 
   useEffect(() => {
     fetchLogs();
@@ -212,8 +201,6 @@ const DispatchReturn = () => {
         log.device_id,
         sizeFor(log),
         colourFor(log),
-        unitsFor(log),
-
         log.copy_type,
         log.notes,
         log.operation_mode,
@@ -284,8 +271,6 @@ const DispatchReturn = () => {
       'Table Size': sizeFor(log),
       'Colour': colourFor(log),
       'Quantity': quantityFor(log),
-      'Units by Size': unitsFor(log),
-
       'Vehicle / Driver': log.vehicle_number,
       'Scanner': log.scanner_name,
       'Device': log.device_id,
@@ -296,9 +281,8 @@ const DispatchReturn = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     worksheet['!cols'] = [
       { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 14 },
-      { wch: 12 }, { wch: 12 }, { wch: 9 }, { wch: 16 }, { wch: 16 },
+      { wch: 12 }, { wch: 12 }, { wch: 9 }, { wch: 16 }, { wch: 14 },
       { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 30 },
-
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -323,8 +307,6 @@ const DispatchReturn = () => {
         'Table Size': sizeFor(log),
         'Colour': colourFor(log),
         'Quantity': quantityFor(log),
-        'Units by Size': unitsFor(log),
-
         'Vehicle / Driver': log.vehicle_number,
         'Scanner': log.scanner_name,
         'Device': log.device_id,
@@ -341,7 +323,7 @@ const DispatchReturn = () => {
 
   const renderTable = (rows: DispatchReturnLog[], variant: 'dispatch' | 'return') => (
     <div className="rounded-md border overflow-x-auto">
-      <Table className={GRID_CLASS}>
+      <Table>
         <TableHeader>
           <TableRow className={theme.headClass}>
             <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
@@ -351,8 +333,6 @@ const DispatchReturn = () => {
             <TableHead>Size</TableHead>
             <TableHead>Colour</TableHead>
             <TableHead className="text-center">Qty</TableHead>
-            <TableHead className="whitespace-nowrap">Units by Size</TableHead>
-
             <TableHead className="whitespace-nowrap">Vehicle / Driver</TableHead>
             <TableHead>Scanner</TableHead>
             <TableHead>Device</TableHead>
@@ -364,7 +344,7 @@ const DispatchReturn = () => {
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={variant === 'return' ? 14 : 13} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={variant === 'return' ? 13 : 12} className="text-center text-muted-foreground py-8">
                 {loading ? 'Loading…' : 'No records found'}
               </TableCell>
             </TableRow>
@@ -390,8 +370,6 @@ const DispatchReturn = () => {
                 <TableCell className="whitespace-pre-line">{sizeFor(log) || '—'}</TableCell>
                 <TableCell className="whitespace-pre-line">{colourFor(log) || '—'}</TableCell>
                 <TableCell className="text-center">{quantityFor(log)}</TableCell>
-                <TableCell className="whitespace-pre-line">{unitsFor(log) || '—'}</TableCell>
-
                 <TableCell className="whitespace-nowrap">{log.vehicle_number || '—'}</TableCell>
                 <TableCell>{log.scanner_name || '—'}</TableCell>
                 <TableCell>{log.device_id || '—'}</TableCell>
