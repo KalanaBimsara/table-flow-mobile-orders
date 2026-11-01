@@ -16,9 +16,14 @@ import {
   fetchTablesForScans,
   formatTableColours,
   formatTableSizes,
+  formatUnitsBySize,
   totalTableQuantity,
   type OrderTableRow,
 } from '@/lib/scanOrderTables';
+
+// Grid lines on every cell so rows and columns are easy to follow.
+const GRID_CLASS = '[&_th]:border [&_th]:border-border [&_td]:border [&_td]:border-border';
+
 
 // The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
 const SL_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -132,6 +137,12 @@ const Production = () => {
     const rows = tablesFor(scan);
     return rows.length ? totalTableQuantity(rows) : scan.quantity;
   };
+  const unitsFor = (scan: ProductionScan) => {
+    const rows = tablesFor(scan);
+    if (rows.length) return formatUnitsBySize(rows);
+    return scan.table_size ? `${scan.table_size} — ${scan.quantity}` : '';
+  };
+
 
   useEffect(() => {
     fetchScans();
@@ -183,6 +194,8 @@ const Production = () => {
         scan.vehicle_number?.toLowerCase().includes(q) ||
         sizeFor(scan).toLowerCase().includes(q) ||
         colourFor(scan).toLowerCase().includes(q) ||
+        unitsFor(scan).toLowerCase().includes(q) ||
+
         scan.notes?.toLowerCase().includes(q)
       );
     });
@@ -198,6 +211,8 @@ const Production = () => {
       'Size': sizeFor(scan),
       'Colour': colourFor(scan),
       'Qty': quantityFor(scan),
+      'Units by Size': unitsFor(scan),
+
       'Vehicle / Driver': scan.vehicle_number || '',
       'Scanner': scan.scanner_name || '',
       'Device': scan.device_id || '',
@@ -212,8 +227,9 @@ const Production = () => {
     const worksheet = XLSX.utils.json_to_sheet(rows);
     worksheet['!cols'] = [
       { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 22 }, { wch: 14 }, { wch: 12 },
-      { wch: 12 }, { wch: 6 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 30 },
+      { wch: 12 }, { wch: 6 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 30 },
     ];
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, SCAN_TABS[tab].label);
     XLSX.writeFile(workbook, `${SCAN_TABS[tab].copyType.replace(' ', '-')}-scans.xlsx`);
