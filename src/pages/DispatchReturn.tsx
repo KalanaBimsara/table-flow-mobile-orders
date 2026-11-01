@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,14 +25,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
-  fetchTablesForScans,
-  formatSizeUnits,
+  fetchOrderDetailsForScans,
   formatTableColours,
   formatTableSizes,
-  tableSizeUnits,
+  orderItemLines,
   totalTableQuantity,
   type OrderTableRow,
 } from '@/lib/scanOrderTables';
+import { buildOrderItemsSheet, type OrderSheetColumn } from '@/lib/orderItemsSheet';
 
 // The system is used in Sri Lanka (Asia/Colombo, UTC+5:30).
 const SL_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -113,6 +113,7 @@ const DispatchReturn = () => {
   const [openingOrder, setOpeningOrder] = useState<string | null>(null);
   const [logs, setLogs] = useState<DispatchReturnLog[]>([]);
   const [logTables, setLogTables] = useState<Map<string, OrderTableRow[]>>(new Map());
+  const [salesPersons, setSalesPersons] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [fromDateTime, setFromDateTime] = useState('');
@@ -141,7 +142,9 @@ const DispatchReturn = () => {
       const rows = (data as DispatchReturnLog[]) || [];
       setLogs(rows);
       try {
-        setLogTables(await fetchTablesForScans(rows));
+        const details = await fetchOrderDetailsForScans(rows);
+        setLogTables(details.tables);
+        setSalesPersons(details.salesPersons);
       } catch (tableError) {
         console.error('Failed to fetch order table details:', tableError);
         toast.error('Could not load table details — showing scanned values instead');
@@ -160,13 +163,13 @@ const DispatchReturn = () => {
     const rows = tablesFor(log);
     return rows.length ? formatTableSizes(rows) : log.table_size || '';
   };
-  // One entry per order item: its size and its own unit count (log values as fallback).
-  const sizeUnitsFor = (log: DispatchReturnLog) => {
-    const rows = tablesFor(log);
-    return rows.length
-      ? tableSizeUnits(rows)
-      : [{ size: log.table_size || '', units: log.quantity }];
-  };
+  // One line per order item: its size, unit count and colour (log values as fallback).
+  const itemLinesFor = (log: DispatchReturnLog) =>
+    orderItemLines(tablesFor(log), {
+      size: log.table_size || '',
+      units: log.quantity,
+      colour: log.colour || '',
+    });
   const colourFor = (log: DispatchReturnLog) => {
     const rows = tablesFor(log);
     return rows.length ? formatTableColours(rows) : log.colour || '';
@@ -266,34 +269,33 @@ const DispatchReturn = () => {
     setDistrictFilter('all');
   };
 
+  const sheetColumns: OrderSheetColumn<DispatchReturnLog>[] = [
+    { header: 'Date & Time (SL)', width: 18, value: (log) => formatSl(log.created_at) },
+    { header: 'Order Form No', width: 14, value: (log) => log.order_form_number },
+    { header: 'Operation', width: 12, value: (log) => log.operation_mode },
+    { header: 'Customer', width: 22, value: (log) => log.customer_name },
+    { header: 'District', width: 14, value: (log) => log.customer_district },
+    { header: 'Sales Person', width: 18, value: (log) => salesPersons.get(log.id) },
+    { header: 'Table Size', width: 12, item: 'size' },
+    { header: 'Units', width: 8, center: true, item: 'units' },
+    { header: 'Colour', width: 26, item: 'colour' },
+    { header: 'Quantity', width: 9, center: true, value: quantityFor },
+    { header: 'Vehicle / Driver', width: 16, value: (log) => log.vehicle_number },
+    { header: 'Scanner', width: 14, value: (log) => log.scanner_name },
+    { header: 'Device', width: 12, value: (log) => log.device_id },
+    { header: 'Copy Type', width: 12, value: (log) => log.copy_type },
+    { header: 'Restocked', width: 10, value: (log) => (log.restocked ? 'Yes' : 'No') },
+    { header: 'Notes', width: 30, value: (log) => log.notes },
+  ];
+  const buildSheet = (rows: DispatchReturnLog[]) =>
+    buildOrderItemsSheet(rows, sheetColumns, itemLinesFor);
+
   const exportToExcel = (rows: DispatchReturnLog[], sheetName: string, fileLabel: string) => {
     if (rows.length === 0) {
       toast.error('No records to export');
       return;
     }
-    const data = rows.map((log) => ({
-      'Date & Time (SL)': formatSl(log.created_at),
-      'Order Form No': log.order_form_number,
-      'Operation': log.operation_mode,
-      'Customer': log.customer_name || '',
-      'District': log.customer_district || '',
-      'Table Size': formatSizeUnits(sizeUnitsFor(log)).sizes,
-      'Units': formatSizeUnits(sizeUnitsFor(log)).units,
-      'Colour': colourFor(log),
-      'Quantity': quantityFor(log),
-      'Vehicle / Driver': log.vehicle_number,
-      'Scanner': log.scanner_name,
-      'Device': log.device_id,
-      'Copy Type': log.copy_type || '',
-      'Restocked': log.restocked ? 'Yes' : 'No',
-      'Notes': log.notes || '',
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    worksheet['!cols'] = [
-      { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 14 },
-      { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 9 }, { wch: 16 },
-      { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 30 },
-    ];
+    const worksheet = buildSheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
     const stamp = formatSl(new Date().toISOString()).replace(/[: ]/g, '-');
@@ -307,26 +309,8 @@ const DispatchReturn = () => {
       return;
     }
     const workbook = XLSX.utils.book_new();
-    const buildSheet = (rows: DispatchReturnLog[]) =>
-      rows.map((log) => ({
-        'Date & Time (SL)': formatSl(log.created_at),
-        'Order Form No': log.order_form_number,
-        'Operation': log.operation_mode,
-        'Customer': log.customer_name || '',
-        'District': log.customer_district || '',
-        'Table Size': formatSizeUnits(sizeUnitsFor(log)).sizes,
-        'Units': formatSizeUnits(sizeUnitsFor(log)).units,
-        'Colour': colourFor(log),
-        'Quantity': quantityFor(log),
-        'Vehicle / Driver': log.vehicle_number,
-        'Scanner': log.scanner_name,
-        'Device': log.device_id,
-        'Copy Type': log.copy_type || '',
-        'Restocked': log.restocked ? 'Yes' : 'No',
-        'Notes': log.notes || '',
-      }));
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(buildSheet(dispatchedLogs)), 'Dispatched');
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(buildSheet(returnedLogs)), 'Returned');
+    XLSX.utils.book_append_sheet(workbook, buildSheet(dispatchedLogs), 'Dispatched');
+    XLSX.utils.book_append_sheet(workbook, buildSheet(returnedLogs), 'Returned');
     const stamp = formatSl(new Date().toISOString()).replace(/[: ]/g, '-');
     XLSX.writeFile(workbook, `dispatch-return-${stamp}.xlsx`);
     toast.success(`${filteredLogs.length} record(s) exported to Excel`);
@@ -334,13 +318,14 @@ const DispatchReturn = () => {
 
   const renderTable = (rows: DispatchReturnLog[], variant: 'dispatch' | 'return') => (
     <div className="rounded-md border overflow-x-auto">
-      <Table className="[&_th]:border [&_td]:border">
+      <Table className="[&_th]:border [&_td]:border [&_th]:border-foreground/25 [&_td]:border-foreground/25">
         <TableHeader>
           <TableRow className={theme.headClass}>
             <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
             <TableHead className="whitespace-nowrap">Order No</TableHead>
             <TableHead>Customer</TableHead>
             <TableHead>District</TableHead>
+            <TableHead className="whitespace-nowrap">Sales Person</TableHead>
             <TableHead>Size</TableHead>
             <TableHead className="text-center whitespace-nowrap">Units</TableHead>
             <TableHead>Colour</TableHead>
@@ -356,53 +341,66 @@ const DispatchReturn = () => {
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={variant === 'return' ? 14 : 13} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={variant === 'return' ? 15 : 14} className="text-center text-muted-foreground py-8">
                 {loading ? 'Loading…' : 'No records found'}
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((log) => (
-              <TableRow key={log.id} className={theme.rowClass}>
-                <TableCell className="whitespace-nowrap">{formatSl(log.created_at)}</TableCell>
-                <TableCell className="font-medium whitespace-nowrap">
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-auto p-0"
-                    onClick={() => openOrder(log)}
-                    disabled={openingOrder !== null}
-                    aria-label={`View order ${log.order_form_number}`}
-                  >
-                    {openingOrder === log.id && <RefreshCw className="mr-1 h-3 w-3 animate-spin" />}
-                    {log.order_form_number}
-                  </Button>
-                </TableCell>
-                <TableCell>{log.customer_name || '—'}</TableCell>
-                <TableCell>{log.customer_district || '—'}</TableCell>
-                <TableCell className="whitespace-pre-line">
-                  {formatSizeUnits(sizeUnitsFor(log)).sizes || '—'}
-                </TableCell>
-                <TableCell className="whitespace-pre-line text-center">
-                  {formatSizeUnits(sizeUnitsFor(log)).units || '—'}
-                </TableCell>
-                <TableCell className="whitespace-pre-line">{colourFor(log) || '—'}</TableCell>
-                <TableCell className="text-center">{quantityFor(log)}</TableCell>
-                <TableCell className="whitespace-nowrap">{log.vehicle_number || '—'}</TableCell>
-                <TableCell>{log.scanner_name || '—'}</TableCell>
-                <TableCell>{log.device_id || '—'}</TableCell>
-                <TableCell>{log.copy_type || '—'}</TableCell>
-                {variant === 'return' && (
-                  <TableCell>
-                    <Badge variant={log.restocked ? 'default' : 'secondary'}>
-                      {log.restocked ? 'Yes' : 'No'}
-                    </Badge>
-                  </TableCell>
-                )}
-                <TableCell className="max-w-[220px] truncate" title={log.notes || ''}>
-                  {log.notes || '—'}
-                </TableCell>
-              </TableRow>
-            ))
+            rows.map((log) => {
+              const lines = itemLinesFor(log);
+              const span = lines.length;
+              return (
+                <React.Fragment key={log.id}>
+                  {lines.map((line, index) => (
+                    <TableRow key={index} className={theme.rowClass}>
+                      {index === 0 && (
+                        <>
+                          <TableCell rowSpan={span} className="whitespace-nowrap">{formatSl(log.created_at)}</TableCell>
+                          <TableCell rowSpan={span} className="font-medium whitespace-nowrap">
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0"
+                              onClick={() => openOrder(log)}
+                              disabled={openingOrder !== null}
+                              aria-label={`View order ${log.order_form_number}`}
+                            >
+                              {openingOrder === log.id && <RefreshCw className="mr-1 h-3 w-3 animate-spin" />}
+                              {log.order_form_number}
+                            </Button>
+                          </TableCell>
+                          <TableCell rowSpan={span}>{log.customer_name || '—'}</TableCell>
+                          <TableCell rowSpan={span}>{log.customer_district || '—'}</TableCell>
+                          <TableCell rowSpan={span}>{salesPersons.get(log.id) || '—'}</TableCell>
+                        </>
+                      )}
+                      <TableCell className="whitespace-nowrap">{line.size || '—'}</TableCell>
+                      <TableCell className="text-center">{line.units ?? '—'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{line.colour || '—'}</TableCell>
+                      {index === 0 && (
+                        <>
+                          <TableCell rowSpan={span} className="text-center">{quantityFor(log)}</TableCell>
+                          <TableCell rowSpan={span} className="whitespace-nowrap">{log.vehicle_number || '—'}</TableCell>
+                          <TableCell rowSpan={span}>{log.scanner_name || '—'}</TableCell>
+                          <TableCell rowSpan={span}>{log.device_id || '—'}</TableCell>
+                          <TableCell rowSpan={span}>{log.copy_type || '—'}</TableCell>
+                          {variant === 'return' && (
+                            <TableCell rowSpan={span}>
+                              <Badge variant={log.restocked ? 'default' : 'secondary'}>
+                                {log.restocked ? 'Yes' : 'No'}
+                              </Badge>
+                            </TableCell>
+                          )}
+                          <TableCell rowSpan={span} className="max-w-[220px] truncate" title={log.notes || ''}>
+                            {log.notes || '—'}
+                          </TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  ))}
+                </React.Fragment>
+              );
+            })
           )}
         </TableBody>
       </Table>

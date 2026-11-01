@@ -19,13 +19,21 @@ interface ScanLike {
 
 const CHUNK_SIZE = 100;
 
+export interface ScanOrderDetails {
+  tables: Map<string, OrderTableRow[]>;
+  salesPersons: Map<string, string>;
+}
+
 /**
- * Fetches the real table details (from `order_tables`) for a list of scan records.
+ * Fetches the real order details for a list of scan records: table rows (from `order_tables`)
+ * and the sales person (from `orders`).
  * Scans without an `order_id` are resolved through `orders.order_form_number` first.
- * Returns a map of scan id -> order_tables rows (empty array when none found).
+ * Returns maps keyed by scan id (empty array / no entry when none found).
  */
-export async function fetchTablesForScans<T extends ScanLike>(scans: T[]): Promise<Map<string, OrderTableRow[]>> {
-  const result = new Map<string, OrderTableRow[]>();
+export async function fetchOrderDetailsForScans<T extends ScanLike>(scans: T[]): Promise<ScanOrderDetails> {
+  const tables = new Map<string, OrderTableRow[]>();
+  const salesPersons = new Map<string, string>();
+  const result = { tables, salesPersons };
   if (scans.length === 0) return result;
 
   // Resolve order ids for scans that only carry the printed order form number.
@@ -61,9 +69,23 @@ export async function fetchTablesForScans<T extends ScanLike>(scans: T[]): Promi
     rowsByOrderId.set(row.order_id, list);
   }
 
+  const salesPersonByOrderId = new Map<string, string>();
+  for (let i = 0; i < allOrderIds.length; i += CHUNK_SIZE) {
+    const { data: orders, error: ordersError } = await supabase
+      .from('orders')
+      .select('id, sales_person_name')
+      .in('id', allOrderIds.slice(i, i + CHUNK_SIZE));
+    if (ordersError) throw ordersError;
+    for (const order of orders || []) {
+      if (order.sales_person_name) salesPersonByOrderId.set(order.id, order.sales_person_name);
+    }
+  }
+
   for (const scan of scans) {
     const orderId = orderIdForScan(scan);
-    result.set(scan.id, (orderId && rowsByOrderId.get(orderId)) || []);
+    tables.set(scan.id, (orderId && rowsByOrderId.get(orderId)) || []);
+    const salesPerson = orderId && salesPersonByOrderId.get(orderId);
+    if (salesPerson) salesPersons.set(scan.id, salesPerson);
   }
   return result;
 }
@@ -72,31 +94,33 @@ export async function fetchTablesForScans<T extends ScanLike>(scans: T[]): Promi
 export const formatTableSizes = (rows: OrderTableRow[]) =>
   rows.map(r => (r.quantity > 1 ? `${r.size} ×${r.quantity}` : r.size)).join('\n');
 
-/** One line per order_tables row: "White / Black" (top / frame colours). */
+// Stored colour values are lower case with underscores (e.g. "ash_white" -> "Ash White").
+const formatColourName = (value: string) =>
+  value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+/** "Teak top, Black leg" (top / frame colours); a record with one colour shows just that colour. */
+export const formatItemColour = (row: OrderTableRow) => {
+  const top = row.top_colour || row.colour || '';
+  const frame = row.frame_colour || '';
+  if (!top || !frame) return formatColourName(top || frame);
+  return `${formatColourName(top)} top, ${formatColourName(frame)} leg`;
+};
+
+/** One line per order_tables row, e.g. "Teak top, Black leg". */
 export const formatTableColours = (rows: OrderTableRow[]) =>
-  rows
-    .map(r => {
-      const top = r.top_colour || r.colour || '';
-      const frame = r.frame_colour || '';
-      return frame && frame !== top ? `${top} / ${frame}` : top;
-    })
-    .filter(Boolean)
-    .join('\n');
+  rows.map(formatItemColour).filter(Boolean).join('\n');
 
 export const totalTableQuantity = (rows: OrderTableRow[]) =>
   rows.reduce((sum, r) => sum + (r.quantity || 0), 0);
 
-export interface SizeUnit {
+export interface OrderItemLine {
   size: string;
   units: number | null;
+  colour: string;
 }
 
-/** One entry per order_tables row: its size and its own unit count. */
-export const tableSizeUnits = (rows: OrderTableRow[]): SizeUnit[] =>
-  rows.map(r => ({ size: r.size, units: r.quantity }));
-
-/** Joined multi-line strings for exports: sizes on one line each, units matching. */
-export const formatSizeUnits = (items: SizeUnit[]) => ({
-  sizes: items.map(i => i.size).join('\n'),
-  units: items.map(i => (i.units == null ? '' : String(i.units))).join('\n'),
-});
+/** One line per order_tables row: its size, unit count and colour. Uses `fallback` when there are no rows. */
+export const orderItemLines = (rows: OrderTableRow[], fallback: OrderItemLine): OrderItemLine[] =>
+  rows.length
+    ? rows.map(r => ({ size: r.size, units: r.quantity, colour: formatItemColour(r) }))
+    : [fallback];
