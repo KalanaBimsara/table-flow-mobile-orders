@@ -85,3 +85,18 @@ export const formatTableColours = (rows: OrderTableRow[]) =>
 
 export const totalTableQuantity = (rows: OrderTableRow[]) =>
   rows.reduce((sum, r) => sum + (r.quantity || 0), 0);
+
+export interface SizeUnit {
+  size: string;
+  units: number | null;
+}
+
+/** One entry per order_tables row: its size and its own unit count. */
+export const tableSizeUnits = (rows: OrderTableRow[]): SizeUnit[] =>
+  rows.map(r => ({ size: r.size, units: r.quantity }));
+
+/** Joined multi-line strings for exports: sizes on one line each, units matching. */
+export const formatSizeUnits = (items: SizeUnit[]) => ({
+  sizes: items.map(i => i.size).join('\n'),
+  units: items.map(i => (i.units == null ? '' : String(i.units))).join('\n'),
+});

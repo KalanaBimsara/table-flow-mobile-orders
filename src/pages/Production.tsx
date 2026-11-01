@@ -16,6 +16,8 @@ import {
   fetchTablesForScans,
   formatTableColours,
   formatTableSizes,
+  formatSizeUnits,
+  tableSizeUnits,
   totalTableQuantity,
   type OrderTableRow,
 } from '@/lib/scanOrderTables';
@@ -124,6 +126,13 @@ const Production = () => {
     const rows = tablesFor(scan);
     return rows.length ? formatTableSizes(rows) : scan.table_size || '';
   };
+  // One entry per order item: its size and its own unit count (scan values as fallback).
+  const sizeUnitsFor = (scan: ProductionScan) => {
+    const rows = tablesFor(scan);
+    return rows.length
+      ? tableSizeUnits(rows)
+      : [{ size: scan.table_size || '', units: scan.quantity }];
+  };
   const colourFor = (scan: ProductionScan) => {
     const rows = tablesFor(scan);
     return rows.length ? formatTableColours(rows) : scan.colour || '';
@@ -195,9 +204,10 @@ const Production = () => {
       'Copy Type': formatCopyType(scan.copy_type),
       'Customer': scan.customer_name || '',
       'District': scan.customer_district || '',
-      'Size': sizeFor(scan),
+      'Size': formatSizeUnits(sizeUnitsFor(scan)).sizes,
+      'Units': formatSizeUnits(sizeUnitsFor(scan)).units,
       'Colour': colourFor(scan),
-      'Qty': quantityFor(scan),
+      'Total Qty': quantityFor(scan),
       'Vehicle / Driver': scan.vehicle_number || '',
       'Scanner': scan.scanner_name || '',
       'Device': scan.device_id || '',
@@ -212,7 +222,7 @@ const Production = () => {
     const worksheet = XLSX.utils.json_to_sheet(rows);
     worksheet['!cols'] = [
       { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 22 }, { wch: 14 }, { wch: 12 },
-      { wch: 12 }, { wch: 6 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 30 },
+      { wch: 8 }, { wch: 12 }, { wch: 6 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 30 },
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, SCAN_TABS[tab].label);
@@ -259,7 +269,7 @@ const Production = () => {
 
     return (
       <div className="rounded-md border overflow-x-auto">
-        <Table>
+        <Table className="[&_th]:border [&_td]:border">
           <TableHeader>
             <TableRow className={theme.headClass}>
               <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
@@ -268,6 +278,7 @@ const Production = () => {
               <TableHead>Customer</TableHead>
               <TableHead>District</TableHead>
               <TableHead>Size</TableHead>
+              <TableHead className="text-center whitespace-nowrap">Units</TableHead>
               <TableHead>Colour</TableHead>
               <TableHead className="text-center">Qty</TableHead>
               <TableHead className="whitespace-nowrap">Vehicle / Driver</TableHead>
@@ -299,7 +310,12 @@ const Production = () => {
                 </TableCell>
                 <TableCell>{scan.customer_name || '—'}</TableCell>
                 <TableCell>{scan.customer_district || '—'}</TableCell>
-                <TableCell className="whitespace-pre-line">{sizeFor(scan) || '—'}</TableCell>
+                <TableCell className="whitespace-pre-line">
+                  {formatSizeUnits(sizeUnitsFor(scan)).sizes || '—'}
+                </TableCell>
+                <TableCell className="whitespace-pre-line text-center">
+                  {formatSizeUnits(sizeUnitsFor(scan)).units || '—'}
+                </TableCell>
                 <TableCell className="whitespace-pre-line">{colourFor(scan) || '—'}</TableCell>
                 <TableCell className="text-center">{quantityFor(scan)}</TableCell>
                 <TableCell className="whitespace-nowrap">{scan.vehicle_number || '—'}</TableCell>

@@ -26,8 +26,10 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
   fetchTablesForScans,
+  formatSizeUnits,
   formatTableColours,
   formatTableSizes,
+  tableSizeUnits,
   totalTableQuantity,
   type OrderTableRow,
 } from '@/lib/scanOrderTables';
@@ -158,6 +160,13 @@ const DispatchReturn = () => {
     const rows = tablesFor(log);
     return rows.length ? formatTableSizes(rows) : log.table_size || '';
   };
+  // One entry per order item: its size and its own unit count (log values as fallback).
+  const sizeUnitsFor = (log: DispatchReturnLog) => {
+    const rows = tablesFor(log);
+    return rows.length
+      ? tableSizeUnits(rows)
+      : [{ size: log.table_size || '', units: log.quantity }];
+  };
   const colourFor = (log: DispatchReturnLog) => {
     const rows = tablesFor(log);
     return rows.length ? formatTableColours(rows) : log.colour || '';
@@ -268,7 +277,8 @@ const DispatchReturn = () => {
       'Operation': log.operation_mode,
       'Customer': log.customer_name || '',
       'District': log.customer_district || '',
-      'Table Size': sizeFor(log),
+      'Table Size': formatSizeUnits(sizeUnitsFor(log)).sizes,
+      'Units': formatSizeUnits(sizeUnitsFor(log)).units,
       'Colour': colourFor(log),
       'Quantity': quantityFor(log),
       'Vehicle / Driver': log.vehicle_number,
@@ -281,8 +291,8 @@ const DispatchReturn = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     worksheet['!cols'] = [
       { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 22 }, { wch: 14 },
-      { wch: 12 }, { wch: 12 }, { wch: 9 }, { wch: 16 }, { wch: 14 },
-      { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 30 },
+      { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 9 }, { wch: 16 },
+      { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 30 },
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -304,7 +314,8 @@ const DispatchReturn = () => {
         'Operation': log.operation_mode,
         'Customer': log.customer_name || '',
         'District': log.customer_district || '',
-        'Table Size': sizeFor(log),
+        'Table Size': formatSizeUnits(sizeUnitsFor(log)).sizes,
+        'Units': formatSizeUnits(sizeUnitsFor(log)).units,
         'Colour': colourFor(log),
         'Quantity': quantityFor(log),
         'Vehicle / Driver': log.vehicle_number,
@@ -323,7 +334,7 @@ const DispatchReturn = () => {
 
   const renderTable = (rows: DispatchReturnLog[], variant: 'dispatch' | 'return') => (
     <div className="rounded-md border overflow-x-auto">
-      <Table>
+      <Table className="[&_th]:border [&_td]:border">
         <TableHeader>
           <TableRow className={theme.headClass}>
             <TableHead className="whitespace-nowrap">Date & Time (SL)</TableHead>
@@ -331,6 +342,7 @@ const DispatchReturn = () => {
             <TableHead>Customer</TableHead>
             <TableHead>District</TableHead>
             <TableHead>Size</TableHead>
+            <TableHead className="text-center whitespace-nowrap">Units</TableHead>
             <TableHead>Colour</TableHead>
             <TableHead className="text-center">Qty</TableHead>
             <TableHead className="whitespace-nowrap">Vehicle / Driver</TableHead>
@@ -344,7 +356,7 @@ const DispatchReturn = () => {
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={variant === 'return' ? 13 : 12} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={variant === 'return' ? 14 : 13} className="text-center text-muted-foreground py-8">
                 {loading ? 'Loading…' : 'No records found'}
               </TableCell>
             </TableRow>
@@ -367,7 +379,12 @@ const DispatchReturn = () => {
                 </TableCell>
                 <TableCell>{log.customer_name || '—'}</TableCell>
                 <TableCell>{log.customer_district || '—'}</TableCell>
-                <TableCell className="whitespace-pre-line">{sizeFor(log) || '—'}</TableCell>
+                <TableCell className="whitespace-pre-line">
+                  {formatSizeUnits(sizeUnitsFor(log)).sizes || '—'}
+                </TableCell>
+                <TableCell className="whitespace-pre-line text-center">
+                  {formatSizeUnits(sizeUnitsFor(log)).units || '—'}
+                </TableCell>
                 <TableCell className="whitespace-pre-line">{colourFor(log) || '—'}</TableCell>
                 <TableCell className="text-center">{quantityFor(log)}</TableCell>
                 <TableCell className="whitespace-nowrap">{log.vehicle_number || '—'}</TableCell>
