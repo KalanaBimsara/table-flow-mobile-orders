@@ -85,3 +85,17 @@ export const formatTableColours = (rows: OrderTableRow[]) =>
 
 export const totalTableQuantity = (rows: OrderTableRow[]) =>
   rows.reduce((sum, r) => sum + (r.quantity || 0), 0);
+
+/**
+ * Units per size, one line each: "30x72 — 2\nL-A — 1".
+ * Duplicate sizes across rows are summed into a single line.
+ */
+export const formatUnitsBySize = (rows: OrderTableRow[]) => {
+  const unitsBySize = new Map<string, number>();
+  for (const r of rows) {
+    const size = (r.size || '').trim() || '—';
+    unitsBySize.set(size, (unitsBySize.get(size) || 0) + (r.quantity || 0));
+  }
+  return [...unitsBySize.entries()].map(([size, qty]) => `${size} — ${qty}`).join('\n');
+};
+
