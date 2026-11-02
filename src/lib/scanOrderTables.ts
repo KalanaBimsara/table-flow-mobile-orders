@@ -150,3 +150,16 @@ export const orderItemLines = (rows: OrderTableRow[], fallback: OrderItemLine): 
   rows.length
     ? rows.map(r => ({ size: r.size, units: r.quantity, colour: formatItemColour(r) }))
     : [fallback];
+
+/**
+ * Scanner notes are stored as a machine payload, e.g.
+ * "FEATURE_KEY=3535|30x60|teak|black|1.5x1.5|34|o shape;size=30x60;...;qty=2;userNote=test".
+ * Only what the operator typed (the `userNote` value) is worth showing; plain notes
+ * typed without a payload are shown as they are.
+ */
+export const userNoteText = (notes: string | null | undefined): string => {
+  if (!notes) return '';
+  const match = /(?:^|;)\s*userNote\s*=\s*/i.exec(notes);
+  if (match) return notes.slice(match.index + match[0].length).trim();
+  return notes.includes('FEATURE_KEY') ? '' : notes.trim();
+};
