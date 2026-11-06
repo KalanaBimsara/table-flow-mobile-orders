@@ -6,3 +6,9 @@ export const totalDispatchedUnits = (
   const quantity = Number(log.quantity);
   return total + (Number.isFinite(quantity) && quantity > 0 ? quantity : 0);
 }, 0);
+
+/** Pending units less gate-pass units dispatched in the selected range. */
+export const unitsToManufacture = (
+  pendingUnits: number,
+  gatePassLogs: readonly { operation_mode: string; quantity: number }[],
+): number => pendingUnits - totalDispatchedUnits(gatePassLogs);

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { totalDispatchedUnits } from './dispatchTotals';
+import { totalDispatchedUnits, unitsToManufacture } from './dispatchTotals';
 
 describe('total dispatched units in the filtered scan records', () => {
   test('adds scanned quantities instead of counting scan records or order quantities', () => {
@@ -14,5 +14,15 @@ describe('total dispatched units in the filtered scan records', () => {
       { operation_mode: 'dispatch', quantity: 2 },
       { operation_mode: 'RETURN', quantity: 7 },
     ])).toBe(2);
+  });
+});
+
+describe('units to be manufactured', () => {
+  test('subtracts scanned dispatched units from pending units, not full order quantities', () => {
+    expect(unitsToManufacture(10, [
+      { operation_mode: 'dispatch', quantity: 2 },
+      { operation_mode: 'dispatch', quantity: 3 },
+      { operation_mode: 'RETURN', quantity: 7 },
+    ])).toBe(5);
   });
 });
