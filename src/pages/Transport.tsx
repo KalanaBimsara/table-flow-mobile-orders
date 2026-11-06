@@ -17,6 +17,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Download, Truck, FileText, ChevronDown, Calendar, Package } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -214,6 +221,8 @@ const Transport: React.FC = () => {
   const [toDate, setToDate] = useState<string>('');
   const [rows, setRows] = useState<OrderRow[]>([]);
   const [summaryRows, setSummaryRows] = useState<OrderRow[]>([]);
+  const [manufactureRows, setManufactureRows] = useState<OrderRow[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'assigned' | 'completed'>('all');
   const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
