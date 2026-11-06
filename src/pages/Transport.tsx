@@ -244,10 +244,10 @@ const Transport: React.FC = () => {
       let reportQ = supabase
         .from('orders')
         .select(baseSelect)
-        .eq('status', 'pending')
         .not('order_form_number', 'is', null)
         .order('order_form_number', { ascending: true })
         .limit(1000);
+      if (statusFilter !== 'all') reportQ = reportQ.eq('status', statusFilter);
       reportQ = applyFilters(reportQ);
 
       let summaryQ = supabase
@@ -256,12 +256,28 @@ const Transport: React.FC = () => {
         .not('order_form_number', 'is', null)
         .order('order_form_number', { ascending: true })
         .limit(1000);
+      if (statusFilter !== 'all') summaryQ = summaryQ.eq('status', statusFilter);
       summaryQ = applyFilters(summaryQ);
 
-      const [{ data: reportData, error: reportError }, { data: summaryData, error: summaryError }] =
-        await Promise.all([reportQ, summaryQ]);
+      // Orders still to be manufactured = pending orders in the same range,
+      // fetched independently of the status filter.
+      let manufactureQ = supabase
+        .from('orders')
+        .select(baseSelect)
+        .eq('status', 'pending')
+        .not('order_form_number', 'is', null)
+        .order('order_form_number', { ascending: true })
+        .limit(1000);
+      manufactureQ = applyFilters(manufactureQ);
+
+      const [
+        { data: reportData, error: reportError },
+        { data: summaryData, error: summaryError },
+        { data: manufactureData, error: manufactureError },
+      ] = await Promise.all([reportQ, summaryQ, manufactureQ]);
       if (reportError) throw reportError;
       if (summaryError) throw summaryError;
+      if (manufactureError) throw manufactureError;
 
       const sortRows = (data: any[]) =>
         (data || []).slice().sort((a: OrderRow, b: OrderRow) => {
@@ -273,6 +289,7 @@ const Transport: React.FC = () => {
 
       setRows(sortRows(reportData) as OrderRow[]);
       setSummaryRows(sortRows(summaryData) as OrderRow[]);
+      setManufactureRows(sortRows(manufactureData) as OrderRow[]);
     } catch (e: any) {
       console.error(e);
       toast.error('දත්ත ලබා ගැනීමට අසමත් විය');
