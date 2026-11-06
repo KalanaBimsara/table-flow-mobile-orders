@@ -321,21 +321,16 @@ const Transport: React.FC = () => {
       };
     });
     const totalUnits = breakdown.reduce((sum, o) => sum + o.units, 0);
-    const manufacturingBreakdown: OrderSummary[] = manufactureRows.map((r) => ({
-      id: r.id,
-      order_form_number: r.order_form_number,
-      customer_name: r.customer_name,
-      created_at: r.created_at,
-      units: r.order_tables?.reduce((s, t) => s + (t.quantity || 0), 0) || 0,
-    }));
-    const manufacturingUnits = manufacturingBreakdown.reduce((sum, o) => sum + o.units, 0);
+    const manufacturingUnits = manufactureRows.reduce(
+      (sum, r) => sum + (r.order_tables?.reduce((s, t) => s + (t.quantity || 0), 0) || 0),
+      0
+    );
     return {
       totalOrders: summaryRows.length,
       totalUnits,
       manufacturingOrders: manufactureRows.length,
       manufacturingUnits,
       breakdown,
-      manufacturingBreakdown,
     };
   }, [summaryRows, manufactureRows]);
 
@@ -528,44 +523,6 @@ const Transport: React.FC = () => {
                 )}
               </TableBody>
             </Table>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">
-              To Be Manufactured ({summary.manufacturingOrders} orders · {summary.manufacturingUnits} units)
-            </h3>
-            <div className="overflow-x-auto rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order No</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Created At</TableHead>
-                    <TableHead className="text-right">Units</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {summary.manufacturingBreakdown.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
-                        No pending orders in selected range
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    summary.manufacturingBreakdown.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.order_form_number ?? '-'}</TableCell>
-                        <TableCell>{order.customer_name}</TableCell>
-                        <TableCell>{formatSl(order.created_at)}</TableCell>
-                        <TableCell className="text-right">{order.units}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
           </div>
         </CardContent>
       </Card>
