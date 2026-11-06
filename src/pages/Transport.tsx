@@ -321,12 +321,18 @@ const Transport: React.FC = () => {
       };
     });
     const totalUnits = breakdown.reduce((sum, o) => sum + o.units, 0);
+    const manufacturingUnits = manufactureRows.reduce(
+      (sum, r) => sum + (r.order_tables?.reduce((s, t) => s + (t.quantity || 0), 0) || 0),
+      0
+    );
     return {
       totalOrders: summaryRows.length,
       totalUnits,
+      manufacturingOrders: manufactureRows.length,
+      manufacturingUnits,
       breakdown,
     };
-  }, [summaryRows]);
+  }, [summaryRows, manufactureRows]);
 
   const openReport = (kind: ReportKind) => {
     if (!rows.length) {
@@ -355,7 +361,24 @@ const Transport: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div>
+              <label className="text-sm font-medium block mb-1">Order Status</label>
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <label className="text-sm font-medium block mb-1">From Order No</label>
               <Input
