@@ -446,7 +446,7 @@ const Transport: React.FC = () => {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            {rows.length} pending orders in range · {summaryRows.length} total orders in range
+            {rows.length} {statusFilter === 'all' ? '' : `${statusFilter} `}orders in range · {summaryRows.length} orders in summary · {summary.manufacturingOrders} orders to be manufactured
           </div>
         </CardContent>
       </Card>
@@ -461,7 +461,7 @@ const Transport: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card className="border border-primary/20 bg-primary/5">
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
@@ -478,6 +478,16 @@ const Transport: React.FC = () => {
                   <p className="text-3xl font-bold">{summary.totalUnits}</p>
                 </div>
                 <Truck className="h-8 w-8 text-primary opacity-80" />
+              </CardContent>
+            </Card>
+            <Card className="border border-amber-500/30 bg-amber-500/10">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">To Be Manufactured</p>
+                  <p className="text-3xl font-bold">{summary.manufacturingOrders}</p>
+                  <p className="text-xs text-muted-foreground">{summary.manufacturingUnits} units (pending orders)</p>
+                </div>
+                <Package className="h-8 w-8 text-amber-600 opacity-80" />
               </CardContent>
             </Card>
           </div>
