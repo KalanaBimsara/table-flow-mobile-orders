@@ -336,7 +336,7 @@ const Transport: React.FC = () => {
 
   const openReport = (kind: ReportKind) => {
     if (!rows.length) {
-      toast.warning('තෝරාගත් පරාසය තුළ පොරොත්තු ඕඩර නොමැත');
+      toast.warning('තෝරාගත් පරාසය තුළ ඕඩර නොමැත');
     }
     const html = buildReportHtml(kind, rows, rangeLabel);
     const w = window.open('', '_blank');
