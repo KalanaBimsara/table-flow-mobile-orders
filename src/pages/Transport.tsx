@@ -321,16 +321,21 @@ const Transport: React.FC = () => {
       };
     });
     const totalUnits = breakdown.reduce((sum, o) => sum + o.units, 0);
-    const manufacturingUnits = manufactureRows.reduce(
-      (sum, r) => sum + (r.order_tables?.reduce((s, t) => s + (t.quantity || 0), 0) || 0),
-      0
-    );
+    const manufacturingBreakdown: OrderSummary[] = manufactureRows.map((r) => ({
+      id: r.id,
+      order_form_number: r.order_form_number,
+      customer_name: r.customer_name,
+      created_at: r.created_at,
+      units: r.order_tables?.reduce((s, t) => s + (t.quantity || 0), 0) || 0,
+    }));
+    const manufacturingUnits = manufacturingBreakdown.reduce((sum, o) => sum + o.units, 0);
     return {
       totalOrders: summaryRows.length,
       totalUnits,
       manufacturingOrders: manufactureRows.length,
       manufacturingUnits,
       breakdown,
+      manufacturingBreakdown,
     };
   }, [summaryRows, manufactureRows]);
 
