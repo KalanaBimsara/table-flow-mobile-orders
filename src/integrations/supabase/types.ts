@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -257,8 +257,8 @@ export type Database = {
           leg_shape?: string | null
           leg_size?: string | null
           order_id?: string | null
-          price: number
-          quantity: number
+          price?: number
+          quantity?: number
           size: string
           top_colour?: string | null
           wire_holes?: string | null
@@ -342,8 +342,8 @@ export type Database = {
           odoo_sale_order_id?: string | null
           odoo_sync_status?: string | null
           order_form_number?: string | null
-          price: number
-          quantity: number
+          price?: number
+          quantity?: number
           sales_person_name?: string | null
           status?: string | null
           table_size: string
@@ -659,15 +659,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      algorithm_sign: {
-        Args: { algorithm: string; secret: string; signables: string }
-        Returns: string
-      }
       get_current_user_role: { Args: never; Returns: string }
-      sign: {
-        Args: { algorithm?: string; payload: Json; secret: string }
-        Returns: string
-      }
       super_admin_get_session: {
         Args: { p_session_token: string }
         Returns: {
@@ -680,6 +672,24 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      super_admin_list_profiles: {
+        Args: { p_session_token: string }
+        Returns: {
+          can_view_all_orders: boolean
+          contact_no: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       super_admin_sign_in: {
         Args: { p_password: string; p_username: string }
@@ -698,18 +708,19 @@ export type Database = {
         Args: { p_session_token: string }
         Returns: undefined
       }
+      super_admin_update_profile: {
+        Args: {
+          p_can_view_all_orders?: boolean
+          p_contact_no?: string
+          p_name?: string
+          p_role?: Database["public"]["Enums"]["user_role"]
+          p_session_token: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       try_cast_double: { Args: { inp: string }; Returns: number }
       update_daily_analytics: { Args: never; Returns: undefined }
-      url_decode: { Args: { data: string }; Returns: string }
-      url_encode: { Args: { data: string }; Returns: string }
-      verify: {
-        Args: { algorithm?: string; secret: string; token: string }
-        Returns: {
-          header: Json
-          payload: Json
-          valid: boolean
-        }[]
-      }
     }
     Enums: {
       user_role: "customer" | "seller" | "delivery" | "admin" | "manager"
