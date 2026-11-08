@@ -17,10 +17,10 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 -- -----------------------------------------------------------------------------
 CREATE TYPE public.user_role AS ENUM ('customer', 'seller', 'delivery', 'admin', 'manager');
 
--- orders.order_form_number is filled from this sequence. If old paper forms are
--- still in circulation, move it past the last old number BEFORE the first order:
---   SELECT setval('public.order_form_number_seq', <last old number>);
-CREATE SEQUENCE public.order_form_number_seq START WITH 1001;
+-- orders.order_form_number is filled from this sequence. The last order in the
+-- lost database was 3596, so new orders continue from 3597 and never clash
+-- with old printed forms and QR codes.
+CREATE SEQUENCE public.order_form_number_seq START WITH 3597;
 
 -- -----------------------------------------------------------------------------
 -- Tables
