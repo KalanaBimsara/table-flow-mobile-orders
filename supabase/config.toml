@@ -1,1 +1,20 @@
-project_id = "baxnczbtheknzpoerpfn"
+project_id = "hlemlubraovotrsdkgka"
+
+# These functions are called without a signed-in Supabase user (the super admin
+# panel and the signup page), and the new sb_publishable_ key is not a JWT, so
+# the gateway's JWT check must be off. The super-admin-* functions check the
+# super admin session token themselves.
+[functions.send-activation-request]
+verify_jwt = false
+
+[functions.super-admin-change-email]
+verify_jwt = false
+
+[functions.super-admin-change-password]
+verify_jwt = false
+
+[functions.super-admin-delete-user]
+verify_jwt = false
+
+[functions.super-admin-update-order-status]
+verify_jwt = false

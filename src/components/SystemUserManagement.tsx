@@ -40,10 +40,13 @@ const SystemUserManagement = () => {
   const handleVisibilityChange = async (user: UserProfile, canViewAll: boolean) => {
     try {
       setSavingVisibilityId(user.id);
-      const { error } = await supabase
-        .from('profiles')
-        .update({ can_view_all_orders: canViewAll } as any)
-        .eq('id', user.id);
+      // The super admin panel has no Supabase Auth session, so profile
+      // changes go through a function that checks the super admin token.
+      const { error } = await (supabase as any).rpc('super_admin_update_profile', {
+        p_session_token: localStorage.getItem('super_admin_session'),
+        p_user_id: user.id,
+        p_can_view_all_orders: canViewAll,
+      });
 
       if (error) throw error;
 
@@ -68,10 +71,9 @@ const SystemUserManagement = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await (supabase as any).rpc('super_admin_list_profiles', {
+        p_session_token: localStorage.getItem('super_admin_session'),
+      });
 
       if (error) throw error;
       setUsers((data || []) as unknown as UserProfile[]);
@@ -98,14 +100,13 @@ const SystemUserManagement = () => {
 
     try {
       setIsSubmitting(true);
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: editForm.name,
-          role: editForm.role as 'admin' | 'customer' | 'delivery' | 'manager' | 'seller',
-          contact_no: editForm.contact_no
-        })
-        .eq('id', selectedUser.id);
+      const { error } = await (supabase as any).rpc('super_admin_update_profile', {
+        p_session_token: localStorage.getItem('super_admin_session'),
+        p_user_id: selectedUser.id,
+        p_name: editForm.name,
+        p_role: editForm.role,
+        p_contact_no: editForm.contact_no,
+      });
 
       if (error) throw error;
 

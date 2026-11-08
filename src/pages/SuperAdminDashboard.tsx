@@ -226,9 +226,9 @@ const SuperAdminDashboard = () => {
         console.log('All orders count:', allOrders?.length);
       }
 
-      const { data: allUsers, error: allUsersError } = await supabase
-        .from('profiles')
-        .select('id');
+      const { data: allUsers, error: allUsersError } = await (supabase as any).rpc('super_admin_list_profiles', {
+        p_session_token: localStorage.getItem('super_admin_session'),
+      });
 
       if (allUsersError) {
         console.error('Error fetching all users:', allUsersError);
