@@ -87,6 +87,12 @@ export const tableSizeOptions = [
   { value: 'DS (36x36)', label: '36x36 Dinning', price: 15000 },
   { value: 'DL (60x36)', label: '60x36 Dinning', price: 17000 },
 
+  // Benches
+  { value: 'Bench 1ft x 1ft', label: 'Bench 1ft x 1ft', price: 7500 },
+  { value: 'Bench 4ft x 1ft', label: 'Bench 4ft x 1ft', price: 9500 },
+  { value: 'Bench 6ft x 1ft', label: 'Bench 6ft x 1ft', price: 12500 },
+  { value: 'Bench 8ft x 1ft', label: 'Bench 8ft x 1ft', price: 15000 },
+
   // L-Shaped Tables - increased by 1000
   { value: 'L-A', label: 'L-Shaped Table (Size A)', price: 24000 },
   { value: 'L-B', label: 'L-Shaped Table (Size B)', price: 25000 },
