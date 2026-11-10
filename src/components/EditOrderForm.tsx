@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import TableItemForm from './TableItemForm';
 import { TableItem, Order } from '@/types/order';
-import { calculateTableAdditionalCosts, calculateLegSizeCost, calculateFrontPanelCost } from '@/lib/utils';
+import { calculateOrderTotals } from '@/lib/utils';
 
 // Define schema for a single table item
 const tableItemSchema = z.object({
@@ -22,8 +22,8 @@ const tableItemSchema = z.object({
   topColour: z.string().min(1, { message: "Top colour is required" }),
   frameColour: z.string().min(1, { message: "Frame colour is required" }),
   colour: z.string(), // Keep for backward compatibility
-  quantity: z.number().int().positive().min(1, { message: "Quantity must be at least 1" }),
-  price: z.number().positive({ message: "Price is required and must be greater than 0" }),
+  quantity: z.number({ required_error: "Quantity is required", invalid_type_error: "Quantity is required" }).int().min(1, { message: "Quantity must be at least 1" }),
+  price: z.number({ invalid_type_error: "Price is required" }).positive({ message: "Price is required and must be greater than 0" }),
   legSize: z.enum(['1.5x1.5', '2x2', '3x1.5']).optional(),
   legShape: z.enum(['O Shape', 'U shape']).optional(),
   legHeight: z.string().optional(),
@@ -109,23 +109,10 @@ export function EditOrderForm({ order, isOpen, onClose }: EditOrderFormProps) {
   const watchDeliveryFee = form.watch("deliveryFee") || 0;
   const watchAdditionalCharges = form.watch("additionalCharges") || 0;
   
-  // Calculate base tables cost
-  const tablesCost = React.useMemo(() => {
-    return watchTables?.reduce((sum, table) => sum + (table.price * table.quantity), 0) || 0;
-  }, [watchTables]);
-
-  // Calculate additional costs (leg size + front panels)
-  const additionalTableCosts = React.useMemo(() => {
-    return watchTables?.reduce((sum, table) => {
-      const legCost = calculateLegSizeCost(table.legSize) * table.quantity;
-      const panelCost = calculateFrontPanelCost(table.frontPanelSize, table.frontPanelLength) * table.quantity;
-      return sum + legCost + panelCost;
-    }, 0) || 0;
-  }, [watchTables]);
-
-  const totalPrice = React.useMemo(() => {
-    return tablesCost + additionalTableCosts + watchDeliveryFee + watchAdditionalCharges;
-  }, [tablesCost, additionalTableCosts, watchDeliveryFee, watchAdditionalCharges]);
+  // Recomputed on every render: react-hook-form mutates nested fields in place,
+  // so a useMemo keyed on `watchTables` would return stale totals.
+  const { tablesCost, additionalTableCosts } = calculateOrderTotals(watchTables);
+  const totalPrice = tablesCost + additionalTableCosts + watchDeliveryFee + watchAdditionalCharges;
 
   // Handle form submission
   async function onSubmit(values: OrderFormValues) {
@@ -161,9 +148,9 @@ export function EditOrderForm({ order, isOpen, onClose }: EditOrderFormProps) {
         salesPersonName: order.salesPersonName
       };
       
-      await editOrder(order.id, orderData);
-      onClose();
-      toast.success("Order updated successfully!");
+      // editOrder shows its own success / error toast.
+      const updated = await editOrder(order.id, orderData);
+      if (updated) onClose();
     } catch (error) {
       console.error('Error updating order:', error);
       toast.error('An error occurred when updating your order');

@@ -47,6 +47,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [creatorName, setCreatorName] = useState<string | null>(null);
   const [deletePassword, setDeletePassword] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch delivery person name directly from profiles table
@@ -128,17 +129,21 @@ const OrderCard: React.FC<OrderCardProps> = ({
       completeOrder(order.id);
     }
   };
-  const handleDeleteOrder = () => {
-    deleteOrder(order.id);
-  };
-  const handleDeleteOrderWithPassword = () => {
-    if (deletePassword === DELETE_CONFIRMATION_PASSWORD) {
-      deleteOrder(order.id);
-      toast.success('Order deleted successfully!');
-      setIsDeleteDialogOpen(false);
-      setDeletePassword(''); // Reset password
-    } else {
+  const handleDeleteOrderWithPassword = async (e?: React.SyntheticEvent) => {
+    // AlertDialogAction closes the dialog by default; keep it open so a wrong
+    // password can be retyped and the button can show progress.
+    e?.preventDefault();
+    if (isDeleting) return;
+    if (deletePassword !== DELETE_CONFIRMATION_PASSWORD) {
       toast.error('Incorrect password. Order not deleted.');
+      return;
+    }
+    setIsDeleting(true);
+    const deleted = await deleteOrder(order.id);
+    setIsDeleting(false);
+    if (deleted) {
+      setIsDeleteDialogOpen(false);
+      setDeletePassword('');
     }
   };
   const openDeleteDialog = () => {
@@ -448,22 +453,41 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="space-y-2 my-4">
-                <Label htmlFor="delete-password">Password</Label>
+                <Label htmlFor={`delete-confirm-${order.id}`}>Password</Label>
                 <div className="flex items-center space-x-2">
                   <LockKeyhole className="h-5 w-5 text-muted-foreground" />
+                  {/*
+                    Deliberately NOT type="password". A password field makes the
+                    browser's password manager treat the page's search box as the
+                    username field and autofill the saved login email into it.
+                    The characters are masked with CSS instead.
+                  */}
                   <Input
-                    id="delete-password"
-                    type="password"
+                    id={`delete-confirm-${order.id}`}
+                    name="order-delete-confirmation"
+                    type="text"
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    data-form-type="other"
+                    style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
                     placeholder="Enter deletion password"
                     value={deletePassword}
                     onChange={(e) => setDeletePassword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleDeleteOrderWithPassword(e);
+                    }}
                   />
                 </div>
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={closeDeleteDialog}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteOrderWithPassword}>
-                  Confirm Delete
+                <AlertDialogCancel onClick={closeDeleteDialog} disabled={isDeleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteOrderWithPassword} disabled={isDeleting}>
+                  {isDeleting ? 'Deleting…' : 'Confirm Delete'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

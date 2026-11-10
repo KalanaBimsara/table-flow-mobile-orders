@@ -34,3 +34,33 @@ export function calculateFrontPanelCost(frontPanelSize?: string, frontPanelLengt
 export function calculateTableAdditionalCosts(legSize?: string, frontPanelSize?: string, frontPanelLength?: number): number {
   return calculateLegSizeCost(legSize) + calculateFrontPanelCost(frontPanelSize, frontPanelLength);
 }
+
+type PricedTable = {
+  price?: number | string | null;
+  quantity?: number | string | null;
+  legSize?: string;
+  frontPanelSize?: string;
+  frontPanelLength?: number | string | null;
+};
+
+const toNumber = (value: unknown): number => {
+  const n = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
+  return Number.isFinite(n) ? n : 0;
+};
+
+// Live totals for the order forms. Tolerates fields that are blank or
+// mid-edit (undefined / '' / NaN) by counting them as 0.
+export function calculateOrderTotals(tables?: PricedTable[] | null): {
+  tablesCost: number;
+  additionalTableCosts: number;
+} {
+  let tablesCost = 0;
+  let additionalTableCosts = 0;
+  for (const table of tables || []) {
+    const quantity = toNumber(table.quantity);
+    tablesCost += toNumber(table.price) * quantity;
+    additionalTableCosts +=
+      calculateTableAdditionalCosts(table.legSize, table.frontPanelSize, toNumber(table.frontPanelLength)) * quantity;
+  }
+  return { tablesCost, additionalTableCosts };
+}

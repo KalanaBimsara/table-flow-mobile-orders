@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { Plus, Loader2, Copy, Check, ExternalLink } from 'lucide-react';
 import TableItemForm from './TableItemForm';
 import { TableItem } from '@/types/order';
-import { calculateTableAdditionalCosts, calculateLegSizeCost, calculateFrontPanelCost } from '@/lib/utils';
+import { calculateOrderTotals } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchOrderTablesByOrderIds } from '@/lib/fetchOrderTables';
 import { addDays, format } from 'date-fns';
@@ -77,8 +77,8 @@ const tableItemSchema = z.object({
   topColour: z.string().min(1, { message: "Top colour is required" }),
   frameColour: z.string().min(1, { message: "Frame colour is required" }),
   colour: z.string(), // Keep for backward compatibility
-  quantity: z.number().int().positive().min(1, { message: "Quantity must be at least 1" }),
-  price: z.number().positive({ message: "Price is required and must be greater than 0" }),
+  quantity: z.number({ required_error: "Quantity is required", invalid_type_error: "Quantity is required" }).int().min(1, { message: "Quantity must be at least 1" }),
+  price: z.number({ invalid_type_error: "Price is required" }).positive({ message: "Price is required and must be greater than 0" }),
   // Customization fields - all required
   legSize: z.enum(['1.5x1.5','2x2', '3x1.5'], { required_error: "Leg size is required" }),
   legShape: z.enum(['O Shape', 'U shape'], { required_error: "Leg shape is required" }),
@@ -88,6 +88,10 @@ const tableItemSchema = z.object({
   frontPanelSize: z.enum(['6', '12', '16', '24']).optional(),
   frontPanelLength: z.number().optional(),
   lShapeOrientation: z.enum(['normal', 'reverse']).optional()
+}).refine((data) => data.size !== 'custom', {
+  // "custom" is only a placeholder until width and length are both entered
+  message: "Enter the custom width and length",
+  path: ["size"]
 }).refine((data) => {
   // If size contains 'L' (L-shaped table), orientation is required
   // But exclude "L-" prefix check to avoid false matches with custom sizes
@@ -143,23 +147,11 @@ export function NewOrderForm() {
     fetchDeliveryDate();
   }, []);
   
-  // Calculate base tables cost
-  const tablesCost = React.useMemo(() => {
-    return watchTables?.reduce((sum, table) => sum + (table.price * table.quantity), 0) || 0;
-  }, [watchTables]);
-
-  // Calculate additional costs (leg size + front panels)
-  const additionalTableCosts = React.useMemo(() => {
-    return watchTables?.reduce((sum, table) => {
-      const legCost = calculateLegSizeCost(table.legSize) * table.quantity;
-      const panelCost = calculateFrontPanelCost(table.frontPanelSize, table.frontPanelLength) * table.quantity;
-      return sum + legCost + panelCost;
-    }, 0) || 0;
-  }, [watchTables]);
-
-  const totalPrice = React.useMemo(() => {
-    return tablesCost + additionalTableCosts + watchDeliveryFee + watchAdditionalCharges;
-  }, [tablesCost, additionalTableCosts, watchDeliveryFee, watchAdditionalCharges]);
+  // Recomputed on every render. react-hook-form updates nested fields in
+  // place, so `watchTables` keeps the same array reference when a quantity,
+  // price, leg size or panel changes; a useMemo keyed on it returned stale totals.
+  const { tablesCost, additionalTableCosts } = calculateOrderTotals(watchTables);
+  const totalPrice = tablesCost + additionalTableCosts + watchDeliveryFee + watchAdditionalCharges;
 
   // Check for existing orders with same contact number
   async function checkDuplicateOrder(contactNumber: string) {

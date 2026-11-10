@@ -558,6 +558,10 @@ export function OrderList() {
                   }
                   value={globalSearch}
                   onChange={(e) => setGlobalSearch(e.target.value)}
+                  name="order-search"
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
                   className="pl-10"
                 />
               </div>
@@ -712,6 +716,10 @@ export function OrderList() {
                   }
                   value={globalSearch}
                   onChange={(e) => setGlobalSearch(e.target.value)}
+                  name="order-search"
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
                   className="pl-10"
                 />
               </div>
@@ -817,6 +825,10 @@ export function OrderList() {
                 }
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
+                name="order-search"
+                autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore="true"
                 className="pl-10"
               />
             </div>
@@ -989,6 +1001,7 @@ export function OrderList() {
                       placeholder="Search by customer name..."
                       value={customerNameSearch}
                       onChange={(e) => setCustomerNameSearch(e.target.value)}
+                      autoComplete="off"
                       className="w-full"
                     />
                   </div>

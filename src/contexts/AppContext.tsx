@@ -12,10 +12,10 @@ interface AppContextType {
   hasMoreCompleted: boolean;
   loadingMoreCompleted: boolean;
   addOrder: (order: Omit<Order, 'id' | 'status' | 'createdAt'>) => Promise<string | null>;
-  editOrder: (orderId: string, orderData: Omit<Order, 'id' | 'status' | 'createdAt' | 'assignedTo' | 'completedAt'>) => Promise<void>;
+  editOrder: (orderId: string, orderData: Omit<Order, 'id' | 'status' | 'createdAt' | 'assignedTo' | 'completedAt'>) => Promise<boolean>;
   assignOrder: (orderId: string, assignedTo: string) => Promise<void>;
   completeOrder: (orderId: string) => Promise<void>;
-  deleteOrder: (orderId: string) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<boolean>;
   getFilteredOrders: (status?: OrderStatus, salesPersonName?: string) => Order[];
   getAssignedOrders: () => Order[];
   getDeliveryPersonName: (userId: string) => string | null;
@@ -472,10 +472,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const editOrder = async (orderId: string, orderData: Omit<Order, 'id' | 'status' | 'createdAt' | 'assignedTo' | 'completedAt'>) => {
+  const editOrder = async (orderId: string, orderData: Omit<Order, 'id' | 'status' | 'createdAt' | 'assignedTo' | 'completedAt'>): Promise<boolean> => {
     try {
-      console.log(`Editing order ${orderId}`);
-      
+
       const calculatedBasePrice = orderData.tables.reduce((sum, table) => 
         sum + (table.price * table.quantity), 0);
       const customizationCosts = orderData.tables.reduce((sum, table) => {
@@ -485,7 +484,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const finalTotalPrice = calculatedBasePrice + customizationCosts + (orderData.deliveryFee || 0) + (orderData.additionalCharges || 0);
 
       // Update the order
-      const { error: orderError } = await supabase
+      const { data: updatedOrder, error: orderError } = await supabase
         .from('orders')
         .update({
           customer_name: orderData.customerName,
@@ -500,24 +499,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           additional_charges: orderData.additionalCharges || 0,
           delivery_date: (orderData as any).deliveryDate || null,
         })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .select('id');
 
       if (orderError) {
         console.error('Error updating order:', orderError);
         toast.error('Failed to update order: ' + orderError.message);
-        return;
+        return false;
       }
-      
+
+      // RLS-blocked updates return no error and no rows. Stop here so the
+      // item rows below are not deleted for an order we could not update.
+      if (!updatedOrder || updatedOrder.length === 0) {
+        toast.error('Order was not updated. It may no longer be pending, or you may not have permission to edit it.');
+        return false;
+      }
+
       // Delete existing order tables
       const { error: deleteTablesError } = await supabase
         .from('order_tables')
         .delete()
         .eq('order_id', orderId);
-      
+
       if (deleteTablesError) {
         console.error('Error deleting existing order tables:', deleteTablesError);
         toast.error('Failed to update order tables: ' + deleteTablesError.message);
-        return;
+        return false;
       }
       
       // Insert new order tables
@@ -547,7 +554,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (tablesError) {
           console.error('Error updating order tables:', tablesError);
           toast.error('Failed to update order tables: ' + tablesError.message);
-          return;
+          return false;
         }
       }
 
@@ -563,46 +570,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       fetchOrders();
       toast.success('Order updated successfully!');
+      return true;
     } catch (error) {
       console.error('Error editing order:', error);
       toast.error('An unexpected error occurred');
+      return false;
     }
   };
 
-  const deleteOrder = async (orderId: string) => {
+  const deleteOrder = async (orderId: string): Promise<boolean> => {
     try {
-      console.log(`Deleting order ${orderId}`);
-      
-      const { error: tablesError } = await supabase
-        .from('order_tables')
-        .delete()
-        .eq('order_id', orderId);
-      
-      if (tablesError) {
-        console.error('Error deleting order tables:', tablesError);
-        toast.error('Failed to delete order tables: ' + tablesError.message);
-        return;
-      }
-      
-      const { error } = await supabase
+      // order_tables and transport rows are removed by ON DELETE CASCADE.
+      // Deleting the order on its own means the items are never removed
+      // while the order itself survives (e.g. when RLS blocks the delete).
+      // RLS-blocked deletes return no error, so ask for the deleted rows back
+      // and treat an empty result as a failure.
+      const { data, error } = await supabase
         .from('orders')
         .delete()
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .select('id');
 
       if (error) {
         console.error('Error deleting order:', error);
         toast.error('Failed to delete order: ' + error.message);
-        return;
+        return false;
       }
 
-      console.log(`Order ${orderId} deleted successfully`);
+      if (!data || data.length === 0) {
+        toast.error('Order was not deleted. You may not have permission to delete orders.');
+        return false;
+      }
 
       setOrders(prev => prev.filter(order => order.id !== orderId));
-      
+      setCompletedOrders(prev => prev.filter(order => order.id !== orderId));
+
       toast.success('Order deleted successfully');
+      return true;
     } catch (error) {
       console.error('Error deleting order:', error);
       toast.error('An unexpected error occurred');
+      return false;
     }
   };
 

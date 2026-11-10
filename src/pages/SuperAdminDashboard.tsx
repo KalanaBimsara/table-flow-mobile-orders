@@ -77,13 +77,15 @@ const SuperAdminDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
+  // Hooks must run on every render, so the effect sits above the early return.
+  useEffect(() => {
+    if (user) loadAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   if (!user) {
     return <Navigate to="/super-admin/login" replace />;
   }
-
-  useEffect(() => {
-    loadAnalytics();
-  }, []);
 
   const calculateProfit = (order: any) => {
     const salesPrice = order.price || 0;

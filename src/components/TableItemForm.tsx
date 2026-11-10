@@ -39,6 +39,8 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
   
   const watchWireHoles = form.watch(`tables.${index}.wireHoles`);
   const watchSize = form.watch(`tables.${index}.size`);
+  // Price has no FormField of its own, so surface its validation error here.
+  const priceError = (form.formState.errors?.tables as any)?.[index]?.price?.message as string | undefined;
 
   // Calculate the price based on the selected size
   const handleSizeChange = (value: string) => {
@@ -158,12 +160,17 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
                 required
                 min="1"
                 onChange={(e) => {
+                  // Always sync, so clearing or editing the price never leaves an
+                  // old value in the total. 0 fails validation with a visible message.
                   const price = parseFloat(e.target.value);
-                  if (!isNaN(price) && price > 0) {
-                    form.setValue(`tables.${index}.price`, price, { shouldValidate: true });
-                  }
+                  form.setValue(`tables.${index}.price`, Number.isFinite(price) && price > 0 ? price : 0, {
+                    shouldValidate: form.formState.isSubmitted,
+                  });
                 }}
               />
+              {priceError && (
+                <p className="text-sm font-medium text-destructive">{priceError}</p>
+              )}
             </div>
           </>
         )}
@@ -181,9 +188,14 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
                     type="number" 
                     min="1" 
                     placeholder="Enter quantity"
-                    {...field} 
-                    onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) || 1 : 1)} 
-                    value={field.value || ''}
+                    {...field}
+                    // Let the field be cleared while typing. Forcing it back to 1
+                    // made "clear, then type 5" become 15. Blank is caught by validation.
+                    onChange={e => {
+                      const parsed = parseInt(e.target.value, 10);
+                      field.onChange(Number.isNaN(parsed) ? undefined : parsed);
+                    }}
+                    value={field.value ?? ''}
                   />
                 </FormControl>
                 <FormMessage />
@@ -465,6 +477,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
                       type="number"
                       placeholder="Enter length"
                       {...field}
+                      value={field.value ?? ''}
                       onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                     />
                   </FormControl>

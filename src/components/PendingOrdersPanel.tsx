@@ -269,6 +269,8 @@ const PendingOrdersPanel = () => {
             placeholder="Search by order number..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            type="search"
+            autoComplete="off"
             className="pl-10"
           />
         </div>
