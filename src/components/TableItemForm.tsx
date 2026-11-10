@@ -460,6 +460,7 @@ const TableItemForm: React.FC<TableItemFormProps> = ({
                       <SelectItem value="12">12" per 1ft - LKR 500</SelectItem>
                       <SelectItem value="16">16" per 1ft - LKR 750</SelectItem>
                       <SelectItem value="24">24" per 1ft - LKR 1000</SelectItem>
+                      <SelectItem value="30">30" per 1ft - LKR 1250</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>

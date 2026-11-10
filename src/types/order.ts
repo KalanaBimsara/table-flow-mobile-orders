@@ -12,7 +12,7 @@ export type TableItem = {
   legHeight?: string,
   wireHoles?: 'no wire holes' | 'normal' | 'special',
   wireHolesComment?: string,
-  frontPanelSize?: '6' | '12' | '16' | '24',
+  frontPanelSize?: '6' | '12' | '16' | '24' | '30',
   frontPanelLength?: number,
   lShapeOrientation?: 'normal' | 'reverse'
 };

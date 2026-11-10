@@ -24,7 +24,8 @@ export function calculateFrontPanelCost(frontPanelSize?: string, frontPanelLengt
     '6': 250,
     '12': 500,
     '16': 750,
-    '24': 1000
+    '24': 1000,
+    '30': 1250
   };
   
   return (pricePerFt[frontPanelSize] || 0) * frontPanelLength;

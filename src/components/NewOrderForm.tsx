@@ -85,7 +85,7 @@ const tableItemSchema = z.object({
   legHeight: z.string().min(1, { message: "Leg height is required" }),
   wireHoles: z.enum(['no wire holes', 'normal', 'special'], { required_error: "Wire holes selection is required" }),
   wireHolesComment: z.string().optional(),
-  frontPanelSize: z.enum(['6', '12', '16', '24']).optional(),
+  frontPanelSize: z.enum(['6', '12', '16', '24', '30']).optional(),
   frontPanelLength: z.number().optional(),
   lShapeOrientation: z.enum(['normal', 'reverse']).optional()
 }).refine((data) => data.size !== 'custom', {

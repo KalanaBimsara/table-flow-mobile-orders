@@ -29,7 +29,7 @@ const tableItemSchema = z.object({
   legHeight: z.string().optional(),
   wireHoles: z.enum(['no wire holes', 'normal', 'special']).optional(),
   wireHolesComment: z.string().optional(),
-  frontPanelSize: z.enum(['6', '12', '16', '24']).optional(),
+  frontPanelSize: z.enum(['6', '12', '16', '24', '30']).optional(),
   frontPanelLength: z.number().optional(),
   lShapeOrientation: z.enum(['normal', 'reverse']).optional()
 }).refine((data) => {
