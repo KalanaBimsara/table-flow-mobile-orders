@@ -11,6 +11,7 @@ type AuthContextType = {
   user: User | null;
   userRole: UserRole | null;
   canViewAllOrders: boolean;
+  permissionsLoaded: boolean;
   loading: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string, role: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -24,38 +25,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [canViewAllOrders, setCanViewAllOrders] = useState(false);
+  // False until can_view_all_orders has been read for the signed-in user.
+  // Order fetches wait for this; otherwise the first fetch always ran with
+  // the default "own orders only" filter.
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const isSigningUp = useRef(false);
+  const permissionsUserId = useRef<string | null>(null);
+  const permissionsRequest = useRef(0);
 
   useEffect(() => {
-    const loadPermissions = async (userId: string) => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('role, can_view_all_orders')
-        .eq('id', userId)
-        .maybeSingle();
+    const readPermissions = async (userId: string): Promise<boolean | null> => {
+      // A failed read must not quietly become "own orders only", so retry and
+      // report null (unknown) if it still fails.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role, can_view_all_orders')
+          .eq('id', userId)
+          .maybeSingle();
 
-      const profile = data as { role?: string | null; can_view_all_orders?: boolean | null } | null;
-      const isManager = profile?.role === 'manager';
-      setCanViewAllOrders(isManager || profile?.can_view_all_orders === true);
+        if (!error) {
+          const profile = data as { role?: string | null; can_view_all_orders?: boolean | null } | null;
+          return profile?.role === 'manager' || profile?.can_view_all_orders === true;
+        }
+        console.error('Failed to load order permissions:', error);
+        await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+      }
+      return null;
     };
+
+    const loadPermissions = async (userId: string) => {
+      const request = ++permissionsRequest.current;
+      const canViewAll = await readPermissions(userId);
+      // Ignore answers for an older request or a user who has since signed out.
+      if (request !== permissionsRequest.current || permissionsUserId.current !== userId) return;
+      if (canViewAll !== null) setCanViewAllOrders(canViewAll);
+      setPermissionsLoaded(true);
+    };
+
+    const applySession = (session: Session | null) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      const userId = session?.user?.id ?? null;
+      if (userId !== permissionsUserId.current) {
+        // Different user (or signed out): forget the previous user's permission
+        // before anything fetches orders for the new one.
+        permissionsUserId.current = userId;
+        setCanViewAllOrders(false);
+        setPermissionsLoaded(false);
+      }
+
+      if (session?.user) {
+        // Fetch user role from metadata
+        setUserRole(session.user.user_metadata.role as UserRole);
+        // Deferred so the Supabase query does not run inside the auth callback.
+        setTimeout(() => loadPermissions(session.user.id), 0);
+      } else {
+        setUserRole(null);
+        permissionsRequest.current++;
+      }
+    };
+
+    // Pick up changes made in the super admin dashboard without a reload:
+    // re-check when the tab regains focus and every minute while visible.
+    const refreshPermissions = () => {
+      if (permissionsUserId.current && document.visibilityState === 'visible') {
+        loadPermissions(permissionsUserId.current);
+      }
+    };
+    window.addEventListener('focus', refreshPermissions);
+    document.addEventListener('visibilitychange', refreshPermissions);
+    const refreshTimer = window.setInterval(refreshPermissions, 60_000);
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fetch user role from metadata
-          const role = session.user.user_metadata.role as UserRole;
-          setUserRole(role);
-          setTimeout(() => loadPermissions(session.user.id), 0);
-        } else {
-          setUserRole(null);
-          setCanViewAllOrders(false);
-        }
+        applySession(session);
         
         if (event === 'SIGNED_IN') {
           // Only show toast if not coming from signup (to avoid duplicate notification)
@@ -73,20 +121,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Fetch user role from metadata
-        const role = session.user.user_metadata.role as UserRole;
-        setUserRole(role);
-        loadPermissions(session.user.id);
-      }
-      
+      applySession(session);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('focus', refreshPermissions);
+      document.removeEventListener('visibilitychange', refreshPermissions);
+      window.clearInterval(refreshTimer);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, role: string) => {
@@ -159,6 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         userRole,
         canViewAllOrders,
+        permissionsLoaded,
         loading,
         signUp,
         signIn,

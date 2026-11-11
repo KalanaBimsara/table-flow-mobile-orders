@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Order, OrderStatus, TableItem } from '@/types/order';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,13 +40,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loadingMoreCompleted, setLoadingMoreCompleted] = useState(false);
   const [completedOrdersOffset, setCompletedOrdersOffset] = useState(0);
   const [deliveryPeople, setDeliveryPeople] = useState<DeliveryPerson[]>([]);
-  const { user, userRole, canViewAllOrders } = useAuth();
+  const { user, userRole, canViewAllOrders, permissionsLoaded } = useAuth();
+  // Each fetch takes a number; a response is applied only if no newer fetch
+  // started meanwhile. Without this, an "own orders only" response that
+  // arrived late could overwrite the "all orders" list.
+  const ordersRequest = useRef(0);
+  const completedRequest = useRef(0);
 
   useEffect(() => {
+    if (!user) {
+      ordersRequest.current++;
+      completedRequest.current++;
+      setOrders([]);
+      setCompletedOrders([]);
+      return;
+    }
+    // Wait until we know whether this user may see all orders.
+    if (!permissionsLoaded) return;
     fetchOrders();
     fetchCompletedOrders(true); // Fetch initial completed orders
     fetchDeliveryPeople();
-  }, [user, userRole, canViewAllOrders]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, userRole, canViewAllOrders, permissionsLoaded]);
 
   const fetchDeliveryPeople = async () => {
     try {
@@ -74,7 +89,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const fetchCompletedOrders = async (reset: boolean = false) => {
     if (!user) return;
-    
+    // "Load more" pages continue the current list; a reset starts a new one
+    // and makes any page still in flight stale.
+    const request = reset ? ++completedRequest.current : completedRequest.current;
+    const isStale = () => request !== completedRequest.current;
+
     try {
       const offset = reset ? 0 : completedOrdersOffset;
       
@@ -95,6 +114,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const { data: ordersData, error: ordersError } = await query;
+      if (isStale()) return;
 
       if (ordersError) {
         console.error('Error fetching completed orders:', ordersError);
@@ -168,6 +188,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         orderFormNumber: order.order_form_number || undefined
       }));
 
+      if (isStale()) return;
+
       if (reset) {
         setCompletedOrders(formattedOrders);
         setCompletedOrdersOffset(COMPLETED_ORDERS_PAGE_SIZE);
@@ -194,9 +216,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
   
+    const request = ++ordersRequest.current;
+    const isStale = () => request !== ordersRequest.current;
+
     try {
-      console.log("Fetching orders with user role:", userRole);
-  
       let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
   
       if (userRole === 'customer') {
@@ -208,7 +231,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
   
       const { data: ordersData, error: ordersError } = await query;
-  
+      if (isStale()) return;
+
       if (ordersError) {
         console.error('Error fetching orders:', ordersError);
         toast.error(`Failed to fetch orders: ${ordersError.message}`);
@@ -287,10 +311,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }));
 
       // Sort orders by creation date (latest first)
-      const sortedOrders = ordersWithTablesAndDates.sort((a, b) => 
+      const sortedOrders = ordersWithTablesAndDates.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-  
+
+      if (isStale()) return;
       setOrders(sortedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);

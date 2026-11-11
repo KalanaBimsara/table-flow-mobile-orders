@@ -64,7 +64,7 @@ const escapeTerm = (term: string) => term.replace(/[%,()]/g, ' ').trim();
  * debounced, so completed orders outside the loaded 30 are still found.
  */
 export function useOrderSearch(term: string, field: SearchField) {
-  const { user, userRole, canViewAllOrders } = useAuth();
+  const { user, userRole, canViewAllOrders, permissionsLoaded } = useAuth();
   const [results, setResults] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -75,6 +75,11 @@ export function useOrderSearch(term: string, field: SearchField) {
     if (!active || !user) {
       setResults([]);
       setLoading(false);
+      return;
+    }
+    // Searching before the permission is known would apply "own orders only".
+    if (!permissionsLoaded) {
+      setLoading(true);
       return;
     }
 
@@ -150,7 +155,7 @@ export function useOrderSearch(term: string, field: SearchField) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [trimmed, field, active, user?.id, userRole, canViewAllOrders]);
+  }, [trimmed, field, active, user?.id, userRole, canViewAllOrders, permissionsLoaded]);
 
   return { results, loading, active };
 }
