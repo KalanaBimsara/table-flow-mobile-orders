@@ -18,6 +18,46 @@ const FORM_COPIES = [
 
 const getQrCodeKey = (tableIndex: number, copyLabel: string) => `${tableIndex}-${copyLabel}`;
 
+// Fill colours for the Top Color / Leg Color cells on the printed form.
+// Shades are spaced apart so they stay distinguishable on a black-and-white
+// printer too (white < ash white < teak < black). Dark fills get white text.
+const COLOUR_FILLS: Record<string, { fill: string; text?: string }> = {
+  white: { fill: '#ffffff' },
+  ash_white: { fill: '#e3d6bd' },
+  teak: { fill: '#9a6639', text: '#ffffff' },
+  black: { fill: '#111111', text: '#ffffff' },
+};
+
+// A table cell filled edge to edge with the colour it names. The print and PDF
+// styles force every td background to white, so the colour sits on a layer
+// inside the cell (which those rules do not touch) stretched to its borders.
+const ColourCell: React.FC<{ value?: string | null; borderColor: string }> = ({ value, borderColor }) => {
+  const key = String(value ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const colour = COLOUR_FILLS[key];
+  return (
+    <td className="border-r p-1 text-center" style={{ borderColor, position: 'relative' }}>
+      {colour && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            backgroundColor: colour.fill,
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact',
+          }}
+        />
+      )}
+      <span style={{ position: 'relative', color: colour?.text, fontWeight: colour?.text ? 600 : undefined }}>
+        {value || ''}
+      </span>
+    </td>
+  );
+};
+
 const normalizeSpecification = (value: unknown) => String(value ?? '').trim().toLowerCase().replace(/["'\s-]/g, '');
 const standardTableSizes = new Set(tableSizeOptions.map(option => normalizeSpecification(option.value)));
 
@@ -490,13 +530,13 @@ const OrderForm: React.FC = () => {
               <tbody>
                 <tr className="border-b" style={{ borderColor: colors.border }}>
                   <td className="border-r p-1 text-center" style={specificationStyle(customizationFlags.size)}>{singleTable.size}</td>
-                  <td className="border-r p-1 text-center" style={{ borderColor: colors.border }}>{singleTable.topColour || singleTable.colour}</td>
+                  <ColourCell value={singleTable.topColour || singleTable.colour} borderColor={colors.border} />
                   <td className="border-r p-1 text-center" style={specificationStyle(customizationFlags.wireHoles)}>{singleTable.wireHoles || 'normal'}</td>
                   <td className="border-r p-1 text-center font-bold" style={{ borderColor: colors.border }}>{singleTable.quantity}</td>
                   <td className="border-r p-1 text-center" style={specificationStyle(customizationFlags.legSize)}>{singleTable.legSize || ''}</td>
                   <td className="border-r p-1 text-center" style={specificationStyle(customizationFlags.legShape)}>{singleTable.legShape || ''}</td>
                   <td className="border-r p-1 text-center" style={specificationStyle(customizationFlags.legHeight)}>{singleTable.legHeight || ''}</td>
-                  <td className="border-r p-1 text-center" style={{ borderColor: colors.border }}>{singleTable.frameColour || ''}</td>
+                  <ColourCell value={singleTable.frameColour} borderColor={colors.border} />
                   <td className="border-r p-1 text-center" style={specificationStyle(customizationFlags.lShapeOrientation)}>
                     {singleTable.lShapeOrientation ? singleTable.lShapeOrientation.charAt(0).toUpperCase() + singleTable.lShapeOrientation.slice(1) : ''}
                   </td>
