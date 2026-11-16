@@ -363,10 +363,14 @@ const Transport: React.FC = () => {
   }, [summaryRows, manufactureRows, gatePassLogs]);
 
   const openReport = (kind: ReportKind) => {
-    if (!rows.length) {
+    // The driver report lists only pending orders, whatever the Order Status
+    // filter is set to. manufactureRows is already the pending orders in the
+    // selected range (paginated, so it isn't capped at 1000).
+    const reportRows = kind === 'driver' ? manufactureRows : rows;
+    if (!reportRows.length) {
       toast.warning('තෝරාගත් පරාසය තුළ ඕඩර නොමැත');
     }
-    const html = buildReportHtml(kind, rows, rangeLabel);
+    const html = buildReportHtml(kind, reportRows, rangeLabel);
     const w = window.open('', '_blank');
     if (!w) {
       toast.error('Pop-up blocked. Please allow pop-ups.');
