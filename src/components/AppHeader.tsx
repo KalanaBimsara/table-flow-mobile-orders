@@ -12,6 +12,7 @@ import {
   MapPin,
   FileText,
   PackageCheck,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -44,7 +45,8 @@ const AppHeader = () => {
   if (userRole === 'manager' || userRole === 'admin') {
     menuItems.push(
       { href: '/management', label: 'Management', icon: Settings },
-      { href: '/dispatch-return', label: 'Dispatch & Return', icon: PackageCheck }
+      { href: '/dispatch-return', label: 'Dispatch & Return', icon: PackageCheck },
+      { href: '/reports', label: 'Reports', icon: BarChart3 }
     );
   }
 

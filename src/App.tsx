@@ -30,6 +30,7 @@ import PublicOrderForm from "./pages/PublicOrderForm";
 import OrderTracking from "./pages/OrderTracking";
 import Transport from "./pages/Transport";
 import DispatchReturn from "./pages/DispatchReturn";
+import Reports from "./pages/Reports";
 
 const queryClient = new QueryClient();
 
@@ -168,7 +169,15 @@ const App = () => {
                                   <ProtectedRoute allowedRoles={['admin', 'manager']}>
                                     <DispatchReturn />
                                   </ProtectedRoute>
-                                } 
+                                }
+                              />
+                              <Route
+                                path="/reports"
+                                element={
+                                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                                    <Reports />
+                                  </ProtectedRoute>
+                                }
                               />
                             </Route>
                             <Route path="*" element={<NotFound />} />

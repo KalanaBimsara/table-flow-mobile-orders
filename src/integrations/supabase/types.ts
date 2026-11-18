@@ -297,6 +297,7 @@ export type Database = {
         Row: {
           additional_charges: number | null
           address: string
+          assigned_at: string | null
           colour: string
           completed_at: string | null
           contact_number: string
@@ -325,6 +326,7 @@ export type Database = {
         Insert: {
           additional_charges?: number | null
           address: string
+          assigned_at?: string | null
           colour: string
           completed_at?: string | null
           contact_number: string
@@ -353,6 +355,7 @@ export type Database = {
         Update: {
           additional_charges?: number | null
           address?: string
+          assigned_at?: string | null
           colour?: string
           completed_at?: string | null
           contact_number?: string
