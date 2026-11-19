@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
-import { Moon, Sun, Factory, Shield, Menu, X, Home, Package, History, Settings, Table, FileText, RefreshCw, Truck, PackageCheck } from "lucide-react";
+import { Moon, Sun, Factory, Shield, Menu, X, Home, Package, History, Settings, Table, FileText, RefreshCw, Truck, PackageCheck, BarChart3 } from "lucide-react";
 import { useTheme } from "@/components/ui/theme-provider";
 import NotificationButton from "@/components/NotificationButton";
 import { useApp } from "@/contexts/AppContext";
@@ -93,6 +93,10 @@ const AppHeaderWrapper = () => {
       href: '/dispatch-return',
       label: 'Dispatch & Return',
       icon: PackageCheck
+    }, {
+      href: '/reports',
+      label: 'Reports',
+      icon: BarChart3
     });
   }
   if (userRole === 'admin') {
